@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { DevToolsPanel } from '@/components/dev-tools-panel'
 import { PuzzleBoard } from '@/components/puzzle-board'
 import { Button } from '@/components/ui/button'
 import {
@@ -90,6 +91,8 @@ export default function TrainPage() {
       {outcome?.status === 'next' && (
         <PuzzleBoard puzzle={outcome.data.puzzle} onComplete={handleComplete} />
       )}
+
+      {import.meta.env.DEV && <DevToolsPanel />}
     </main>
   )
 }
