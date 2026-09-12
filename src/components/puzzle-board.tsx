@@ -18,6 +18,12 @@ const MOVE_HINT_STYLE = {
 }
 const CAPTURE_HINT_STYLE = { boxShadow: 'inset 0 0 0 3px rgba(0,0,0,0.22)' }
 
+// Il lato che deve risolvere il puzzle e' l'opposto di chi gioca la mossa di
+// apertura (il colore a muovere nella FEN originale, prima del setup).
+function solverColorFor(fen: string): 'white' | 'black' {
+  return new Chess(fen).turn() === 'w' ? 'black' : 'white'
+}
+
 // Riferimento stabile (non un nuovo [] ad ogni render) da usare come
 // playedMoves "effettivo" nel render in cui il puzzle e' appena cambiato.
 const EMPTY_MOVES: string[] = []
@@ -52,7 +58,9 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
 
   const [playedMoves, setPlayedMoves] = useState<string[]>([])
   const [viewIndex, setViewIndex] = useState(0)
-  const [orientation, setOrientation] = useState<'white' | 'black'>('white')
+  const [orientation, setOrientation] = useState<'white' | 'black'>(() =>
+    solverColorFor(puzzle.fen),
+  )
   const [feedback, setFeedback] = useState<Feedback>('intro')
   const [elapsed, setElapsed] = useState(0)
   const [loadedPuzzleId, setLoadedPuzzleId] = useState(puzzle.puzzle_id)
@@ -78,7 +86,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     setViewIndex(0)
     setFeedback('intro')
     setElapsed(0)
-    setOrientation(new Chess(puzzle.fen).turn() === 'w' ? 'black' : 'white')
+    setOrientation(solverColorFor(puzzle.fen))
     setWrongMove(null)
     setPendingCompletion(null)
     setSelection(null)
