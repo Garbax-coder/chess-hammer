@@ -1,7 +1,8 @@
-import { Chess } from 'chess.js'
+import { Chess, type Square } from 'chess.js'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Chessboard } from 'react-chessboard'
+import { SolvedFireworks } from '@/components/solved-fireworks'
 import { Button } from '@/components/ui/button'
 import { parseUci } from '@/lib/uci'
 import type { LichessPuzzle } from '@/types/training'
@@ -11,29 +12,64 @@ type Feedback = 'intro' | 'playing' | 'correct' | 'wrong' | 'solved'
 const INTRO_DELAY_MS = 500
 const AUTO_MOVE_DELAY_MS = 400
 const FEEDBACK_HOLD_MS = 900
+const WRONG_SQUARE_STYLE = { backgroundColor: 'rgba(220, 38, 38, 0.55)' }
+const SELECTED_SQUARE_STYLE = { backgroundColor: 'rgba(59, 130, 246, 0.35)' }
+const MOVE_HINT_STYLE = {
+  backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.22) 22%, transparent 24%)',
+}
+const CAPTURE_HINT_STYLE = { boxShadow: 'inset 0 0 0 3px rgba(0,0,0,0.22)' }
+
+// Il lato che deve risolvere il puzzle e' l'opposto di chi gioca la mossa di
+// apertura (il colore a muovere nella FEN originale, prima del setup).
+function solverColorFor(fen: string): 'white' | 'black' {
+  return new Chess(fen).turn() === 'w' ? 'black' : 'white'
+}
 
 // Riferimento stabile (non un nuovo [] ad ogni render) da usare come
 // playedMoves "effettivo" nel render in cui il puzzle e' appena cambiato.
 const EMPTY_MOVES: string[] = []
 
+interface PendingCompletion {
+  result: 'solved' | 'failed'
+  timeSeconds: number
+}
+
+interface SquareSelection {
+  square: string
+  targets: { to: string; capture: boolean }[]
+}
+
 interface PuzzleBoardProps {
   puzzle: LichessPuzzle
+  autoAdvance: boolean
   onComplete: (result: 'solved' | 'failed', timeSeconds: number) => void
 }
 
-export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
+export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProps) {
   const gameRef = useRef(new Chess())
   const solutionIndexRef = useRef(1)
   const startedAtRef = useRef(0)
   const lockedRef = useRef(false)
   const playedMovesLenRef = useRef(0)
+  const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const autoAdvanceRef = useRef(autoAdvance)
+  useEffect(() => {
+    autoAdvanceRef.current = autoAdvance
+  }, [autoAdvance])
 
   const [playedMoves, setPlayedMoves] = useState<string[]>([])
   const [viewIndex, setViewIndex] = useState(0)
-  const [orientation, setOrientation] = useState<'white' | 'black'>('white')
+  const [orientation, setOrientation] = useState<'white' | 'black'>(() =>
+    solverColorFor(puzzle.fen),
+  )
   const [feedback, setFeedback] = useState<Feedback>('intro')
   const [elapsed, setElapsed] = useState(0)
   const [loadedPuzzleId, setLoadedPuzzleId] = useState(puzzle.puzzle_id)
+  const [wrongMove, setWrongMove] = useState<{ fen: string; square: string } | null>(null)
+  const [pendingCompletion, setPendingCompletion] = useState<PendingCompletion | null>(
+    null,
+  )
+  const [selection, setSelection] = useState<SquareSelection | null>(null)
 
   // Quando il puzzle cambia, playedMoves/viewIndex non sono ancora stati
   // azzerati (lo state aggiornato da una setState chiamata qui durante il
@@ -51,16 +87,27 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
     setViewIndex(0)
     setFeedback('intro')
     setElapsed(0)
-    setOrientation(new Chess(puzzle.fen).turn() === 'w' ? 'black' : 'white')
+    setOrientation(solverColorFor(puzzle.fen))
+    setWrongMove(null)
+    setPendingCompletion(null)
+    setSelection(null)
   }
   const effectivePlayedMoves = isNewPuzzle ? EMPTY_MOVES : playedMoves
   const effectiveViewIndex = isNewPuzzle ? 0 : viewIndex
+  const effectiveWrongMove = isNewPuzzle ? null : wrongMove
 
   const isLive = effectiveViewIndex === effectivePlayedMoves.length
+
+  function navigateView(next: number) {
+    setWrongMove(null)
+    setSelection(null)
+    setViewIndex(next)
+  }
 
   function applyMoveAndAdvanceView(uci: string) {
     gameRef.current.move(parseUci(uci))
     setPlayedMoves((prev) => [...prev, uci])
+    setSelection(null)
   }
 
   useEffect(() => {
@@ -78,6 +125,7 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
     const tickInterval = setInterval(() => {
       setElapsed(Math.round((Date.now() - startedAtRef.current) / 1000))
     }, 1000)
+    tickIntervalRef.current = tickInterval
 
     return () => {
       clearTimeout(introTimer)
@@ -94,9 +142,13 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'ArrowLeft') {
         e.preventDefault()
+        setWrongMove(null)
+        setSelection(null)
         setViewIndex((v) => Math.max(0, v - 1))
       } else if (e.key === 'ArrowRight') {
         e.preventDefault()
+        setWrongMove(null)
+        setSelection(null)
         setViewIndex((v) => Math.min(playedMovesLenRef.current, v + 1))
       }
     }
@@ -104,7 +156,7 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  const displayFen = useMemo(() => {
+  const replayFen = useMemo(() => {
     const g = new Chess(puzzle.fen)
     for (let i = 0; i < effectiveViewIndex; i++) {
       g.move(parseUci(effectivePlayedMoves[i]))
@@ -112,11 +164,75 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
     return g.fen()
   }, [puzzle, effectivePlayedMoves, effectiveViewIndex])
 
+  const displayFen = isLive && effectiveWrongMove ? effectiveWrongMove.fen : replayFen
+
+  const effectiveSelection = isLive ? selection : null
+
+  const squareStyles = useMemo(() => {
+    if (!isLive) return undefined
+    if (effectiveWrongMove) {
+      return { [effectiveWrongMove.square]: WRONG_SQUARE_STYLE }
+    }
+    if (effectiveSelection) {
+      const styles: Record<string, CSSProperties> = {
+        [effectiveSelection.square]: SELECTED_SQUARE_STYLE,
+      }
+      for (const target of effectiveSelection.targets) {
+        styles[target.to] = target.capture ? CAPTURE_HINT_STYLE : MOVE_HINT_STYLE
+      }
+      return styles
+    }
+    return undefined
+  }, [isLive, effectiveWrongMove, effectiveSelection])
+
+  // Calcolate qui (in un event handler, non durante il render) cosi'
+  // gameRef puo' essere letto liberamente senza toccare la logica di
+  // rendering: il risultato va semplicemente in state.
+  function handleSquareClick({
+    piece,
+    square,
+  }: {
+    piece: { pieceType: string } | null
+    square: string
+  }) {
+    if (lockedRef.current || !isLive) return
+
+    if (selection) {
+      if (selection.square === square) {
+        setSelection(null)
+        return
+      }
+      if (selection.targets.some((t) => t.to === square)) {
+        attemptMove(selection.square, square)
+        return
+      }
+    }
+
+    if (piece && piece.pieceType[0] === gameRef.current.turn()) {
+      const moves = gameRef.current.moves({ square: square as Square, verbose: true })
+      setSelection({
+        square,
+        targets: moves.map((m) => ({ to: m.to, capture: !!gameRef.current.get(m.to) })),
+      })
+      return
+    }
+    setSelection(null)
+  }
+
   function finish(result: 'solved' | 'failed') {
     lockedRef.current = true
+    if (tickIntervalRef.current) {
+      clearInterval(tickIntervalRef.current)
+      tickIntervalRef.current = null
+    }
     setFeedback(result === 'solved' ? 'solved' : 'wrong')
     const timeSeconds = Math.round((Date.now() - startedAtRef.current) / 1000)
-    setTimeout(() => onComplete(result, timeSeconds), FEEDBACK_HOLD_MS)
+    setElapsed(timeSeconds)
+    if (autoAdvanceRef.current) {
+      setTimeout(() => onComplete(result, timeSeconds), FEEDBACK_HOLD_MS)
+    } else {
+      setPendingCompletion({ result, timeSeconds })
+    }
   }
 
   function playOpponentReply() {
@@ -130,15 +246,10 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
     setFeedback('playing')
   }
 
-  function handlePieceDrop({
-    sourceSquare,
-    targetSquare,
-  }: {
-    sourceSquare: string
-    targetSquare: string | null
-  }): boolean {
-    if (lockedRef.current || !targetSquare || !isLive) return false
+  function attemptMove(sourceSquare: string, targetSquare: string): boolean {
+    if (lockedRef.current || !isLive) return false
 
+    setSelection(null)
     const game = gameRef.current
     const expectedUci = puzzle.moves[solutionIndexRef.current]
     const promotion =
@@ -156,9 +267,14 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
 
     const isCorrect = move.lan === expectedUci
     if (!isCorrect) {
+      // Il pezzo resta sulla casa sbagliata (evidenziata in rosso) invece di
+      // tornare subito indietro: gameRef resta pero' "pulito" (undo) dato che
+      // e' la fonte di verita' per le mosse valide del puzzle.
+      const wrongFen = game.fen()
       game.undo()
+      setWrongMove({ fen: wrongFen, square: targetSquare })
       finish('failed')
-      return false
+      return true
     }
 
     solutionIndexRef.current += 1
@@ -177,6 +293,17 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
     }, AUTO_MOVE_DELAY_MS)
 
     return true
+  }
+
+  function handlePieceDrop({
+    sourceSquare,
+    targetSquare,
+  }: {
+    sourceSquare: string
+    targetSquare: string | null
+  }): boolean {
+    if (!targetSquare) return false
+    return attemptMove(sourceSquare, targetSquare)
   }
 
   const turnLabel = orientation === 'white' ? 'Bianco' : 'Nero'
@@ -200,7 +327,7 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
       </div>
 
       <div
-        className={`rounded-lg ring-2 transition-all duration-300 ${
+        className={`relative rounded-lg ring-2 transition-all duration-300 ${
           feedback === 'wrong'
             ? 'ring-destructive'
             : feedback === 'solved' || feedback === 'correct'
@@ -213,6 +340,7 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
           options={{
             position: displayFen,
             onPieceDrop: handlePieceDrop,
+            onSquareClick: handleSquareClick,
             boardOrientation: orientation,
             canDragPiece: ({ piece }) =>
               isLive &&
@@ -220,41 +348,54 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
               piece.pieceType[0] === gameRef.current.turn(),
             animationDurationInMs: 200,
             boardStyle: { borderRadius: '0.5rem', overflow: 'hidden' },
+            squareStyles,
             // react-chessboard usa `id` per generare selettori CSS interni
             // (es. `#${id}-square-a1`): un ID CSS non puo' iniziare con una
             // cifra, mentre molti puzzle_id Lichess sì (es. "00rTX").
             id: `puzzle-${puzzle.puzzle_id}`,
           }}
         />
+        {feedback === 'solved' && <SolvedFireworks />}
       </div>
 
-      <div className="flex items-center gap-3">
+      {pendingCompletion ? (
         <Button
           type="button"
-          variant="outline"
-          size="icon-sm"
-          disabled={effectiveViewIndex === 0}
-          onClick={() => setViewIndex((v) => Math.max(0, v - 1))}
-          aria-label="Mossa precedente"
-        >
-          <ChevronLeft className="size-4" />
-        </Button>
-        <span className="text-muted-foreground w-16 text-center text-xs">
-          {effectiveViewIndex}/{effectivePlayedMoves.length}
-        </span>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-sm"
-          disabled={isLive}
           onClick={() =>
-            setViewIndex((v) => Math.min(effectivePlayedMoves.length, v + 1))
+            onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)
           }
-          aria-label="Mossa successiva"
         >
-          <ChevronRight className="size-4" />
+          Puzzle successivo →
         </Button>
-      </div>
+      ) : (
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            disabled={effectiveViewIndex === 0}
+            onClick={() => navigateView(Math.max(0, effectiveViewIndex - 1))}
+            aria-label="Mossa precedente"
+          >
+            <ChevronLeft className="size-4" />
+          </Button>
+          <span className="text-muted-foreground w-16 text-center text-xs">
+            {effectiveViewIndex}/{effectivePlayedMoves.length}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            disabled={isLive}
+            onClick={() =>
+              navigateView(Math.min(effectivePlayedMoves.length, effectiveViewIndex + 1))
+            }
+            aria-label="Mossa successiva"
+          >
+            <ChevronRight className="size-4" />
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

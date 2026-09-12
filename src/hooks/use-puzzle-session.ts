@@ -31,6 +31,7 @@ export function useRecordAttempt(session: TrainingSession | null | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['next-puzzle', session?.id] })
       queryClient.invalidateQueries({ queryKey: ['active-session', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['session-progress', session?.id] })
     },
   })
 }
