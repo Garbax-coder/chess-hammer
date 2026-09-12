@@ -44,6 +44,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   const startedAtRef = useRef(0)
   const lockedRef = useRef(false)
   const playedMovesLenRef = useRef(0)
+  const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const autoAdvanceRef = useRef(autoAdvance)
   useEffect(() => {
     autoAdvanceRef.current = autoAdvance
@@ -115,6 +116,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     const tickInterval = setInterval(() => {
       setElapsed(Math.round((Date.now() - startedAtRef.current) / 1000))
     }, 1000)
+    tickIntervalRef.current = tickInterval
 
     return () => {
       clearTimeout(introTimer)
@@ -185,10 +187,18 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     square: string
   }) {
     if (lockedRef.current || !isLive) return
-    if (selection?.square === square) {
-      setSelection(null)
-      return
+
+    if (selection) {
+      if (selection.square === square) {
+        setSelection(null)
+        return
+      }
+      if (selection.targets.some((t) => t.to === square)) {
+        attemptMove(selection.square, square)
+        return
+      }
     }
+
     if (piece && piece.pieceType[0] === gameRef.current.turn()) {
       const moves = gameRef.current.moves({ square: square as Square, verbose: true })
       setSelection({
@@ -202,8 +212,13 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
 
   function finish(result: 'solved' | 'failed') {
     lockedRef.current = true
+    if (tickIntervalRef.current) {
+      clearInterval(tickIntervalRef.current)
+      tickIntervalRef.current = null
+    }
     setFeedback(result === 'solved' ? 'solved' : 'wrong')
     const timeSeconds = Math.round((Date.now() - startedAtRef.current) / 1000)
+    setElapsed(timeSeconds)
     if (autoAdvanceRef.current) {
       setTimeout(() => onComplete(result, timeSeconds), FEEDBACK_HOLD_MS)
     } else {
@@ -222,14 +237,8 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     setFeedback('playing')
   }
 
-  function handlePieceDrop({
-    sourceSquare,
-    targetSquare,
-  }: {
-    sourceSquare: string
-    targetSquare: string | null
-  }): boolean {
-    if (lockedRef.current || !targetSquare || !isLive) return false
+  function attemptMove(sourceSquare: string, targetSquare: string): boolean {
+    if (lockedRef.current || !isLive) return false
 
     setSelection(null)
     const game = gameRef.current
@@ -275,6 +284,17 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     }, AUTO_MOVE_DELAY_MS)
 
     return true
+  }
+
+  function handlePieceDrop({
+    sourceSquare,
+    targetSquare,
+  }: {
+    sourceSquare: string
+    targetSquare: string | null
+  }): boolean {
+    if (!targetSquare) return false
+    return attemptMove(sourceSquare, targetSquare)
   }
 
   const turnLabel = orientation === 'white' ? 'Bianco' : 'Nero'
