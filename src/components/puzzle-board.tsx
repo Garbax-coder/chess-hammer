@@ -139,7 +139,10 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
             canDragPiece: ({ piece }) =>
               !lockedRef.current && piece.pieceType[0] === gameRef.current.turn(),
             animationDurationInMs: 200,
-            id: puzzle.puzzle_id,
+            // react-chessboard usa `id` per generare selettori CSS interni
+            // (es. `#${id}-square-a1`): un ID CSS non puo' iniziare con una
+            // cifra, mentre molti puzzle_id Lichess sì (es. "00rTX").
+            id: `puzzle-${puzzle.puzzle_id}`,
           }}
         />
       </div>
