@@ -1,11 +1,16 @@
 import { Chess, type Square } from 'chess.js'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { Chessboard } from 'react-chessboard'
+import { Chessboard, type Arrow } from 'react-chessboard'
+import { AnalysisPanel } from '@/components/analysis-panel'
 import { SolvedFireworks } from '@/components/solved-fireworks'
 import { Button } from '@/components/ui/button'
+import { useStockfishAnalysis } from '@/hooks/use-stockfish-analysis'
+import { useEngineSettings } from '@/lib/engine-settings'
 import { parseUci } from '@/lib/uci'
 import type { LichessPuzzle } from '@/types/training'
+
+const BEST_MOVE_ARROW_COLOR = 'rgba(37, 99, 235, 0.8)'
 
 type Feedback = 'intro' | 'playing' | 'correct' | 'wrong' | 'solved'
 
@@ -106,7 +111,12 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
 
   function applyMoveAndAdvanceView(uci: string) {
     gameRef.current.move(parseUci(uci))
+    // viewIndex va sincronizzato nello STESSO batch di setPlayedMoves, non
+    // tramite l'effect qui sotto (che gira un render dopo): altrimenti per
+    // un render displayFen mostra ancora la posizione precedente alla mossa
+    // appena giocata (es. analisi motore che parte sulla FEN sbagliata).
     setPlayedMoves((prev) => [...prev, uci])
+    setViewIndex(effectivePlayedMoves.length + 1)
     setSelection(null)
   }
 
@@ -165,6 +175,34 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   }, [puzzle, effectivePlayedMoves, effectiveViewIndex])
 
   const displayFen = isLive && effectiveWrongMove ? effectiveWrongMove.fen : replayFen
+
+  // Modalita' di analisi: attiva solo dopo la fine del puzzle quando
+  // l'avanzamento automatico e' spento (altrimenti si passa subito al
+  // puzzle successivo e non avrebbe senso). Analizza la posizione
+  // attualmente visualizzata, che l'utente puo' cambiare navigando la
+  // cronologia con le frecce/i bottoni qui sotto.
+  const { settings: engineSettings, update: updateEngineSettings } = useEngineSettings()
+  const analysisEnabled = pendingCompletion !== null
+  const { lines: engineLines, analyzing } = useStockfishAnalysis(
+    analysisEnabled ? displayFen : null,
+    {
+      multiPv: engineSettings.multiPv,
+      depth: engineSettings.depth,
+      enabled: analysisEnabled,
+    },
+  )
+  const bestMoveArrows = useMemo<Arrow[]>(() => {
+    if (!engineSettings.showBestMoveArrow) return []
+    const bestUci = engineLines[0]?.pvUci[0]
+    if (!bestUci || bestUci.length < 4) return []
+    return [
+      {
+        startSquare: bestUci.slice(0, 2),
+        endSquare: bestUci.slice(2, 4),
+        color: BEST_MOVE_ARROW_COLOR,
+      },
+    ]
+  }, [engineLines, engineSettings.showBestMoveArrow])
 
   const effectiveSelection = isLive ? selection : null
 
@@ -279,6 +317,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
 
     solutionIndexRef.current += 1
     setPlayedMoves((prev) => [...prev, move.lan])
+    setViewIndex(effectivePlayedMoves.length + 1)
 
     if (solutionIndexRef.current >= puzzle.moves.length) {
       finish('solved')
@@ -349,6 +388,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
             animationDurationInMs: 200,
             boardStyle: { borderRadius: '0.5rem', overflow: 'hidden' },
             squareStyles,
+            arrows: bestMoveArrows,
             // react-chessboard usa `id` per generare selettori CSS interni
             // (es. `#${id}-square-a1`): un ID CSS non puo' iniziare con una
             // cifra, mentre molti puzzle_id Lichess sì (es. "00rTX").
@@ -358,43 +398,52 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
         {feedback === 'solved' && <SolvedFireworks />}
       </div>
 
-      {pendingCompletion ? (
+      <div className="flex items-center gap-3">
         <Button
           type="button"
-          onClick={() =>
-            onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)
-          }
+          variant="outline"
+          size="icon-sm"
+          disabled={effectiveViewIndex === 0}
+          onClick={() => navigateView(Math.max(0, effectiveViewIndex - 1))}
+          aria-label="Mossa precedente"
         >
-          Puzzle successivo →
+          <ChevronLeft className="size-4" />
         </Button>
-      ) : (
-        <div className="flex items-center gap-3">
+        <span className="text-muted-foreground w-16 text-center text-xs">
+          {effectiveViewIndex}/{effectivePlayedMoves.length}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          disabled={isLive}
+          onClick={() =>
+            navigateView(Math.min(effectivePlayedMoves.length, effectiveViewIndex + 1))
+          }
+          aria-label="Mossa successiva"
+        >
+          <ChevronRight className="size-4" />
+        </Button>
+      </div>
+
+      {pendingCompletion && (
+        <>
+          <AnalysisPanel
+            fen={displayFen}
+            lines={engineLines}
+            analyzing={analyzing}
+            settings={engineSettings}
+            onUpdateSettings={updateEngineSettings}
+          />
           <Button
             type="button"
-            variant="outline"
-            size="icon-sm"
-            disabled={effectiveViewIndex === 0}
-            onClick={() => navigateView(Math.max(0, effectiveViewIndex - 1))}
-            aria-label="Mossa precedente"
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <span className="text-muted-foreground w-16 text-center text-xs">
-            {effectiveViewIndex}/{effectivePlayedMoves.length}
-          </span>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            disabled={isLive}
             onClick={() =>
-              navigateView(Math.min(effectivePlayedMoves.length, effectiveViewIndex + 1))
+              onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)
             }
-            aria-label="Mossa successiva"
           >
-            <ChevronRight className="size-4" />
+            Puzzle successivo →
           </Button>
-        </div>
+        </>
       )}
     </div>
   )
