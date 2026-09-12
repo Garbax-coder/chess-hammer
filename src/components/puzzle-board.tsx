@@ -4,11 +4,19 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Chessboard, type Arrow } from 'react-chessboard'
 import { AnalysisPanel } from '@/components/analysis-panel'
 import { EvalBar } from '@/components/eval-bar'
+import { MoveHistoryPanel } from '@/components/move-history'
 import { SolvedFireworks } from '@/components/solved-fireworks'
 import { Button } from '@/components/ui/button'
 import { useStockfishAnalysis } from '@/hooks/use-stockfish-analysis'
 import { evalToWhitePercent } from '@/lib/chess-format'
 import { useEngineSettings } from '@/lib/engine-settings'
+import {
+  addMoveNode,
+  INITIAL_MOVE_NODES,
+  pathFromRoot,
+  ROOT_NODE_ID,
+  type MoveTreeNode,
+} from '@/lib/move-tree'
 import { parseUci } from '@/lib/uci'
 import type { LichessPuzzle } from '@/types/training'
 
@@ -32,10 +40,6 @@ function solverColorFor(fen: string): 'white' | 'black' {
   return new Chess(fen).turn() === 'w' ? 'black' : 'white'
 }
 
-// Riferimento stabile (non un nuovo [] ad ogni render) da usare come
-// playedMoves "effettivo" nel render in cui il puzzle e' appena cambiato.
-const EMPTY_MOVES: string[] = []
-
 interface PendingCompletion {
   result: 'solved' | 'failed'
   timeSeconds: number
@@ -57,15 +61,19 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   const solutionIndexRef = useRef(1)
   const startedAtRef = useRef(0)
   const lockedRef = useRef(false)
-  const playedMovesLenRef = useRef(0)
+  const nodeIdCounterRef = useRef(0)
   const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const autoAdvanceRef = useRef(autoAdvance)
   useEffect(() => {
     autoAdvanceRef.current = autoAdvance
   }, [autoAdvance])
 
-  const [playedMoves, setPlayedMoves] = useState<string[]>([])
-  const [viewIndex, setViewIndex] = useState(0)
+  // Albero delle mosse: registra sia la linea di soluzione del puzzle sia
+  // (una volta finito il puzzle) tutte le diramazioni esplorate liberamente
+  // dall'utente in modalita' di analisi, cosi' da poterle rivedere tutte
+  // nella cronologia senza perdere quelle precedenti.
+  const [nodes, setNodes] = useState<Record<string, MoveTreeNode>>(INITIAL_MOVE_NODES)
+  const [currentId, setCurrentId] = useState(ROOT_NODE_ID)
   const [orientation, setOrientation] = useState<'white' | 'black'>(() =>
     solverColorFor(puzzle.fen),
   )
@@ -77,12 +85,8 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     null,
   )
   const [selection, setSelection] = useState<SquareSelection | null>(null)
-  // Mosse giocate liberamente in modalita' di analisi (dopo la fine del
-  // puzzle), a partire da branchPoint dentro effectivePlayedMoves.
-  const [freeMoves, setFreeMoves] = useState<string[]>([])
-  const [branchPoint, setBranchPoint] = useState<number | null>(null)
 
-  // Quando il puzzle cambia, playedMoves/viewIndex non sono ancora stati
+  // Quando il puzzle cambia, nodes/currentId non sono ancora stati
   // azzerati (lo state aggiornato da una setState chiamata qui durante il
   // render non e' visibile nelle costanti locali di QUESTA stessa
   // esecuzione: serve comunque un nuovo render). Calcoliamo quindi dei
@@ -94,50 +98,52 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   const isNewPuzzle = puzzle.puzzle_id !== loadedPuzzleId
   if (isNewPuzzle) {
     setLoadedPuzzleId(puzzle.puzzle_id)
-    setPlayedMoves([])
-    setViewIndex(0)
+    setNodes(INITIAL_MOVE_NODES)
+    setCurrentId(ROOT_NODE_ID)
     setFeedback('intro')
     setElapsed(0)
     setOrientation(solverColorFor(puzzle.fen))
     setWrongMove(null)
     setPendingCompletion(null)
     setSelection(null)
-    setFreeMoves([])
-    setBranchPoint(null)
+    nodeIdCounterRef.current = 0
   }
-  const effectivePlayedMoves = isNewPuzzle ? EMPTY_MOVES : playedMoves
-  const effectiveViewIndex = isNewPuzzle ? 0 : viewIndex
+  const effectiveNodes = isNewPuzzle ? INITIAL_MOVE_NODES : nodes
+  const effectiveCurrentId = isNewPuzzle ? ROOT_NODE_ID : currentId
   const effectiveWrongMove = isNewPuzzle ? null : wrongMove
-  const effectiveFreeMoves = isNewPuzzle ? EMPTY_MOVES : freeMoves
-  const effectiveBranchPoint = isNewPuzzle ? null : branchPoint
 
-  // In modalita' di analisi la cronologia si estende oltre le mosse del
-  // puzzle: baseLen e' il punto (dentro effectivePlayedMoves) da cui parte
-  // il ramo esplorato liberamente dall'utente (di norma la fine del
-  // puzzle, a meno che l'utente non sia tornato indietro e abbia diramato
-  // prima).
-  const baseLen = effectiveBranchPoint ?? effectivePlayedMoves.length
-  const timelineMoves = useMemo(
-    () => [...effectivePlayedMoves.slice(0, baseLen), ...effectiveFreeMoves],
-    [effectivePlayedMoves, baseLen, effectiveFreeMoves],
-  )
+  const isLive = effectiveNodes[effectiveCurrentId].children.length === 0
 
-  const isLive = effectiveViewIndex === timelineMoves.length
+  // Riferimenti "sempre aggiornati" letti dall'handler tastiera qui sotto,
+  // per non dover ricreare l'effect ad ogni mossa/navigazione.
+  const nodesRef = useRef(effectiveNodes)
+  nodesRef.current = effectiveNodes
+  const currentIdRef = useRef(effectiveCurrentId)
+  currentIdRef.current = effectiveCurrentId
 
-  function navigateView(next: number) {
+  function navigateTo(id: string) {
     setWrongMove(null)
     setSelection(null)
-    setViewIndex(next)
+    setCurrentId(id)
   }
 
   function applyMoveAndAdvanceView(uci: string) {
-    gameRef.current.move(parseUci(uci))
-    // viewIndex va sincronizzato nello STESSO batch di setPlayedMoves, non
-    // tramite l'effect qui sotto (che gira un render dopo): altrimenti per
-    // un render displayFen mostra ancora la posizione precedente alla mossa
-    // appena giocata (es. analisi motore che parte sulla FEN sbagliata).
-    setPlayedMoves((prev) => [...prev, uci])
-    setViewIndex(effectivePlayedMoves.length + 1)
+    const move = gameRef.current.move(parseUci(uci))
+    // Questa funzione puo' essere invocata con un ritardo (setTimeout, per
+    // la risposta automatica dell'avversario): a quel punto effectiveNodes/
+    // effectiveCurrentId di QUESTO render potrebbero essere gia' superati
+    // da una mossa nel frattempo registrata (es. la mossa corretta del
+    // risolutore appena giocata). Si usano quindi i ref "sempre aggiornati"
+    // invece delle costanti effective* catturate nella chiusura originale.
+    const { nodes: newNodes, id } = addMoveNode(
+      nodesRef.current,
+      currentIdRef.current,
+      uci,
+      move.san,
+      `n${nodeIdCounterRef.current++}`,
+    )
+    setNodes(newNodes)
+    setCurrentId(id)
     setSelection(null)
   }
 
@@ -165,40 +171,41 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   }, [puzzle])
 
   useEffect(() => {
-    setViewIndex(playedMoves.length)
-  }, [playedMoves])
-
-  // Riferimento "sempre aggiornato" alla lunghezza della cronologia
-  // visualizzabile (puzzle + eventuale ramo di analisi libera), letto
-  // dall'handler tastiera qui sotto per non dover ricreare l'effect ad ogni
-  // mossa.
-  playedMovesLenRef.current = timelineMoves.length
-
-  useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'ArrowLeft') {
         e.preventDefault()
-        setWrongMove(null)
-        setSelection(null)
-        setViewIndex((v) => Math.max(0, v - 1))
+        const cur = nodesRef.current[currentIdRef.current]
+        if (cur.parentId) {
+          setWrongMove(null)
+          setSelection(null)
+          setCurrentId(cur.parentId)
+        }
       } else if (e.key === 'ArrowRight') {
         e.preventDefault()
-        setWrongMove(null)
-        setSelection(null)
-        setViewIndex((v) => Math.min(playedMovesLenRef.current, v + 1))
+        const cur = nodesRef.current[currentIdRef.current]
+        if (cur.children.length > 0) {
+          setWrongMove(null)
+          setSelection(null)
+          setCurrentId(cur.children[0])
+        }
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  const timelinePath = useMemo(
+    () => pathFromRoot(effectiveNodes, effectiveCurrentId),
+    [effectiveNodes, effectiveCurrentId],
+  )
+
   const replayFen = useMemo(() => {
     const g = new Chess(puzzle.fen)
-    for (let i = 0; i < effectiveViewIndex; i++) {
-      g.move(parseUci(timelineMoves[i]))
+    for (const node of timelinePath) {
+      g.move(parseUci(node.uci as string))
     }
     return g.fen()
-  }, [puzzle, timelineMoves, effectiveViewIndex])
+  }, [puzzle, timelinePath])
 
   const displayFen = isLive && effectiveWrongMove ? effectiveWrongMove.fen : replayFen
 
@@ -315,9 +322,9 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   }
 
   // Modalita' di analisi: qualsiasi mossa legale, non necessariamente quella
-  // del puzzle. Se l'utente naviga indietro dentro le mosse del puzzle e
-  // muove da li', si dirama un nuovo percorso da quel punto (branchPoint);
-  // altrimenti si estende/tronca il ramo di analisi gia' in corso.
+  // del puzzle, giocabile da qualunque punto della cronologia. Se il nodo
+  // corrente ha gia' un figlio con quella mossa lo si riusa, altrimenti si
+  // crea una nuova diramazione: nessuna variante precedente viene persa.
   function attemptFreeMove(sourceSquare: string, targetSquare: string): boolean {
     setSelection(null)
     setWrongMove(null)
@@ -329,16 +336,15 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
       return false
     }
 
-    if (effectiveViewIndex < baseLen) {
-      setBranchPoint(effectiveViewIndex)
-      setFreeMoves([move.lan])
-      setViewIndex(effectiveViewIndex + 1)
-    } else {
-      const freeIndex = effectiveViewIndex - baseLen
-      const newFreeMoves = [...effectiveFreeMoves.slice(0, freeIndex), move.lan]
-      setFreeMoves(newFreeMoves)
-      setViewIndex(baseLen + newFreeMoves.length)
-    }
+    const { nodes: newNodes, id } = addMoveNode(
+      nodesRef.current,
+      currentIdRef.current,
+      move.lan,
+      move.san,
+      `n${nodeIdCounterRef.current++}`,
+    )
+    setNodes(newNodes)
+    setCurrentId(id)
     return true
   }
 
@@ -401,8 +407,17 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     }
 
     solutionIndexRef.current += 1
-    setPlayedMoves((prev) => [...prev, move.lan])
-    setViewIndex(effectivePlayedMoves.length + 1)
+    {
+      const { nodes: newNodes, id } = addMoveNode(
+        nodesRef.current,
+        currentIdRef.current,
+        move.lan,
+        move.san,
+        `n${nodeIdCounterRef.current++}`,
+      )
+      setNodes(newNodes)
+      setCurrentId(id)
+    }
 
     if (solutionIndexRef.current >= puzzle.moves.length) {
       finish('solved')
@@ -432,13 +447,15 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   }
 
   const turnLabel = orientation === 'white' ? 'Bianco' : 'Nero'
+  const startTurn = puzzle.fen.split(' ')[1] === 'b' ? 'b' : 'w'
+  const currentPly = timelinePath.length
 
   const statusText = analysisEnabled
     ? isLive
       ? 'Modalità analisi — muovi liberamente'
-      : `Stai rivedendo la mossa ${effectiveViewIndex}/${timelineMoves.length}`
+      : `Stai rivedendo la mossa ${currentPly}`
     : !isLive
-      ? `Stai rivedendo la mossa ${effectiveViewIndex}/${timelineMoves.length}`
+      ? `Stai rivedendo la mossa ${currentPly}`
       : feedback === 'intro'
         ? "L'avversario muove…"
         : feedback === 'solved'
@@ -507,23 +524,27 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
             type="button"
             variant="outline"
             size="icon-sm"
-            disabled={effectiveViewIndex === 0}
-            onClick={() => navigateView(Math.max(0, effectiveViewIndex - 1))}
+            disabled={effectiveCurrentId === ROOT_NODE_ID}
+            onClick={() => {
+              const parentId = effectiveNodes[effectiveCurrentId].parentId
+              if (parentId) navigateTo(parentId)
+            }}
             aria-label="Mossa precedente"
           >
             <ChevronLeft className="size-4" />
           </Button>
           <span className="text-muted-foreground w-16 text-center text-xs">
-            {effectiveViewIndex}/{timelineMoves.length}
+            {currentPly}
           </span>
           <Button
             type="button"
             variant="outline"
             size="icon-sm"
             disabled={isLive}
-            onClick={() =>
-              navigateView(Math.min(timelineMoves.length, effectiveViewIndex + 1))
-            }
+            onClick={() => {
+              const childId = effectiveNodes[effectiveCurrentId].children[0]
+              if (childId) navigateTo(childId)
+            }}
             aria-label="Mossa successiva"
           >
             <ChevronRight className="size-4" />
@@ -539,6 +560,12 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
             analyzing={analyzing}
             settings={engineSettings}
             onUpdateSettings={updateEngineSettings}
+          />
+          <MoveHistoryPanel
+            nodes={effectiveNodes}
+            currentId={effectiveCurrentId}
+            startTurn={startTurn}
+            onSelect={navigateTo}
           />
           <Button
             type="button"
