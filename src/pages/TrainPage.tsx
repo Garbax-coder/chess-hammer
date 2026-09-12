@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useActiveSession } from '@/hooks/use-active-session'
 import { useNextPuzzle, useRecordAttempt } from '@/hooks/use-puzzle-session'
+import { useSessionProgress } from '@/hooks/use-session-history'
 import { useUpdateAutoAdvance, useUserStats } from '@/hooks/use-user-stats'
 
 export default function TrainPage() {
@@ -21,6 +22,7 @@ export default function TrainPage() {
   const recordAttempt = useRecordAttempt(session)
   const { data: stats } = useUserStats()
   const updateAutoAdvance = useUpdateAutoAdvance()
+  const { data: progress } = useSessionProgress(session)
 
   if (loadingSession) return null
 
@@ -58,6 +60,12 @@ export default function TrainPage() {
         <p className="text-muted-foreground text-sm">
           Giro {session.current_round} di 3 — {session.total_puzzles} puzzle totali
         </p>
+        {progress && (
+          <p className="text-muted-foreground text-sm">
+            Puzzle di oggi: {Math.min(progress.attemptedToday + 1, progress.dailyTarget)}/
+            {progress.dailyTarget}
+          </p>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
