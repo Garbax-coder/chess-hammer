@@ -76,7 +76,7 @@ export async function countAttemptsToday(
   return count ?? 0
 }
 
-async function fetchPuzzleById(puzzleId: string): Promise<LichessPuzzle> {
+export async function fetchPuzzleById(puzzleId: string): Promise<LichessPuzzle> {
   const { data, error } = await supabase
     .from('lichess_puzzles')
     .select('*')
