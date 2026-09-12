@@ -3,6 +3,7 @@ import { ProtectedRoute } from '@/components/protected-route'
 import DashboardPage from '@/pages/DashboardPage'
 import HomePage from '@/pages/HomePage'
 import LoginPage from '@/pages/LoginPage'
+import NewSessionPage from '@/pages/NewSessionPage'
 import SignupPage from '@/pages/SignupPage'
 
 function App() {
@@ -16,6 +17,14 @@ function App() {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/sessions/new"
+        element={
+          <ProtectedRoute>
+            <NewSessionPage />
           </ProtectedRoute>
         }
       />
