@@ -17,6 +17,7 @@ import {
   ROOT_NODE_ID,
   type MoveTreeNode,
 } from '@/lib/move-tree'
+import { playIllegalMoveSound, playMoveSound } from '@/lib/sound-effects'
 import { parseUci } from '@/lib/uci'
 import type { LichessPuzzle } from '@/types/training'
 
@@ -38,6 +39,15 @@ const CAPTURE_HINT_STYLE = { boxShadow: 'inset 0 0 0 3px rgba(0,0,0,0.22)' }
 // apertura (il colore a muovere nella FEN originale, prima del setup).
 function solverColorFor(fen: string): 'white' | 'black' {
   return new Chess(fen).turn() === 'w' ? 'black' : 'white'
+}
+
+// chess.js aggiunge "+" o "#" alla notazione SAN per scacco/scacco matto:
+// e' quindi la fonte piu' semplice per capire quale suono riprodurre,
+// senza dover richiamare game.isCheck()/isCheckmate() separatamente.
+function playSoundForMove(move: { san: string; captured?: string }) {
+  const checkmate = move.san.endsWith('#')
+  const check = !checkmate && move.san.endsWith('+')
+  playMoveSound({ capture: !!move.captured, check, checkmate })
 }
 
 interface PendingCompletion {
@@ -129,6 +139,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
 
   function applyMoveAndAdvanceView(uci: string) {
     const move = gameRef.current.move(parseUci(uci))
+    playSoundForMove(move)
     // Questa funzione puo' essere invocata con un ritardo (setTimeout, per
     // la risposta automatica dell'avversario): a quel punto effectiveNodes/
     // effectiveCurrentId di QUESTO render potrebbero essere gia' superati
@@ -335,6 +346,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     } catch {
       return false
     }
+    playSoundForMove(move)
 
     const { nodes: newNodes, id } = addMoveNode(
       nodesRef.current,
@@ -402,10 +414,12 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
       const wrongFen = game.fen()
       game.undo()
       setWrongMove({ fen: wrongFen, square: targetSquare })
+      playIllegalMoveSound()
       finish('failed')
       return true
     }
 
+    playSoundForMove(move)
     solutionIndexRef.current += 1
     {
       const { nodes: newNodes, id } = addMoveNode(
