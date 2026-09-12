@@ -3,6 +3,8 @@
 Web app per tracciare allenamenti di scacchi con il **Woodpecker Method**: risolvi un set
 fisso di puzzle per 3 giri consecutivi, aumentando la velocità di risoluzione ad ogni giro.
 
+**Live**: [chess-hammer.vercel.app](https://chess-hammer.vercel.app)
+
 ## Stack
 
 - React + TypeScript + Vite
@@ -29,6 +31,10 @@ npm run dev
 
 ## Stato del progetto
 
-Vedi il piano di implementazione in corso: setup progetto completato (Fase 1). Le fasi
-successive (import puzzle Lichess, autenticazione, motore puzzle/ELO, dashboard, deploy)
-verranno affrontate una alla volta.
+Piano di implementazione completato: setup progetto, import puzzle Lichess (~210k, campionati
+per rating), autenticazione (email/password + Google OAuth), configurazione sessione
+Woodpecker, motore ELO e selezione puzzle, scacchiera interattiva, dashboard e storico
+sessioni, rifinitura UI (dark mode, shell di navigazione), deploy su Vercel.
+
+Prossimi sviluppi possibili: altri provider OAuth (Facebook), ottimizzazione dimensione
+bundle (code splitting), metriche aggiuntive nello storico.
