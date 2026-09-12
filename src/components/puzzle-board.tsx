@@ -2,6 +2,7 @@ import { Chess, type Square } from 'chess.js'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Chessboard } from 'react-chessboard'
+import { SolvedFireworks } from '@/components/solved-fireworks'
 import { Button } from '@/components/ui/button'
 import { parseUci } from '@/lib/uci'
 import type { LichessPuzzle } from '@/types/training'
@@ -326,7 +327,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
       </div>
 
       <div
-        className={`rounded-lg ring-2 transition-all duration-300 ${
+        className={`relative rounded-lg ring-2 transition-all duration-300 ${
           feedback === 'wrong'
             ? 'ring-destructive'
             : feedback === 'solved' || feedback === 'correct'
@@ -354,6 +355,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
             id: `puzzle-${puzzle.puzzle_id}`,
           }}
         />
+        {feedback === 'solved' && <SolvedFireworks />}
       </div>
 
       {pendingCompletion ? (
