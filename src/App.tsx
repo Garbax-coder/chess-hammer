@@ -5,6 +5,7 @@ import HomePage from '@/pages/HomePage'
 import LoginPage from '@/pages/LoginPage'
 import NewSessionPage from '@/pages/NewSessionPage'
 import SignupPage from '@/pages/SignupPage'
+import TrainPage from '@/pages/TrainPage'
 
 function App() {
   return (
@@ -25,6 +26,14 @@ function App() {
         element={
           <ProtectedRoute>
             <NewSessionPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/train"
+        element={
+          <ProtectedRoute>
+            <TrainPage />
           </ProtectedRoute>
         }
       />

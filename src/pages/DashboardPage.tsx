@@ -44,6 +44,11 @@ export default function DashboardPage() {
               {daysForRound(session.total_puzzles, session.daily_target_round3)} giorni)
             </p>
           </CardContent>
+          <CardContent className="pt-0">
+            <Button asChild className="w-full">
+              <Link to="/train">Continua allenamento</Link>
+            </Button>
+          </CardContent>
         </Card>
       ) : (
         <Card className="w-full max-w-md text-left">
