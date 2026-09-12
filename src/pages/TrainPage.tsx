@@ -74,6 +74,19 @@ export default function TrainPage() {
       result,
       timeSeconds,
     })
+
+    if (autoAdvance && sessionDetail) {
+      const puzzles = sessionDetail.puzzles
+      const currentIndex = puzzles.findIndex(
+        (p) => p.sessionPuzzleId === practiceSelection.sessionPuzzleId,
+      )
+      const next = currentIndex >= 0 ? puzzles[currentIndex + 1] : undefined
+      if (next) {
+        setPracticeSelection({ sessionPuzzleId: next.sessionPuzzleId, puzzleId: next.puzzleId })
+        return
+      }
+    }
+
     setPracticeSelection(null)
   }
 
