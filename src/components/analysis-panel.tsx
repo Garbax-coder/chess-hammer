@@ -38,7 +38,7 @@ export function AnalysisPanel({
   const sideToMove = fen.split(' ')[1] === 'b' ? 'b' : 'w'
 
   return (
-    <Card className="w-full max-w-[480px]">
+    <Card className="w-full lg:w-72">
       <CardHeader className="flex flex-row items-center justify-between gap-2 py-3">
         <CardTitle className="text-sm">Analisi motore</CardTitle>
         <Button
