@@ -1,6 +1,6 @@
-import { Chess } from 'chess.js'
+import { Chess, type Square } from 'chess.js'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Chessboard } from 'react-chessboard'
 import { Button } from '@/components/ui/button'
 import { parseUci } from '@/lib/uci'
@@ -12,6 +12,11 @@ const INTRO_DELAY_MS = 500
 const AUTO_MOVE_DELAY_MS = 400
 const FEEDBACK_HOLD_MS = 900
 const WRONG_SQUARE_STYLE = { backgroundColor: 'rgba(220, 38, 38, 0.55)' }
+const SELECTED_SQUARE_STYLE = { backgroundColor: 'rgba(59, 130, 246, 0.35)' }
+const MOVE_HINT_STYLE = {
+  backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.22) 22%, transparent 24%)',
+}
+const CAPTURE_HINT_STYLE = { boxShadow: 'inset 0 0 0 3px rgba(0,0,0,0.22)' }
 
 // Riferimento stabile (non un nuovo [] ad ogni render) da usare come
 // playedMoves "effettivo" nel render in cui il puzzle e' appena cambiato.
@@ -20,6 +25,11 @@ const EMPTY_MOVES: string[] = []
 interface PendingCompletion {
   result: 'solved' | 'failed'
   timeSeconds: number
+}
+
+interface SquareSelection {
+  square: string
+  targets: { to: string; capture: boolean }[]
 }
 
 interface PuzzleBoardProps {
@@ -49,6 +59,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   const [pendingCompletion, setPendingCompletion] = useState<PendingCompletion | null>(
     null,
   )
+  const [selection, setSelection] = useState<SquareSelection | null>(null)
 
   // Quando il puzzle cambia, playedMoves/viewIndex non sono ancora stati
   // azzerati (lo state aggiornato da una setState chiamata qui durante il
@@ -69,6 +80,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     setOrientation(new Chess(puzzle.fen).turn() === 'w' ? 'black' : 'white')
     setWrongMove(null)
     setPendingCompletion(null)
+    setSelection(null)
   }
   const effectivePlayedMoves = isNewPuzzle ? EMPTY_MOVES : playedMoves
   const effectiveViewIndex = isNewPuzzle ? 0 : viewIndex
@@ -78,12 +90,14 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
 
   function navigateView(next: number) {
     setWrongMove(null)
+    setSelection(null)
     setViewIndex(next)
   }
 
   function applyMoveAndAdvanceView(uci: string) {
     gameRef.current.move(parseUci(uci))
     setPlayedMoves((prev) => [...prev, uci])
+    setSelection(null)
   }
 
   useEffect(() => {
@@ -118,10 +132,12 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
       if (e.key === 'ArrowLeft') {
         e.preventDefault()
         setWrongMove(null)
+        setSelection(null)
         setViewIndex((v) => Math.max(0, v - 1))
       } else if (e.key === 'ArrowRight') {
         e.preventDefault()
         setWrongMove(null)
+        setSelection(null)
         setViewIndex((v) => Math.min(playedMovesLenRef.current, v + 1))
       }
     }
@@ -138,6 +154,51 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   }, [puzzle, effectivePlayedMoves, effectiveViewIndex])
 
   const displayFen = isLive && effectiveWrongMove ? effectiveWrongMove.fen : replayFen
+
+  const effectiveSelection = isLive ? selection : null
+
+  const squareStyles = useMemo(() => {
+    if (!isLive) return undefined
+    if (effectiveWrongMove) {
+      return { [effectiveWrongMove.square]: WRONG_SQUARE_STYLE }
+    }
+    if (effectiveSelection) {
+      const styles: Record<string, CSSProperties> = {
+        [effectiveSelection.square]: SELECTED_SQUARE_STYLE,
+      }
+      for (const target of effectiveSelection.targets) {
+        styles[target.to] = target.capture ? CAPTURE_HINT_STYLE : MOVE_HINT_STYLE
+      }
+      return styles
+    }
+    return undefined
+  }, [isLive, effectiveWrongMove, effectiveSelection])
+
+  // Calcolate qui (in un event handler, non durante il render) cosi'
+  // gameRef puo' essere letto liberamente senza toccare la logica di
+  // rendering: il risultato va semplicemente in state.
+  function handleSquareClick({
+    piece,
+    square,
+  }: {
+    piece: { pieceType: string } | null
+    square: string
+  }) {
+    if (lockedRef.current || !isLive) return
+    if (selection?.square === square) {
+      setSelection(null)
+      return
+    }
+    if (piece && piece.pieceType[0] === gameRef.current.turn()) {
+      const moves = gameRef.current.moves({ square: square as Square, verbose: true })
+      setSelection({
+        square,
+        targets: moves.map((m) => ({ to: m.to, capture: !!gameRef.current.get(m.to) })),
+      })
+      return
+    }
+    setSelection(null)
+  }
 
   function finish(result: 'solved' | 'failed') {
     lockedRef.current = true
@@ -170,6 +231,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   }): boolean {
     if (lockedRef.current || !targetSquare || !isLive) return false
 
+    setSelection(null)
     const game = gameRef.current
     const expectedUci = puzzle.moves[solutionIndexRef.current]
     const promotion =
@@ -249,6 +311,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
           options={{
             position: displayFen,
             onPieceDrop: handlePieceDrop,
+            onSquareClick: handleSquareClick,
             boardOrientation: orientation,
             canDragPiece: ({ piece }) =>
               isLive &&
@@ -256,10 +319,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
               piece.pieceType[0] === gameRef.current.turn(),
             animationDurationInMs: 200,
             boardStyle: { borderRadius: '0.5rem', overflow: 'hidden' },
-            squareStyles:
-              isLive && effectiveWrongMove
-                ? { [effectiveWrongMove.square]: WRONG_SQUARE_STYLE }
-                : undefined,
+            squareStyles,
             // react-chessboard usa `id` per generare selettori CSS interni
             // (es. `#${id}-square-a1`): un ID CSS non puo' iniziare con una
             // cifra, mentre molti puzzle_id Lichess sì (es. "00rTX").
