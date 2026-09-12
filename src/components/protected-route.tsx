@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Navigate } from 'react-router-dom'
+import { AppShell } from '@/components/app-shell'
 import { useAuth } from '@/lib/auth-context'
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -13,5 +14,5 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace />
   }
 
-  return children
+  return <AppShell>{children}</AppShell>
 }

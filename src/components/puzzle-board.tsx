@@ -130,7 +130,16 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
         <span>{elapsed}s</span>
       </div>
 
-      <div style={{ width: 'min(90vw, 480px)', aspectRatio: '1 / 1' }}>
+      <div
+        className={`rounded-lg ring-2 transition-all duration-300 ${
+          feedback === 'wrong'
+            ? 'ring-destructive'
+            : feedback === 'solved' || feedback === 'correct'
+              ? 'ring-primary/50'
+              : 'ring-transparent'
+        }`}
+        style={{ width: 'min(90vw, 480px)', aspectRatio: '1 / 1' }}
+      >
         <Chessboard
           options={{
             position: fen,
@@ -139,6 +148,7 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
             canDragPiece: ({ piece }) =>
               !lockedRef.current && piece.pieceType[0] === gameRef.current.turn(),
             animationDurationInMs: 200,
+            boardStyle: { borderRadius: '0.5rem', overflow: 'hidden' },
             // react-chessboard usa `id` per generare selettori CSS interni
             // (es. `#${id}-square-a1`): un ID CSS non puo' iniziare con una
             // cifra, mentre molti puzzle_id Lichess sì (es. "00rTX").

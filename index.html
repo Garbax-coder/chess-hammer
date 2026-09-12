@@ -5,6 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chess Hammer — Woodpecker Trainer</title>
+    <script>
+      // Applica il tema prima del primo paint, per evitare un flash del tema sbagliato.
+      ;(function () {
+        try {
+          var stored = localStorage.getItem('chess-hammer-theme')
+          var dark =
+            stored === 'dark' ||
+            (stored !== 'light' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (dark) document.documentElement.classList.add('dark')
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -20,7 +20,7 @@ export default function TrainPage() {
 
   if (!session) {
     return (
-      <main className="flex min-h-svh flex-col items-center justify-center gap-4 text-center">
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
         <p className="text-muted-foreground">Nessuna sessione attiva.</p>
         <Button asChild>
           <Link to="/sessions/new">Crea una sessione</Link>
@@ -42,7 +42,7 @@ export default function TrainPage() {
   }
 
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-6 px-4 py-8">
+    <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-8">
       <div className="text-center">
         <h1 className="text-foreground text-lg font-semibold tracking-tight">
           Allenamento

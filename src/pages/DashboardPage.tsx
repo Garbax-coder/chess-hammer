@@ -11,7 +11,6 @@ import { Progress } from '@/components/ui/progress'
 import { useActiveSession } from '@/hooks/use-active-session'
 import { useSessionProgress } from '@/hooks/use-session-history'
 import { useUserStats } from '@/hooks/use-user-stats'
-import { signOut } from '@/lib/auth'
 import { useAuth } from '@/lib/auth-context'
 import { daysForRound } from '@/lib/training-sessions'
 
@@ -22,7 +21,7 @@ export default function DashboardPage() {
   const { data: stats } = useUserStats()
 
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-4 px-4 py-8 text-center">
+    <main className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-8 text-center">
       <div>
         <p className="text-muted-foreground text-sm">
           Accesso effettuato come {user?.email ?? 'utente'}
@@ -102,15 +101,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       )}
-
-      <div className="flex gap-3">
-        <Button asChild variant="outline">
-          <Link to="/sessions">Storico sessioni</Link>
-        </Button>
-        <Button variant="outline" onClick={() => signOut()}>
-          Esci
-        </Button>
-      </div>
     </main>
   )
 }

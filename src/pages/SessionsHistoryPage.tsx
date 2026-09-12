@@ -1,35 +1,17 @@
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useSessionsList } from '@/hooks/use-session-history'
-import type { SessionStatus } from '@/types/training'
-
-const statusLabel: Record<SessionStatus, string> = {
-  in_progress: 'In corso',
-  completed: 'Completata',
-  abandoned: 'Abbandonata',
-}
-
-const statusVariant: Record<SessionStatus, 'default' | 'secondary' | 'outline'> = {
-  in_progress: 'default',
-  completed: 'secondary',
-  abandoned: 'outline',
-}
+import { sessionStatusLabel, sessionStatusVariant } from '@/lib/session-status'
 
 export default function SessionsHistoryPage() {
   const { data: sessions, isLoading } = useSessionsList()
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-2xl flex-col gap-4 px-4 py-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-foreground text-lg font-semibold tracking-tight">
-          Storico sessioni
-        </h1>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/dashboard">Torna alla dashboard</Link>
-        </Button>
-      </div>
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-8">
+      <h1 className="text-foreground text-lg font-semibold tracking-tight">
+        Storico sessioni
+      </h1>
 
       {isLoading && <p className="text-muted-foreground text-sm">Caricamento…</p>}
 
@@ -50,7 +32,9 @@ export default function SessionsHistoryPage() {
                     Creata il {new Date(s.created_at).toLocaleDateString('it-IT')}
                   </p>
                 </div>
-                <Badge variant={statusVariant[s.status]}>{statusLabel[s.status]}</Badge>
+                <Badge variant={sessionStatusVariant[s.status]}>
+                  {sessionStatusLabel[s.status]}
+                </Badge>
               </CardContent>
             </Card>
           </Link>
