@@ -7,7 +7,7 @@ import type {
   TrainingSession,
 } from '@/types/training'
 
-function dailyTargetForRound(session: TrainingSession, round: 1 | 2 | 3): number {
+export function dailyTargetForRound(session: TrainingSession, round: 1 | 2 | 3): number {
   if (round === 1) return session.daily_target_round1
   if (round === 2) return session.daily_target_round2
   return session.daily_target_round3
@@ -29,13 +29,15 @@ export async function getUserElo(userId: string): Promise<number> {
   return data.current_elo
 }
 
-interface SessionPuzzleRow {
+export interface SessionPuzzleRow {
   id: string
   puzzle_id: string
   order_index: number
 }
 
-async function fetchSessionPuzzles(sessionId: string): Promise<SessionPuzzleRow[]> {
+export async function fetchSessionPuzzles(
+  sessionId: string,
+): Promise<SessionPuzzleRow[]> {
   const { data, error } = await supabase
     .from('session_puzzles')
     .select('id, puzzle_id, order_index')
@@ -45,7 +47,7 @@ async function fetchSessionPuzzles(sessionId: string): Promise<SessionPuzzleRow[
   return data
 }
 
-async function fetchAttemptedSessionPuzzleIds(
+export async function fetchAttemptedSessionPuzzleIds(
   sessionPuzzleIds: string[],
   round: 1 | 2 | 3,
 ): Promise<Set<string>> {
@@ -59,7 +61,7 @@ async function fetchAttemptedSessionPuzzleIds(
   return new Set(data.map((r) => r.session_puzzle_id))
 }
 
-async function countAttemptsToday(
+export async function countAttemptsToday(
   sessionPuzzleIds: string[],
   round: 1 | 2 | 3,
 ): Promise<number> {

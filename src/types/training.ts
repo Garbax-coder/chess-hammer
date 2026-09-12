@@ -67,3 +67,24 @@ export interface NextPuzzle {
   puzzle: LichessPuzzle
   round: 1 | 2 | 3
 }
+
+export interface SessionProgress {
+  round: 1 | 2 | 3
+  poolSize: number
+  roundTargetSize: number
+  attemptedThisRound: number
+  dailyTarget: number
+  attemptedToday: number
+}
+
+export interface SessionPuzzleResult {
+  orderIndex: number
+  puzzleId: string
+  rating: number
+  attempts: Partial<Record<1 | 2 | 3, PuzzleAttempt>>
+}
+
+export interface SessionDetail {
+  session: TrainingSession
+  puzzles: SessionPuzzleResult[]
+}

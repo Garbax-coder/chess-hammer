@@ -4,6 +4,8 @@ import DashboardPage from '@/pages/DashboardPage'
 import HomePage from '@/pages/HomePage'
 import LoginPage from '@/pages/LoginPage'
 import NewSessionPage from '@/pages/NewSessionPage'
+import SessionDetailPage from '@/pages/SessionDetailPage'
+import SessionsHistoryPage from '@/pages/SessionsHistoryPage'
 import SignupPage from '@/pages/SignupPage'
 import TrainPage from '@/pages/TrainPage'
 
@@ -34,6 +36,22 @@ function App() {
         element={
           <ProtectedRoute>
             <TrainPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/sessions"
+        element={
+          <ProtectedRoute>
+            <SessionsHistoryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/sessions/:id"
+        element={
+          <ProtectedRoute>
+            <SessionDetailPage />
           </ProtectedRoute>
         }
       />
