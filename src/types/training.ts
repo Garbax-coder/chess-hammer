@@ -99,9 +99,3 @@ export interface PracticeAttempt {
   time_seconds: number
   attempted_at: string
 }
-
-export interface PracticeStat {
-  count: number
-  bestTimeSeconds: number | null
-  lastResult: AttemptResult | null
-}

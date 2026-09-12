@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { PracticeStat, PuzzleAttempt, SessionPuzzleResult } from '@/types/training'
+import type { PracticeAttempt, PuzzleAttempt, SessionPuzzleResult } from '@/types/training'
 
 interface RoundIndicatorProps {
   round: 1 | 2 | 3
@@ -39,11 +39,46 @@ function lastAttemptOf(result: SessionPuzzleResult): PuzzleAttempt | undefined {
   return result.attempts[3] ?? result.attempts[2] ?? result.attempts[1]
 }
 
+/** Un tag per ogni tentativo in pratica libera: verde/rosso col tempo, il migliore evidenziato. */
+function PracticeAttemptTags({ attempts }: { attempts: PracticeAttempt[] | undefined }) {
+  if (!attempts || attempts.length === 0) return null
+
+  const bestTime = attempts.reduce<number | null>((best, a) => {
+    if (a.result !== 'solved') return best
+    return best === null ? a.time_seconds : Math.min(best, a.time_seconds)
+  }, null)
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {attempts.map((a) => {
+        const solved = a.result === 'solved'
+        const isBest = solved && a.time_seconds === bestTime
+        return (
+          <span
+            key={a.id}
+            title={`Pratica libera — ${new Date(a.attempted_at).toLocaleString('it-IT')}: ${
+              solved ? 'risolto' : 'fallito'
+            } in ${a.time_seconds}s${isBest ? ' (miglior tempo)' : ''}`}
+            className={`flex h-5 shrink-0 items-center justify-center rounded px-1.5 text-[0.6rem] font-semibold ${
+              solved
+                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                : 'bg-destructive/10 text-destructive'
+            } ${isBest ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-background' : ''}`}
+          >
+            {isBest && '★ '}
+            {a.time_seconds}s
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
 interface PuzzleRowProps {
   result: SessionPuzzleResult
   isActive: boolean
   currentRound: 1 | 2 | 3
-  practiceStat: PracticeStat | undefined
+  practiceAttempts: PracticeAttempt[] | undefined
   canPractice: boolean
   onSelect: (result: SessionPuzzleResult) => void
 }
@@ -52,7 +87,7 @@ function PuzzleRow({
   result,
   isActive,
   currentRound,
-  practiceStat,
+  practiceAttempts,
   canPractice,
   onSelect,
 }: PuzzleRowProps) {
@@ -85,15 +120,7 @@ function PuzzleRow({
           {new Date(lastAttempt.attempted_at).toLocaleDateString('it-IT')}
         </span>
       )}
-      {practiceStat && (
-        <span
-          className="text-muted-foreground text-[0.6rem]"
-          title={`${practiceStat.count} tentativi in pratica libera, migliore ${practiceStat.bestTimeSeconds}s`}
-        >
-          ↻ {practiceStat.count}
-          {practiceStat.bestTimeSeconds !== null && ` · ${practiceStat.bestTimeSeconds}s`}
-        </span>
-      )}
+      <PracticeAttemptTags attempts={practiceAttempts} />
     </button>
   )
 }
@@ -102,7 +129,7 @@ interface SessionPuzzleListProps {
   puzzles: SessionPuzzleResult[]
   activeSessionPuzzleId: string | null
   currentRound: 1 | 2 | 3
-  practiceStats: Map<string, PracticeStat>
+  practiceAttemptsByPuzzle: Map<string, PracticeAttempt[]>
   canPractice: boolean
   onSelectPuzzle: (result: SessionPuzzleResult) => void
 }
@@ -111,7 +138,7 @@ export function SessionPuzzleList({
   puzzles,
   activeSessionPuzzleId,
   currentRound,
-  practiceStats,
+  practiceAttemptsByPuzzle,
   canPractice,
   onSelectPuzzle,
 }: SessionPuzzleListProps) {
@@ -136,7 +163,7 @@ export function SessionPuzzleList({
               result={result}
               isActive={result.sessionPuzzleId === activeSessionPuzzleId}
               currentRound={currentRound}
-              practiceStat={practiceStats.get(result.puzzleId)}
+              practiceAttempts={practiceAttemptsByPuzzle.get(result.puzzleId)}
               canPractice={canPractice}
               onSelect={onSelectPuzzle}
             />

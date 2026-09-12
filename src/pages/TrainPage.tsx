@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useActiveSession } from '@/hooks/use-active-session'
 import { useNextPuzzle, useRecordAttempt } from '@/hooks/use-puzzle-session'
-import { usePuzzleById, useRecordPracticeAttempt, usePracticeStats } from '@/hooks/use-practice'
+import { usePuzzleById, useRecordPracticeAttempt, usePracticeAttempts } from '@/hooks/use-practice'
 import { useSessionDetail, useSessionProgress } from '@/hooks/use-session-history'
 import { useUpdateAutoAdvance, useUserStats } from '@/hooks/use-user-stats'
 import type { SessionPuzzleResult } from '@/types/training'
@@ -40,7 +40,7 @@ export default function TrainPage() {
     () => sessionDetail?.puzzles.map((p) => p.puzzleId) ?? [],
     [sessionDetail],
   )
-  const { data: practiceStats } = usePracticeStats(puzzleIds)
+  const { data: practiceAttemptsByPuzzle } = usePracticeAttempts(puzzleIds)
 
   if (loadingSession) return null
 
@@ -94,7 +94,7 @@ export default function TrainPage() {
           puzzles={sessionDetail?.puzzles ?? []}
           activeSessionPuzzleId={activeSessionPuzzleId}
           currentRound={session.current_round}
-          practiceStats={practiceStats ?? new Map()}
+          practiceAttemptsByPuzzle={practiceAttemptsByPuzzle ?? new Map()}
           canPractice={canPractice}
           onSelectPuzzle={handleSelectPuzzle}
         />
@@ -102,15 +102,44 @@ export default function TrainPage() {
 
       <div className="order-1 flex flex-col items-center gap-6 lg:order-2">
         {practiceSelection ? (
-          <>
-            <div className="text-center">
-              <h1 className="text-foreground text-lg font-semibold tracking-tight">
-                Pratica libera
-              </h1>
+          <div className="text-center">
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">
+              Pratica libera
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Il risultato non viene tracciato nella sessione ufficiale.
+            </p>
+          </div>
+        ) : (
+          <div className="text-center">
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">
+              Allenamento
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Giro {session.current_round} di 3 — {session.total_puzzles} puzzle totali
+            </p>
+            {progress && (
               <p className="text-muted-foreground text-sm">
-                Il risultato non viene tracciato nella sessione ufficiale.
+                Puzzle di oggi: {Math.min(progress.attemptedToday + 1, progress.dailyTarget)}/
+                {progress.dailyTarget}
               </p>
-            </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          <Switch
+            id="auto-advance"
+            checked={autoAdvance}
+            onCheckedChange={(checked) => updateAutoAdvance.mutate(checked)}
+          />
+          <Label htmlFor="auto-advance" className="text-muted-foreground text-sm">
+            Avanzamento automatico
+          </Label>
+        </div>
+
+        {practiceSelection ? (
+          <>
             <Button variant="outline" size="sm" onClick={() => setPracticeSelection(null)}>
               Torna alla lista
             </Button>
@@ -127,32 +156,6 @@ export default function TrainPage() {
           </>
         ) : (
           <>
-            <div className="text-center">
-              <h1 className="text-foreground text-lg font-semibold tracking-tight">
-                Allenamento
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                Giro {session.current_round} di 3 — {session.total_puzzles} puzzle totali
-              </p>
-              {progress && (
-                <p className="text-muted-foreground text-sm">
-                  Puzzle di oggi: {Math.min(progress.attemptedToday + 1, progress.dailyTarget)}/
-                  {progress.dailyTarget}
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Switch
-                id="auto-advance"
-                checked={autoAdvance}
-                onCheckedChange={(checked) => updateAutoAdvance.mutate(checked)}
-              />
-              <Label htmlFor="auto-advance" className="text-muted-foreground text-sm">
-                Avanzamento automatico
-              </Label>
-            </div>
-
             {loadingPuzzle && <p className="text-muted-foreground text-sm">Caricamento…</p>}
 
             {outcome?.status === 'quota_reached' && (

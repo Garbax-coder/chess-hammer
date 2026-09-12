@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { AttemptResult, PracticeStat } from '@/types/training'
+import type { AttemptResult, PracticeAttempt } from '@/types/training'
 
 export async function recordPracticeAttempt(params: {
   userId: string
@@ -16,33 +16,29 @@ export async function recordPracticeAttempt(params: {
   if (error) throw error
 }
 
-/** Statistiche di pratica libera per un insieme di puzzle, aggregate lato client. */
-export async function fetchPracticeStats(
+/** Tutti i tentativi di pratica libera per un insieme di puzzle, raggruppati per puzzle_id. */
+export async function fetchPracticeAttempts(
   userId: string,
   puzzleIds: string[],
-): Promise<Map<string, PracticeStat>> {
+): Promise<Map<string, PracticeAttempt[]>> {
   if (puzzleIds.length === 0) return new Map()
 
   const { data, error } = await supabase
     .from('practice_attempts')
-    .select('puzzle_id, result, time_seconds, attempted_at')
+    .select('*')
     .eq('user_id', userId)
     .in('puzzle_id', puzzleIds)
     .order('attempted_at', { ascending: true })
   if (error) throw error
 
-  const stats = new Map<string, PracticeStat>()
+  const attemptsByPuzzle = new Map<string, PracticeAttempt[]>()
   for (const row of data) {
-    const existing = stats.get(row.puzzle_id)
-    const bestTimeSeconds = existing?.bestTimeSeconds
-      ? Math.min(existing.bestTimeSeconds, row.time_seconds)
-      : row.time_seconds
-    stats.set(row.puzzle_id, {
-      count: (existing?.count ?? 0) + 1,
-      bestTimeSeconds,
-      // le righe sono in ordine crescente di data: l'ultima iterata e' la piu' recente
-      lastResult: row.result,
-    })
+    const existing = attemptsByPuzzle.get(row.puzzle_id)
+    if (existing) {
+      existing.push(row)
+    } else {
+      attemptsByPuzzle.set(row.puzzle_id, [row])
+    }
   }
-  return stats
+  return attemptsByPuzzle
 }
