@@ -12,6 +12,10 @@ const INTRO_DELAY_MS = 500
 const AUTO_MOVE_DELAY_MS = 400
 const FEEDBACK_HOLD_MS = 900
 
+// Riferimento stabile (non un nuovo [] ad ogni render) da usare come
+// playedMoves "effettivo" nel render in cui il puzzle e' appena cambiato.
+const EMPTY_MOVES: string[] = []
+
 interface PuzzleBoardProps {
   puzzle: LichessPuzzle
   onComplete: (result: 'solved' | 'failed', timeSeconds: number) => void
@@ -29,8 +33,30 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
   const [orientation, setOrientation] = useState<'white' | 'black'>('white')
   const [feedback, setFeedback] = useState<Feedback>('intro')
   const [elapsed, setElapsed] = useState(0)
+  const [loadedPuzzleId, setLoadedPuzzleId] = useState(puzzle.puzzle_id)
 
-  const isLive = viewIndex === playedMoves.length
+  // Quando il puzzle cambia, playedMoves/viewIndex non sono ancora stati
+  // azzerati (lo state aggiornato da una setState chiamata qui durante il
+  // render non e' visibile nelle costanti locali di QUESTA stessa
+  // esecuzione: serve comunque un nuovo render). Calcoliamo quindi dei
+  // valori "effettivi" che riflettono gia' il reset imminente, cosi'
+  // displayFen qui sotto non rigioca le mosse del puzzle precedente su una
+  // FEN che non le supporta (altrimenti: mossa non valida, crash). Le
+  // chiamate setState servono solo a far "mettere al passo" lo stato reale
+  // per il prossimo render (bottoni, contatori, ecc.).
+  const isNewPuzzle = puzzle.puzzle_id !== loadedPuzzleId
+  if (isNewPuzzle) {
+    setLoadedPuzzleId(puzzle.puzzle_id)
+    setPlayedMoves([])
+    setViewIndex(0)
+    setFeedback('intro')
+    setElapsed(0)
+    setOrientation(new Chess(puzzle.fen).turn() === 'w' ? 'black' : 'white')
+  }
+  const effectivePlayedMoves = isNewPuzzle ? EMPTY_MOVES : playedMoves
+  const effectiveViewIndex = isNewPuzzle ? 0 : viewIndex
+
+  const isLive = effectiveViewIndex === effectivePlayedMoves.length
 
   function applyMoveAndAdvanceView(uci: string) {
     gameRef.current.move(parseUci(uci))
@@ -42,11 +68,6 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
     solutionIndexRef.current = 1
     startedAtRef.current = Date.now()
     lockedRef.current = true
-    setPlayedMoves([])
-    setViewIndex(0)
-    setFeedback('intro')
-    setElapsed(0)
-    setOrientation(new Chess(puzzle.fen).turn() === 'w' ? 'black' : 'white')
 
     const introTimer = setTimeout(() => {
       applyMoveAndAdvanceView(puzzle.moves[0])
@@ -85,11 +106,11 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
 
   const displayFen = useMemo(() => {
     const g = new Chess(puzzle.fen)
-    for (let i = 0; i < viewIndex; i++) {
-      g.move(parseUci(playedMoves[i]))
+    for (let i = 0; i < effectiveViewIndex; i++) {
+      g.move(parseUci(effectivePlayedMoves[i]))
     }
     return g.fen()
-  }, [puzzle, playedMoves, viewIndex])
+  }, [puzzle, effectivePlayedMoves, effectiveViewIndex])
 
   function finish(result: 'solved' | 'failed') {
     lockedRef.current = true
@@ -161,7 +182,7 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
   const turnLabel = orientation === 'white' ? 'Bianco' : 'Nero'
 
   const statusText = !isLive
-    ? `Stai rivedendo la mossa ${viewIndex}/${playedMoves.length}`
+    ? `Stai rivedendo la mossa ${effectiveViewIndex}/${effectivePlayedMoves.length}`
     : feedback === 'intro'
       ? "L'avversario muove…"
       : feedback === 'solved'
@@ -212,21 +233,23 @@ export function PuzzleBoard({ puzzle, onComplete }: PuzzleBoardProps) {
           type="button"
           variant="outline"
           size="icon-sm"
-          disabled={viewIndex === 0}
+          disabled={effectiveViewIndex === 0}
           onClick={() => setViewIndex((v) => Math.max(0, v - 1))}
           aria-label="Mossa precedente"
         >
           <ChevronLeft className="size-4" />
         </Button>
         <span className="text-muted-foreground w-16 text-center text-xs">
-          {viewIndex}/{playedMoves.length}
+          {effectiveViewIndex}/{effectivePlayedMoves.length}
         </span>
         <Button
           type="button"
           variant="outline"
           size="icon-sm"
           disabled={isLive}
-          onClick={() => setViewIndex((v) => Math.min(playedMoves.length, v + 1))}
+          onClick={() =>
+            setViewIndex((v) => Math.min(effectivePlayedMoves.length, v + 1))
+          }
           aria-label="Mossa successiva"
         >
           <ChevronRight className="size-4" />
