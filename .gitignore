@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Lichess puzzle dump / sampled output (regenerated locally, not committed)
+scripts/import-lichess-puzzles/*.csv
+scripts/import-lichess-puzzles/*.csv.zst
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
