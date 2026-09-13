@@ -14,6 +14,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { formatScore, pvToSan } from '@/lib/chess-format'
 import type { EngineSettings } from '@/lib/engine-settings'
+import { useTranslations } from '@/lib/language-context'
 import type { EngineLine } from '@/lib/stockfish-engine'
 
 const LINE_COUNT_OPTIONS = [1, 2, 3, 4, 5]
@@ -36,17 +37,18 @@ export function AnalysisPanel({
 }: AnalysisPanelProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const sideToMove = fen.split(' ')[1] === 'b' ? 'b' : 'w'
+  const t = useTranslations()
 
   return (
     <Card className="w-full lg:w-72">
       <CardHeader className="flex flex-row items-center justify-between gap-2 py-3">
-        <CardTitle className="text-sm">Analisi motore</CardTitle>
+        <CardTitle className="text-sm">{t.analysisPanel.title}</CardTitle>
         <Button
           type="button"
           variant="ghost"
           size="icon-sm"
           onClick={() => setDialogOpen(true)}
-          aria-label="Impostazioni analisi"
+          aria-label={t.analysisPanel.settingsAria}
         >
           <Settings className="size-4" />
         </Button>
@@ -54,7 +56,7 @@ export function AnalysisPanel({
       <CardContent className="flex flex-col gap-1.5 pt-0">
         {lines.length === 0 && (
           <p className="text-muted-foreground text-xs">
-            {analyzing ? 'Analisi in corso…' : 'Nessuna analisi disponibile.'}
+            {analyzing ? t.analysisPanel.analyzing : t.analysisPanel.noAnalysis}
           </p>
         )}
         {lines.map((line) => (
@@ -69,7 +71,7 @@ export function AnalysisPanel({
         ))}
         {analyzing && lines.length > 0 && (
           <p className="text-muted-foreground text-[0.65rem]">
-            Profondita' {lines[0]?.depth ?? '…'}/{settings.depth}
+            {t.analysisPanel.depth(lines[0]?.depth ?? '…', settings.depth)}
           </p>
         )}
       </CardContent>
@@ -77,11 +79,11 @@ export function AnalysisPanel({
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Impostazioni analisi</DialogTitle>
+            <DialogTitle>{t.analysisPanel.settingsTitle}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
             <div className="flex items-center justify-between gap-4">
-              <Label htmlFor="multi-pv">Numero di linee</Label>
+              <Label htmlFor="multi-pv">{t.analysisPanel.numberOfLines}</Label>
               <Select
                 value={String(settings.multiPv)}
                 onValueChange={(v) => onUpdateSettings({ multiPv: Number(v) })}
@@ -100,7 +102,7 @@ export function AnalysisPanel({
             </div>
 
             <div className="flex items-center justify-between gap-4">
-              <Label htmlFor="depth">Profondita' motore</Label>
+              <Label htmlFor="depth">{t.analysisPanel.engineDepth}</Label>
               <Select
                 value={String(settings.depth)}
                 onValueChange={(v) => onUpdateSettings({ depth: Number(v) })}
@@ -119,7 +121,7 @@ export function AnalysisPanel({
             </div>
 
             <div className="flex items-center justify-between gap-4">
-              <Label htmlFor="best-move-arrow">Freccia mossa migliore</Label>
+              <Label htmlFor="best-move-arrow">{t.analysisPanel.bestMoveArrow}</Label>
               <Switch
                 id="best-move-arrow"
                 checked={settings.showBestMoveArrow}

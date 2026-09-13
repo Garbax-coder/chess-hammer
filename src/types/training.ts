@@ -78,13 +78,25 @@ export interface SessionProgress {
 }
 
 export interface SessionPuzzleResult {
+  sessionPuzzleId: string
   orderIndex: number
   puzzleId: string
   rating: number
+  fen: string
   attempts: Partial<Record<1 | 2 | 3, PuzzleAttempt>>
 }
 
 export interface SessionDetail {
   session: TrainingSession
   puzzles: SessionPuzzleResult[]
+}
+
+/** Tentativo di "pratica libera": non influisce su sessione/ELO ufficiali. */
+export interface PracticeAttempt {
+  id: string
+  user_id: string
+  puzzle_id: string
+  result: AttemptResult
+  time_seconds: number
+  attempted_at: string
 }

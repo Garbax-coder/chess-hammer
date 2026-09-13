@@ -17,9 +17,10 @@ export async function fetchAllSessions(userId: string): Promise<TrainingSession[
 }
 
 interface RawSessionPuzzleRow {
+  id: string
   order_index: number
   puzzle_id: string
-  lichess_puzzles: { rating: number } | null
+  lichess_puzzles: { rating: number; fen: string } | null
   puzzle_attempts: PuzzleAttempt[]
 }
 
@@ -33,7 +34,7 @@ export async function fetchSessionDetail(sessionId: string): Promise<SessionDeta
 
   const { data: rows, error: puzzlesError } = await supabase
     .from('session_puzzles')
-    .select('order_index, puzzle_id, lichess_puzzles(rating), puzzle_attempts(*)')
+    .select('id, order_index, puzzle_id, lichess_puzzles(rating, fen), puzzle_attempts(*)')
     .eq('session_id', sessionId)
     .order('order_index', { ascending: true })
   if (puzzlesError) throw puzzlesError
@@ -45,9 +46,11 @@ export async function fetchSessionDetail(sessionId: string): Promise<SessionDeta
         attempts[attempt.round_number] = attempt
       }
       return {
+        sessionPuzzleId: row.id,
         orderIndex: row.order_index,
         puzzleId: row.puzzle_id,
         rating: row.lichess_puzzles?.rating ?? 0,
+        fen: row.lichess_puzzles?.fen ?? '',
         attempts,
       }
     },

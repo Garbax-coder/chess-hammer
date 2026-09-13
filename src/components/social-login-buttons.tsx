@@ -2,6 +2,7 @@ import type { ComponentType } from 'react'
 import { GoogleIcon } from '@/components/social-icons'
 import { Button } from '@/components/ui/button'
 import { oauthProviders, signInWithOAuth, type OAuthProvider } from '@/lib/auth'
+import { useTranslations } from '@/lib/language-context'
 
 const icons: Record<OAuthProvider, ComponentType<{ className?: string }>> = {
   google: GoogleIcon,
@@ -9,6 +10,8 @@ const icons: Record<OAuthProvider, ComponentType<{ className?: string }>> = {
 }
 
 export function SocialLoginButtons({ onError }: { onError: (message: string) => void }) {
+  const t = useTranslations()
+
   async function handleClick(provider: OAuthProvider) {
     const { error } = await signInWithOAuth(provider)
     if (error) onError(error.message)
@@ -27,7 +30,7 @@ export function SocialLoginButtons({ onError }: { onError: (message: string) => 
             onClick={() => handleClick(id)}
           >
             <Icon className="size-4" />
-            Continua con {label}
+            {t.socialLogin.continueWith(label)}
           </Button>
         )
       })}

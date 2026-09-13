@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useActiveSession } from '@/hooks/use-active-session'
 import { useAuth } from '@/lib/auth-context'
 import { resetSession, resetTodayQuota } from '@/lib/dev-tools'
+import { useTranslations } from '@/lib/language-context'
 
 /**
  * Pannello visibile solo in sviluppo (`import.meta.env.DEV`, mai nella build
@@ -13,6 +14,7 @@ import { resetSession, resetTodayQuota } from '@/lib/dev-tools'
  */
 export function DevToolsPanel() {
   const { user } = useAuth()
+  const t = useTranslations()
   const { data: session } = useActiveSession()
   const queryClient = useQueryClient()
   const [busy, setBusy] = useState<'quota' | 'session' | null>(null)
@@ -42,7 +44,7 @@ export function DevToolsPanel() {
   return (
     <Card className="border-dashed">
       <CardHeader>
-        <CardTitle className="text-sm">🔧 Debug (solo sviluppo)</CardTitle>
+        <CardTitle className="text-sm">{t.devTools.title}</CardTitle>
       </CardHeader>
       <CardContent className="flex gap-2">
         <Button
@@ -52,7 +54,7 @@ export function DevToolsPanel() {
           disabled={busy !== null}
           onClick={handleResetQuota}
         >
-          {busy === 'quota' ? 'Reset…' : 'Reset quota oggi'}
+          {busy === 'quota' ? t.devTools.resetting : t.devTools.resetQuota}
         </Button>
         <Button
           type="button"
@@ -61,7 +63,7 @@ export function DevToolsPanel() {
           disabled={busy !== null}
           onClick={handleResetSession}
         >
-          {busy === 'session' ? 'Reset…' : 'Reset sessione (ELO incluso)'}
+          {busy === 'session' ? t.devTools.resetting : t.devTools.resetSession}
         </Button>
       </CardContent>
     </Card>

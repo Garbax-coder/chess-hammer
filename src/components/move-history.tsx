@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-r
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useTranslations } from '@/lib/language-context'
 import {
   isWhiteMove,
   moveNumberFor,
@@ -117,6 +118,7 @@ export function MoveHistoryPanel({
   startTurn,
   onSelect,
 }: MoveHistoryPanelProps) {
+  const t = useTranslations()
   const current = nodes[currentId]
   const rootChildren = nodes[ROOT_NODE_ID]?.children ?? []
   const canGoBack = currentId !== ROOT_NODE_ID
@@ -133,12 +135,12 @@ export function MoveHistoryPanel({
   return (
     <Card className="w-full lg:w-72">
       <CardHeader className="py-3">
-        <CardTitle className="text-sm">Cronologia mosse</CardTitle>
+        <CardTitle className="text-sm">{t.moveHistory.title}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 pt-0">
         <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto">
           {rootChildren.length === 0 ? (
-            <p className="text-muted-foreground text-xs">Nessuna mossa.</p>
+            <p className="text-muted-foreground text-xs">{t.moveHistory.empty}</p>
           ) : (
             <MoveLine
               nodes={nodes}
@@ -158,7 +160,7 @@ export function MoveHistoryPanel({
             size="icon-sm"
             disabled={!canGoBack}
             onClick={() => onSelect(ROOT_NODE_ID)}
-            aria-label="Vai all'inizio"
+            aria-label={t.moveHistory.goToStart}
           >
             <ChevronsLeft className="size-4" />
           </Button>
@@ -168,7 +170,7 @@ export function MoveHistoryPanel({
             size="icon-sm"
             disabled={!canGoBack}
             onClick={() => current.parentId && onSelect(current.parentId)}
-            aria-label="Cronologia: mossa precedente"
+            aria-label={t.moveHistory.prevMove}
           >
             <ChevronLeft className="size-4" />
           </Button>
@@ -178,7 +180,7 @@ export function MoveHistoryPanel({
             size="icon-sm"
             disabled={!canGoForward}
             onClick={() => onSelect(current.children[0])}
-            aria-label="Cronologia: mossa successiva"
+            aria-label={t.moveHistory.nextMove}
           >
             <ChevronRight className="size-4" />
           </Button>
@@ -188,7 +190,7 @@ export function MoveHistoryPanel({
             size="icon-sm"
             disabled={!canGoForward}
             onClick={goToLast}
-            aria-label="Vai alla fine"
+            aria-label={t.moveHistory.goToEnd}
           >
             <ChevronsRight className="size-4" />
           </Button>
