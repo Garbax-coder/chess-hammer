@@ -26,7 +26,9 @@ const BEST_MOVE_ARROW_COLOR = 'rgba(37, 99, 235, 0.8)'
 // calc(100vw - 2rem) invece di una frazione fissa (es. 90vw): la scacchiera
 // deve occupare tutto lo spazio orizzontale disponibile dentro il padding
 // della pagina (px-4 = 1rem per lato), non lasciare margine extra su mobile.
-const BOARD_SIZE = 'min(calc(100vw - 2rem), 78vh, 720px)'
+// Esportata per riuso nello skeleton di caricamento (stessa dimensione,
+// niente "scatto" quando il puzzle vero arriva).
+export const BOARD_SIZE = 'min(calc(100vw - 2rem), 78vh, 720px)'
 
 type Feedback = 'intro' | 'playing' | 'correct' | 'wrong' | 'solved'
 
@@ -86,9 +88,19 @@ interface PuzzleBoardProps {
   puzzle: LichessPuzzle
   autoAdvance: boolean
   onComplete: (result: 'solved' | 'failed', timeSeconds: number) => void
+  // True mentre il tentativo appena concluso e' in registrazione (chiamata
+  // di rete in corso): disabilita il bottone "Puzzle successivo" e mostra
+  // uno spinner, cosi' un click ripetuto o una rete lenta non passano
+  // inosservati.
+  isCompleting?: boolean
 }
 
-export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProps) {
+export function PuzzleBoard({
+  puzzle,
+  autoAdvance,
+  onComplete,
+  isCompleting = false,
+}: PuzzleBoardProps) {
   const t = useTranslations()
   const gameRef = useRef(new Chess())
   const solutionIndexRef = useRef(1)
@@ -707,6 +719,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
             type="button"
             className="w-full lg:hidden"
             style={{ width: BOARD_SIZE }}
+            loading={isCompleting}
             onClick={() => onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)}
           >
             {t.puzzleBoard.nextPuzzle}
@@ -736,6 +749,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
             <Button
               type="button"
               className="hidden lg:inline-flex"
+              loading={isCompleting}
               onClick={() =>
                 onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)
               }
