@@ -232,7 +232,7 @@ export function SessionPuzzleList({
         )}
         <div
           ref={listRef}
-          className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto lg:max-h-none lg:min-h-0 lg:flex-1"
+          className="scrollbar-hide flex max-h-[70vh] flex-col gap-2 overflow-y-auto lg:max-h-none lg:min-h-0 lg:flex-1"
         >
           {isLoading &&
             puzzles.length === 0 &&

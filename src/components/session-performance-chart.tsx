@@ -168,7 +168,7 @@ export function SessionPerformanceChart({
           ))}
         </div>
 
-        <div className="overflow-x-auto pb-1">
+        <div className="scrollbar-hide overflow-x-auto pb-1">
           <svg
             width={chart.width}
             height={HEATMAP_TOP + HEATMAP_HEIGHT}

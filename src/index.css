@@ -137,6 +137,21 @@
   }
 }
 
+@layer utilities {
+  /* Per liste/heatmap interne che scorrono dentro uno spazio gia' stretto
+     (sidebar puzzle, righe della heatmap "Prestazioni puzzle"): la
+     scrollbar classica (non overlay) sottrae ~15px di larghezza/altezza al
+     contenuto. Lo scroll resta comunque possibile con rotella, trackpad,
+     touch o scrollIntoView; si perde solo l'indicatore visivo. */
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @keyframes firework-particle {
   0% {
     transform: translate(-50%, -50%) rotate(var(--angle)) translateX(0) scale(1);
