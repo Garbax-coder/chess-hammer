@@ -42,14 +42,17 @@ export function PuzzleMiniBoard({ fen }: { fen: string }) {
   }, [fen, orientation])
 
   return (
-    <div className="ring-border/60 grid aspect-square w-11 shrink-0 grid-cols-8 overflow-hidden rounded ring-1">
+    <div
+      className="ring-border/60 grid aspect-square w-11 shrink-0 grid-cols-8 overflow-hidden rounded ring-1"
+      style={{ gridTemplateRows: 'repeat(8, minmax(0, 1fr))' }}
+    >
       {board.flatMap((row, rankIdx) =>
         row.map((piece, fileIdx) => {
           const isLight = (rankIdx + fileIdx) % 2 === 0
           return (
             <div
               key={`${rankIdx}-${fileIdx}`}
-              className={`flex items-center justify-center ${isLight ? 'bg-[#f0d9b5]' : 'bg-[#b58863]'}`}
+              className={`flex min-h-0 items-center justify-center ${isLight ? 'bg-[#f0d9b5]' : 'bg-[#b58863]'}`}
             >
               {piece && (
                 <span
