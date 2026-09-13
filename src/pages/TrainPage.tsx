@@ -25,7 +25,7 @@ import type { SessionPuzzleResult } from '@/types/training'
 export default function TrainPage() {
   const t = useTranslations()
   const { data: session, isLoading: loadingSession } = useActiveSession()
-  const { data: outcome, isLoading: loadingPuzzle, refetch } = useNextPuzzle(session)
+  const { data: outcome, isLoading: loadingPuzzle } = useNextPuzzle(session)
   const recordAttempt = useRecordAttempt(session)
   const { data: stats } = useUserStats()
   const updateAutoAdvance = useUpdateAutoAdvance()
@@ -61,6 +61,8 @@ export default function TrainPage() {
 
   async function handleComplete(result: 'solved' | 'failed', timeSeconds: number) {
     if (outcome?.status !== 'next') return
+    // La mutation scrive gia' il prossimo puzzle nella cache di 'outcome'
+    // (vedi useRecordAttempt): non serve un refetch separato qui.
     await recordAttempt.mutateAsync({
       sessionPuzzleId: outcome.data.sessionPuzzleId,
       round: outcome.data.round,
@@ -68,7 +70,6 @@ export default function TrainPage() {
       timeSeconds,
       puzzleRating: outcome.data.puzzle.rating,
     })
-    refetch()
   }
 
   async function handlePracticeComplete(result: 'solved' | 'failed', timeSeconds: number) {

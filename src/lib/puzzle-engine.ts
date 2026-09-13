@@ -214,18 +214,22 @@ export async function getNextPuzzle(
   return { status: 'next', data: { sessionPuzzleId: nextInPool.id, puzzle, round } }
 }
 
-// Un'unica chiamata RPC invece di 4 round trip sequenziali (lettura ELO,
-// insert tentativo, lettura contatori, update stats): la logica gira in una
-// singola transazione lato Postgres, vedi supabase/migrations/0009_*.sql.
-export async function recordAttempt(params: {
+// Un'unica chiamata RPC per l'intera azione "concludi il puzzle e passa al
+// prossimo": registra il tentativo E decide il prossimo puzzle nella stessa
+// transazione Postgres lato server (stessa logica di recordAttempt +
+// getNextPuzzle sopra, vedi supabase/migrations/0010_*.sql), invece di una
+// RPC di scrittura seguita da 3-5 letture sequenziali dal client.
+export async function recordAttemptAndGetNextPuzzle(params: {
+  sessionId: string
   sessionPuzzleId: string
   round: 1 | 2 | 3
   result: AttemptResult
   timeSeconds: number
   puzzleRating: number
-}) {
-  const { sessionPuzzleId, round, result, timeSeconds, puzzleRating } = params
-  const { data, error } = await supabase.rpc('record_puzzle_attempt', {
+}): Promise<NextPuzzleOutcome> {
+  const { sessionId, sessionPuzzleId, round, result, timeSeconds, puzzleRating } = params
+  const { data, error } = await supabase.rpc('record_attempt_and_get_next_puzzle', {
+    p_session_id: sessionId,
     p_session_puzzle_id: sessionPuzzleId,
     p_round: round,
     p_result: result,
@@ -233,5 +237,5 @@ export async function recordAttempt(params: {
     p_puzzle_rating: puzzleRating,
   })
   if (error) throw error
-  return data
+  return data as NextPuzzleOutcome
 }
