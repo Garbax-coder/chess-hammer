@@ -220,11 +220,11 @@ export function SessionPuzzleList({
   }, [activeSessionPuzzleId])
 
   return (
-    <Card className="w-full lg:w-64">
+    <Card className="min-h-0 w-full flex-1 lg:w-64">
       <CardHeader className="py-3">
         <CardTitle className="text-sm">{t.sessionPuzzleList.title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-1 pt-0">
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-1 pt-0">
         {canPractice && (
           <p className="text-muted-foreground mb-1 text-xs">
             {t.sessionPuzzleList.quotaHint}
@@ -232,7 +232,7 @@ export function SessionPuzzleList({
         )}
         <div
           ref={listRef}
-          className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto lg:max-h-[calc(100vh-12rem)]"
+          className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto lg:max-h-none lg:min-h-0 lg:flex-1"
         >
           {isLoading &&
             puzzles.length === 0 &&

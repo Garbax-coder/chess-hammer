@@ -134,7 +134,11 @@ export default function TrainPage() {
 
   return (
     <main className="flex w-full flex-1 flex-col items-center gap-4 px-4 py-8 lg:flex-row lg:items-start lg:justify-center lg:gap-3">
-      <aside className="order-2 flex w-full flex-col gap-4 lg:order-1 lg:w-64 lg:shrink-0 lg:self-start">
+      {/* 117px = header (53px) + padding sopra/sotto di questo <main> (py-8,
+          32px ciascuno): senza sottrarli, la sidebar sticky puo' sporgere
+          di quel tanto oltre il fondo della viewport e costringere a
+          scorrere l'intera pagina solo per vederne l'ultima riga. */}
+      <aside className="order-2 flex min-h-0 w-full flex-col gap-4 lg:sticky lg:top-14 lg:order-1 lg:max-h-[calc(100vh-117px)] lg:w-64 lg:shrink-0 lg:self-start">
         <div className="flex flex-col gap-3">
           {practiceSelection ? (
             <div>
