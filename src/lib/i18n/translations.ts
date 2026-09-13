@@ -23,6 +23,7 @@ export interface Translations {
   nav: {
     dashboard: string
     history: string
+    faq: string
     toggleTheme: string
     signOut: string
   }
@@ -56,6 +57,20 @@ export interface Translations {
     noActiveSessionTitle: string
     noActiveSessionDescription: string
     createSession: string
+    eloHistory: {
+      title: string
+      empty: string
+      range: { week: string; month: string; year: string; all: string }
+    }
+    puzzlePerformance: {
+      title: string
+      empty: string
+      roundLabel: (round: number) => string
+      legendSolved: string
+      legendFailed: string
+      legendPending: string
+      openSession: string
+    }
   }
   newSession: {
     title: string
@@ -66,6 +81,9 @@ export interface Translations {
     errorGeneric: string
     errorInvalidValues: string
     start: string
+    calendarTitle: string
+    calendarEndDate: (date: string) => string
+    calendarTruncated: string
   }
   sessionsHistory: {
     title: string
@@ -76,7 +94,7 @@ export interface Translations {
   sessionDetail: {
     title: (date: string) => string
     subtitle: (total: number, round: number, status: string) => string
-    empty: string
+    selectPrompt: string
   }
   sessionStatus: {
     in_progress: string
@@ -151,6 +169,7 @@ export interface Translations {
     resetting: string
     resetQuota: string
     resetSession: string
+    deleteActiveSession: string
   }
   profile: {
     openLabel: string
@@ -161,6 +180,11 @@ export interface Translations {
     boardTheme: string
     pieceSet: string
     themes: Record<BoardThemeId, string>
+  }
+  faq: {
+    title: string
+    intro: string
+    items: { question: string; answer: string }[]
   }
   errors: {
     noPuzzleAvailable: string
@@ -189,6 +213,7 @@ export const it: Translations = {
   nav: {
     dashboard: 'Dashboard',
     history: 'Storico',
+    faq: 'FAQ',
     toggleTheme: 'Cambia tema',
     signOut: 'Esci',
   },
@@ -224,6 +249,20 @@ export const it: Translations = {
     noActiveSessionTitle: 'Nessuna sessione attiva',
     noActiveSessionDescription: 'Configura un nuovo allenamento Woodpecker per iniziare.',
     createSession: 'Crea nuova sessione',
+    eloHistory: {
+      title: 'Andamento ELO',
+      empty: 'Nessun puzzle risolto in questo periodo.',
+      range: { week: 'Settimana', month: 'Mese', year: 'Anno', all: 'Tutto' },
+    },
+    puzzlePerformance: {
+      title: 'Prestazioni puzzle',
+      empty: 'Nessun puzzle ancora nel pool di questa sessione.',
+      roundLabel: (round) => `Giro ${round}`,
+      legendSolved: 'Risolto',
+      legendFailed: 'Fallito',
+      legendPending: 'Da fare',
+      openSession: 'Apri sessione',
+    },
   },
   newSession: {
     title: 'Nuova sessione',
@@ -236,6 +275,9 @@ export const it: Translations = {
     errorInvalidValues:
       'Tutti i valori devono essere numeri interi maggiori o uguali a 1.',
     start: 'Avvia sessione',
+    calendarTitle: 'Anteprima calendario',
+    calendarEndDate: (date) => `Fine prevista: ${date}`,
+    calendarTruncated: 'Durata troppo lunga per essere mostrata per intero.',
   },
   sessionsHistory: {
     title: 'Storico sessioni',
@@ -246,7 +288,7 @@ export const it: Translations = {
   sessionDetail: {
     title: (date) => `Sessione del ${date}`,
     subtitle: (total, round, status) => `${total} puzzle · giro ${round}/3 · ${status}`,
-    empty: 'Nessun puzzle ancora nel pool di questa sessione.',
+    selectPrompt: 'Seleziona un puzzle dalla lista per rivederlo o risolverlo di nuovo.',
   },
   sessionStatus: {
     in_progress: 'In corso',
@@ -320,6 +362,7 @@ export const it: Translations = {
     resetting: 'Reset…',
     resetQuota: 'Reset quota oggi',
     resetSession: 'Reset sessione (ELO incluso)',
+    deleteActiveSession: 'Elimina sessione attiva',
   },
   profile: {
     openLabel: 'Profilo',
@@ -336,6 +379,48 @@ export const it: Translations = {
       slate: 'Ardesia',
       coral: 'Corallo',
     },
+  },
+  faq: {
+    title: 'Domande frequenti',
+    intro:
+      'Come funziona il Metodo Woodpecker, come lo applica Chess Hammer, e come leggere i tuoi dati per migliorare.',
+    items: [
+      {
+        question: "Cos'è il Metodo Woodpecker?",
+        answer:
+          "Il Metodo Woodpecker è una tecnica di allenamento tattico ideata dai maestri Axel Smith e Hans Tikkanen: si sceglie un set fisso di puzzle e lo si risolve più volte di seguito (di solito 3-7 giri), invece di risolvere sempre puzzle nuovi.\n\nOgni ripetizione dello stesso set dovrebbe essere più veloce della precedente: l'obiettivo non è imparare il puzzle a memoria, ma allenare il riconoscimento immediato dei pattern tattici (forchette, inchiodature, sacrifici tipici...), rendendoli automatici anche in partita, sotto il tempo dell'orologio.",
+      },
+      {
+        question: 'Come viene applicato in Chess Hammer?',
+        answer:
+          "Ogni sessione ha un pool fisso di puzzle (impostabile alla creazione, es. 200) e si articola in 3 giri:\n\n1° giro — scoperta: i puzzle vengono scelti uno alla volta in base al tuo rating ELO attuale, e formano il pool fisso della sessione.\n2° e 3° giro — ripetizione: si ripercorre esattamente lo stesso pool, nello stesso ordine, cercando di risolverlo più in fretta.\n\nOgni giro ha una quota giornaliera configurabile (es. 10/20/40 puzzle al giorno per giro 1/2/3): l'app calcola automaticamente quanti giorni servono per completare ciascun giro.",
+      },
+      {
+        question: "Cosa rappresenta l'ELO?",
+        answer:
+          'È una stima del tuo livello tattico, calcolata con la stessa formula usata negli scacchi per il rating dei giocatori: dopo ogni tentativo, il tuo ELO si avvicina a quello del puzzle a seconda che tu lo abbia risolto o no, pesato per quanto era "atteso" il risultato — batterti contro un puzzle molto più difficile del tuo livello vale di più se lo risolvi.',
+      },
+      {
+        question: "Quando cambia l'ELO, e perché solo allora?",
+        answer:
+          "L'ELO cambia SOLO durante il 1° giro di ogni sessione. Nei giri 2° e 3° resta congelato, anche se risolvi o sbagli i puzzle.\n\nIl motivo: al 1° giro i puzzle sono nuovi per te, quindi risolverli è un test reale della tua forza tattica — per questo vengono anche scelti in base al tuo ELO attuale. Al 2° e 3° giro stai ripetendo puzzle già visti e (si spera) già risolti: andare più veloce misura la memorizzazione e l'automatismo del pattern, non la tua forza scacchistica, quindi non è un segnale corretto per aggiornare l'ELO.\n\nL'ELO torna a poter cambiare al 1° giro della sessione successiva, quando affronti di nuovo puzzle mai visti.",
+      },
+      {
+        question: 'Cosa posso impostare io?',
+        answer:
+          'Alla creazione di una sessione: il numero totale di puzzle e la quota giornaliera per ciascuno dei 3 giri.\n\nNel profilo: lingua, stile della scacchiera, set dei pezzi, avanzamento automatico al puzzle successivo, suoni.',
+      },
+      {
+        question: 'Quali dati vengono misurati, e a cosa servono?',
+        answer:
+          "Per ogni tentativo: esito (risolto/fallito), tempo di risoluzione, giro ed ELO prima/dopo. Questi dati alimentano:\n\n— il grafico Andamento ELO, per vedere il progresso nel tempo;\n— la heatmap Prestazioni puzzle, che mostra a colpo d'occhio quali puzzle risolvi e quali sbagli, giro per giro;\n— il grafico dei tempi di risoluzione, per vedere se stai davvero velocizzando la ripetizione, l'obiettivo del metodo.\n\nUn quadratino rosso ricorrente sullo stesso puzzle tra i giri, o un tempo che non scende, sono segnali utili: quel pattern non si è ancora fissato e vale la pena rivederlo con calma in modalità pratica.",
+      },
+      {
+        question: 'Cosa è la modalità pratica?',
+        answer:
+          "Puoi rivedere e risolvere di nuovo qualsiasi puzzle già incontrato, anche di sessioni passate, senza che il tentativo influisca sulla sessione ufficiale o sull'ELO: serve solo per allenarti liberamente. La trovi cliccando un puzzle nella lista di una sessione, o un quadratino della heatmap Prestazioni puzzle in dashboard.",
+      },
+    ],
   },
   errors: {
     noPuzzleAvailable: 'Nessun puzzle disponibile per questo rating: pool esaurito.',
@@ -364,6 +449,7 @@ export const en: Translations = {
   nav: {
     dashboard: 'Dashboard',
     history: 'History',
+    faq: 'FAQ',
     toggleTheme: 'Toggle theme',
     signOut: 'Sign out',
   },
@@ -399,6 +485,20 @@ export const en: Translations = {
     noActiveSessionTitle: 'No active session',
     noActiveSessionDescription: 'Set up a new Woodpecker training to get started.',
     createSession: 'Create new session',
+    eloHistory: {
+      title: 'ELO trend',
+      empty: 'No puzzles solved in this period.',
+      range: { week: 'Week', month: 'Month', year: 'Year', all: 'All' },
+    },
+    puzzlePerformance: {
+      title: 'Puzzle performance',
+      empty: 'No puzzles in this session pool yet.',
+      roundLabel: (round) => `Round ${round}`,
+      legendSolved: 'Solved',
+      legendFailed: 'Failed',
+      legendPending: 'To do',
+      openSession: 'Open session',
+    },
   },
   newSession: {
     title: 'New session',
@@ -410,6 +510,9 @@ export const en: Translations = {
     errorGeneric: 'Error creating the session',
     errorInvalidValues: 'All values must be whole numbers greater than or equal to 1.',
     start: 'Start session',
+    calendarTitle: 'Calendar preview',
+    calendarEndDate: (date) => `Estimated finish: ${date}`,
+    calendarTruncated: 'Too long to show in full.',
   },
   sessionsHistory: {
     title: 'Session history',
@@ -420,7 +523,7 @@ export const en: Translations = {
   sessionDetail: {
     title: (date) => `Session from ${date}`,
     subtitle: (total, round, status) => `${total} puzzles · round ${round}/3 · ${status}`,
-    empty: 'No puzzles in this session pool yet.',
+    selectPrompt: 'Select a puzzle from the list to review it or solve it again.',
   },
   sessionStatus: {
     in_progress: 'In progress',
@@ -494,6 +597,7 @@ export const en: Translations = {
     resetting: 'Resetting…',
     resetQuota: "Reset today's quota",
     resetSession: 'Reset session (incl. ELO)',
+    deleteActiveSession: 'Delete active session',
   },
   profile: {
     openLabel: 'Profile',
@@ -510,6 +614,48 @@ export const en: Translations = {
       slate: 'Slate',
       coral: 'Coral',
     },
+  },
+  faq: {
+    title: 'Frequently asked questions',
+    intro:
+      'How the Woodpecker Method works, how Chess Hammer applies it, and how to read your data to improve.',
+    items: [
+      {
+        question: 'What is the Woodpecker Method?',
+        answer:
+          "The Woodpecker Method is a tactical training technique devised by grandmasters Axel Smith and Hans Tikkanen: you pick a fixed set of puzzles and solve it several times in a row (usually 3-7 rounds), instead of always solving new puzzles.\n\nEach repetition of the same set should be faster than the previous one: the goal isn't to memorize the puzzle, but to train instant recognition of tactical patterns (forks, pins, typical sacrifices...), making them automatic even in a real game, under the clock.",
+      },
+      {
+        question: 'How is it applied in Chess Hammer?',
+        answer:
+          "Each session has a fixed puzzle pool (configurable when you create it, e.g. 200) and unfolds over 3 rounds:\n\nRound 1 — discovery: puzzles are picked one at a time based on your current ELO rating, and form the session's fixed pool.\nRounds 2 and 3 — repetition: you go through the exact same pool, in the same order, trying to solve it faster.\n\nEach round has a configurable daily target (e.g. 10/20/40 puzzles a day for rounds 1/2/3): the app automatically works out how many days each round will take.",
+      },
+      {
+        question: 'What does ELO represent?',
+        answer:
+          'It\'s an estimate of your tactical level, computed with the same formula chess uses to rate players: after each attempt, your ELO moves toward the puzzle\'s rating depending on whether you solved it or not, weighted by how "expected" the outcome was — beating a puzzle well above your level is worth more if you solve it.',
+      },
+      {
+        question: 'When does ELO change, and why only then?',
+        answer:
+          "ELO changes ONLY during round 1 of each session. In rounds 2 and 3 it stays frozen, whether you solve the puzzles or not.\n\nWhy: in round 1 the puzzles are new to you, so solving them is a real test of your tactical strength — that's also why they're picked based on your current ELO. In rounds 2 and 3 you're repeating puzzles you've already seen and (hopefully) already solved: getting faster measures memorization and pattern automaticity, not your chess strength, so it isn't a fair signal to update ELO with.\n\nELO starts changing again at round 1 of the next session, when you face puzzles you've never seen before.",
+      },
+      {
+        question: 'What can I configure?',
+        answer:
+          'When creating a session: the total number of puzzles and the daily target for each of the 3 rounds.\n\nIn your profile: language, board style, piece set, auto-advance to the next puzzle, sounds.',
+      },
+      {
+        question: 'What data is measured, and how does it help?',
+        answer:
+          "For every attempt: outcome (solved/failed), solving time, round, and ELO before/after. This data feeds:\n\n— the ELO trend chart, to see your progress over time;\n— the Puzzle performance heatmap, showing at a glance which puzzles you solve and which you miss, round by round;\n— the solving-time chart, to see whether you're actually getting faster on repetition, the whole point of the method.\n\nA cell that keeps turning up red for the same puzzle across rounds, or a solving time that isn't dropping, are useful signals: that pattern hasn't stuck yet and is worth reviewing calmly in practice mode.",
+      },
+      {
+        question: 'What is practice mode?',
+        answer:
+          "You can review and re-solve any puzzle you've already encountered, even from past sessions, without the attempt affecting the official session or your ELO: it's purely for free training. You'll find it by clicking a puzzle in a session's list, or a cell in the Puzzle performance heatmap on the dashboard.",
+      },
+    ],
   },
   errors: {
     noPuzzleAvailable: 'No puzzle available for this rating: pool exhausted.',

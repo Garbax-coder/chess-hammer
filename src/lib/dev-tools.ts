@@ -61,3 +61,15 @@ export async function resetSession(sessionId: string, userId: string) {
     .eq('user_id', userId)
   if (statsError) throw statsError
 }
+
+/**
+ * Elimina del tutto la sessione attiva (session_puzzles e puzzle_attempts
+ * seguono a cascata) per liberare subito lo slot di "sessione attiva" e
+ * poter testare la creazione di una nuova sessione, senza dover completare
+ * i 3 giri o resettarla in place. Non tocca user_stats (ELO/contatori
+ * restano quelli reali).
+ */
+export async function deleteActiveSession(sessionId: string) {
+  const { error } = await supabase.from('training_sessions').delete().eq('id', sessionId)
+  if (error) throw error
+}

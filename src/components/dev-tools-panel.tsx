@@ -1,10 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useActiveSession } from '@/hooks/use-active-session'
 import { useAuth } from '@/lib/auth-context'
-import { resetSession, resetTodayQuota } from '@/lib/dev-tools'
+import { deleteActiveSession, resetSession, resetTodayQuota } from '@/lib/dev-tools'
 import { useTranslations } from '@/lib/language-context'
 
 /**
@@ -17,7 +18,8 @@ export function DevToolsPanel() {
   const t = useTranslations()
   const { data: session } = useActiveSession()
   const queryClient = useQueryClient()
-  const [busy, setBusy] = useState<'quota' | 'session' | null>(null)
+  const navigate = useNavigate()
+  const [busy, setBusy] = useState<'quota' | 'session' | 'delete' | null>(null)
 
   if (!session || !user) return null
 
@@ -41,12 +43,23 @@ export function DevToolsPanel() {
     }
   }
 
+  async function handleDeleteActiveSession() {
+    setBusy('delete')
+    try {
+      await deleteActiveSession(session!.id)
+      await queryClient.invalidateQueries()
+      navigate('/dashboard')
+    } finally {
+      setBusy(null)
+    }
+  }
+
   return (
     <Card className="border-dashed">
       <CardHeader>
         <CardTitle className="text-sm">{t.devTools.title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex gap-2">
+      <CardContent className="flex flex-wrap gap-2">
         <Button
           type="button"
           variant="outline"
@@ -64,6 +77,15 @@ export function DevToolsPanel() {
           onClick={handleResetSession}
         >
           {busy === 'session' ? t.devTools.resetting : t.devTools.resetSession}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={busy !== null}
+          onClick={handleDeleteActiveSession}
+        >
+          {busy === 'delete' ? t.devTools.resetting : t.devTools.deleteActiveSession}
         </Button>
       </CardContent>
     </Card>

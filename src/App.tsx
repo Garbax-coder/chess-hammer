@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/protected-route'
 import DashboardPage from '@/pages/DashboardPage'
+import FaqPage from '@/pages/FaqPage'
 import HomePage from '@/pages/HomePage'
 import LoginPage from '@/pages/LoginPage'
 import NewSessionPage from '@/pages/NewSessionPage'
@@ -52,6 +53,14 @@ function App() {
         element={
           <ProtectedRoute>
             <SessionDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/faq"
+        element={
+          <ProtectedRoute>
+            <FaqPage />
           </ProtectedRoute>
         }
       />
