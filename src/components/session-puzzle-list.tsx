@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PuzzleMiniBoard } from '@/components/puzzle-mini-board'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -132,6 +133,7 @@ function PuzzleRow({
   return (
     <button
       type="button"
+      data-session-puzzle-id={result.sessionPuzzleId}
       disabled={!canPractice}
       onClick={() => canPractice && onSelect(result)}
       className={`flex w-full items-center gap-3 rounded-md border px-2.5 py-2 text-left transition-colors ${
@@ -203,6 +205,19 @@ export function SessionPuzzleList({
   boardTheme,
 }: SessionPuzzleListProps) {
   const t = useTranslations()
+  const listRef = useRef<HTMLDivElement>(null)
+
+  // Chi arriva da fuori (es. click su un quadratino della heatmap in
+  // dashboard) puo' selezionare un puzzle a meta' di una lista lunga anche
+  // 200 righe: la porta in vista automaticamente invece di lasciare
+  // l'utente a scorrere alla cieca per trovarla.
+  useEffect(() => {
+    if (!activeSessionPuzzleId || !listRef.current) return
+    const row = listRef.current.querySelector<HTMLElement>(
+      `[data-session-puzzle-id="${activeSessionPuzzleId}"]`,
+    )
+    row?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [activeSessionPuzzleId])
 
   return (
     <Card className="w-full lg:w-64">
@@ -215,7 +230,10 @@ export function SessionPuzzleList({
             {t.sessionPuzzleList.quotaHint}
           </p>
         )}
-        <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
+        <div
+          ref={listRef}
+          className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto lg:max-h-[calc(100vh-12rem)]"
+        >
           {isLoading &&
             puzzles.length === 0 &&
             Array.from({ length: 6 }, (_, i) => <PuzzleRowSkeleton key={i} />)}
