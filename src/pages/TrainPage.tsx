@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DevToolsPanel } from '@/components/dev-tools-panel'
 import { PuzzleBoard } from '@/components/puzzle-board'
+import { PuzzleBoardSkeleton } from '@/components/puzzle-board-skeleton'
 import { SessionPuzzleList } from '@/components/session-puzzle-list'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,7 +31,7 @@ export default function TrainPage() {
   const recordAttempt = useRecordAttempt(session)
   const { data: stats } = useUserStats()
   const updateAutoAdvance = useUpdateAutoAdvance()
-  const { data: puzzles } = useSessionPuzzles(session)
+  const { data: puzzles, isLoading: loadingPuzzles } = useSessionPuzzles(session)
   const recordPracticeAttempt = useRecordPracticeAttempt()
   const { enabled: soundEnabled, setEnabled: setSoundEnabled } = useSoundEnabled()
 
@@ -176,6 +177,7 @@ export default function TrainPage() {
 
         <SessionPuzzleList
           puzzles={puzzles ?? []}
+          isLoading={loadingPuzzles}
           activeSessionPuzzleId={activeSessionPuzzleId}
           currentRound={session.current_round}
           practiceAttemptsByPuzzle={practiceAttemptsByPuzzle ?? new Map()}
@@ -192,13 +194,14 @@ export default function TrainPage() {
               puzzle={practicePuzzle}
               autoAdvance={autoAdvance}
               onComplete={handlePracticeComplete}
+              isCompleting={recordPracticeAttempt.isPending}
             />
           ) : (
-            <p className="text-muted-foreground text-sm">{t.common.loading}</p>
+            <PuzzleBoardSkeleton />
           )
         ) : (
           <>
-            {loadingPuzzle && <p className="text-muted-foreground text-sm">{t.common.loading}</p>}
+            {loadingPuzzle && <PuzzleBoardSkeleton />}
 
             {outcome?.status === 'quota_reached' && (
               <Card className="w-full max-w-sm">
@@ -233,6 +236,7 @@ export default function TrainPage() {
                 puzzle={outcome.data.puzzle}
                 autoAdvance={autoAdvance}
                 onComplete={handleComplete}
+                isCompleting={recordAttempt.isPending}
               />
             )}
           </>

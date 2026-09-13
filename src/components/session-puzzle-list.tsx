@@ -1,8 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PuzzleMiniBoard } from '@/components/puzzle-mini-board'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { Translations } from '@/lib/i18n/translations'
 import { useTranslations } from '@/lib/language-context'
 import type { PracticeAttempt, PuzzleAttempt, SessionPuzzleResult } from '@/types/training'
+
+function PuzzleRowSkeleton() {
+  return (
+    <div className="flex w-full items-center gap-3 rounded-md border border-border/60 px-2.5 py-2">
+      <Skeleton className="size-7 shrink-0 rounded" />
+      <Skeleton className="size-10 shrink-0 rounded" />
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <Skeleton className="h-3.5 w-3/4" />
+        <Skeleton className="h-2.5 w-1/3" />
+      </div>
+    </div>
+  )
+}
 
 interface RoundIndicatorProps {
   round: 1 | 2 | 3
@@ -162,6 +176,7 @@ function PuzzleRow({
 
 interface SessionPuzzleListProps {
   puzzles: SessionPuzzleResult[]
+  isLoading?: boolean
   activeSessionPuzzleId: string | null
   currentRound: 1 | 2 | 3
   practiceAttemptsByPuzzle: Map<string, PracticeAttempt[]>
@@ -171,6 +186,7 @@ interface SessionPuzzleListProps {
 
 export function SessionPuzzleList({
   puzzles,
+  isLoading = false,
   activeSessionPuzzleId,
   currentRound,
   practiceAttemptsByPuzzle,
@@ -189,7 +205,10 @@ export function SessionPuzzleList({
           <p className="text-muted-foreground mb-1 text-xs">{t.sessionPuzzleList.quotaHint}</p>
         )}
         <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
-          {puzzles.length === 0 && (
+          {isLoading &&
+            puzzles.length === 0 &&
+            Array.from({ length: 6 }, (_, i) => <PuzzleRowSkeleton key={i} />)}
+          {!isLoading && puzzles.length === 0 && (
             <p className="text-muted-foreground text-xs">{t.sessionPuzzleList.empty}</p>
           )}
           {[...puzzles].reverse().map((result) => (
