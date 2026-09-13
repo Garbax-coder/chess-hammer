@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { useStockfishAnalysis } from '@/hooks/use-stockfish-analysis'
 import { evalToWhitePercent } from '@/lib/chess-format'
 import { useEngineSettings } from '@/lib/engine-settings'
+import { useTranslations } from '@/lib/language-context'
 import {
   addMoveNode,
   INITIAL_MOVE_NODES,
@@ -90,6 +91,7 @@ interface PuzzleBoardProps {
 }
 
 export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProps) {
+  const t = useTranslations()
   const gameRef = useRef(new Chess())
   const solutionIndexRef = useRef(1)
   const startedAtRef = useRef(0)
@@ -514,29 +516,29 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     return attemptMove(sourceSquare, targetSquare)
   }
 
-  const turnLabel = orientation === 'white' ? 'Bianco' : 'Nero'
+  const turnLabel = orientation === 'white' ? t.puzzleBoard.white : t.puzzleBoard.black
   const startTurn = puzzle.fen.split(' ')[1] === 'b' ? 'b' : 'w'
   const currentPly = timelinePath.length
 
   const statusText = analysisEnabled
     ? isLive
-      ? 'Modalità analisi — muovi liberamente'
-      : `Stai rivedendo la mossa ${currentPly}`
+      ? t.puzzleBoard.analysisMode
+      : t.puzzleBoard.reviewingMove(currentPly)
     : !isLive
-      ? `Stai rivedendo la mossa ${currentPly}`
+      ? t.puzzleBoard.reviewingMove(currentPly)
       : feedback === 'intro'
-        ? "L'avversario muove…"
+        ? t.puzzleBoard.opponentMoving
         : feedback === 'solved'
-          ? 'Risolto! 🎉'
+          ? t.puzzleBoard.solved
           : feedback === 'wrong'
-            ? 'Mossa sbagliata'
-            : `Muovi con il ${turnLabel}`
+            ? t.puzzleBoard.wrongMove
+            : t.puzzleBoard.moveWith(turnLabel)
 
   return (
     <div className="flex w-full flex-col items-center gap-4 lg:flex-row lg:items-start lg:justify-center">
       <div className="flex flex-col items-center gap-4">
         <div style={{ width: BOARD_SIZE }} className="text-muted-foreground flex items-center justify-between text-xs">
-          <span>Rating {puzzle.rating}</span>
+          <span>{t.puzzleBoard.rating(puzzle.rating)}</span>
           <span>{statusText}</span>
           <span>{elapsed}s</span>
         </div>
@@ -597,7 +599,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
               const parentId = effectiveNodes[effectiveCurrentId].parentId
               if (parentId) navigateTo(parentId)
             }}
-            aria-label="Mossa precedente"
+            aria-label={t.puzzleBoard.prevMove}
           >
             <ChevronLeft className="size-4" />
           </Button>
@@ -613,7 +615,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
               const childId = effectiveNodes[effectiveCurrentId].children[0]
               if (childId) navigateTo(childId)
             }}
-            aria-label="Mossa successiva"
+            aria-label={t.puzzleBoard.nextMove}
           >
             <ChevronRight className="size-4" />
           </Button>
@@ -645,7 +647,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
                 onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)
               }
             >
-              Puzzle successivo →
+              {t.puzzleBoard.nextPuzzle}
             </Button>
           </div>
         )}

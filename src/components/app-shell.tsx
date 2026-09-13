@@ -4,9 +4,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/hooks/use-theme'
 import { signOut } from '@/lib/auth'
+import { useLanguage } from '@/lib/language-context'
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { theme, toggleTheme } = useTheme()
+  const { language, setLanguage, t } = useLanguage()
   const navigate = useNavigate()
 
   async function handleSignOut() {
@@ -26,16 +28,24 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
           <nav className="flex items-center gap-1">
             <Button asChild variant="ghost" size="sm">
-              <Link to="/dashboard">Dashboard</Link>
+              <Link to="/dashboard">{t.nav.dashboard}</Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
-              <Link to="/sessions">Storico</Link>
+              <Link to="/sessions">{t.nav.history}</Link>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLanguage(language === 'it' ? 'en' : 'it')}
+              aria-label={t.language.label}
+            >
+              {language === 'it' ? 'IT' : 'EN'}
             </Button>
             <Button
               variant="ghost"
               size="icon-sm"
               onClick={toggleTheme}
-              aria-label="Cambia tema"
+              aria-label={t.nav.toggleTheme}
             >
               {theme === 'dark' ? (
                 <Sun className="size-4" />
@@ -47,7 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               variant="ghost"
               size="icon-sm"
               onClick={handleSignOut}
-              aria-label="Esci"
+              aria-label={t.nav.signOut}
             >
               <LogOut className="size-4" />
             </Button>

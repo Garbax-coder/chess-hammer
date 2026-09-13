@@ -18,10 +18,12 @@ import { useNextPuzzle, useRecordAttempt } from '@/hooks/use-puzzle-session'
 import { usePuzzleById, useRecordPracticeAttempt, usePracticeAttempts } from '@/hooks/use-practice'
 import { useSessionDetail, useSessionProgress } from '@/hooks/use-session-history'
 import { useSoundEnabled } from '@/hooks/use-sound-enabled'
+import { useTranslations } from '@/lib/language-context'
 import { useUpdateAutoAdvance, useUserStats } from '@/hooks/use-user-stats'
 import type { SessionPuzzleResult } from '@/types/training'
 
 export default function TrainPage() {
+  const t = useTranslations()
   const { data: session, isLoading: loadingSession } = useActiveSession()
   const { data: outcome, isLoading: loadingPuzzle, refetch } = useNextPuzzle(session)
   const recordAttempt = useRecordAttempt(session)
@@ -49,9 +51,9 @@ export default function TrainPage() {
   if (!session) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-        <p className="text-muted-foreground">Nessuna sessione attiva.</p>
+        <p className="text-muted-foreground">{t.train.noActiveSession}</p>
         <Button asChild>
-          <Link to="/sessions/new">Crea una sessione</Link>
+          <Link to="/sessions/new">{t.train.createSession}</Link>
         </Button>
       </main>
     )
@@ -109,24 +111,24 @@ export default function TrainPage() {
           {practiceSelection ? (
             <div>
               <h1 className="text-foreground text-lg font-semibold tracking-tight">
-                Pratica libera
+                {t.train.practiceTitle}
               </h1>
-              <p className="text-muted-foreground text-sm">
-                Il risultato non viene tracciato nella sessione ufficiale.
-              </p>
+              <p className="text-muted-foreground text-sm">{t.train.practiceSubtitle}</p>
             </div>
           ) : (
             <div>
               <h1 className="text-foreground text-lg font-semibold tracking-tight">
-                Allenamento
+                {t.train.title}
               </h1>
               <p className="text-muted-foreground text-sm">
-                Giro {session.current_round} di 3 — {session.total_puzzles} puzzle totali
+                {t.train.roundInfo(session.current_round, session.total_puzzles)}
               </p>
               {progress && (
                 <p className="text-muted-foreground text-sm">
-                  Puzzle di oggi: {Math.min(progress.attemptedToday + 1, progress.dailyTarget)}/
-                  {progress.dailyTarget}
+                  {t.train.todayPuzzle(
+                    Math.min(progress.attemptedToday + 1, progress.dailyTarget),
+                    progress.dailyTarget,
+                  )}
                 </p>
               )}
             </div>
@@ -139,7 +141,7 @@ export default function TrainPage() {
               onCheckedChange={(checked) => updateAutoAdvance.mutate(checked)}
             />
             <Label htmlFor="auto-advance" className="text-muted-foreground text-sm">
-              Avanzamento automatico
+              {t.train.autoAdvance}
             </Label>
           </div>
 
@@ -150,7 +152,7 @@ export default function TrainPage() {
               onCheckedChange={setSoundEnabled}
             />
             <Label htmlFor="sound-enabled" className="text-muted-foreground text-sm">
-              Suoni
+              {t.train.soundEnabled}
             </Label>
           </div>
         </div>
@@ -169,7 +171,7 @@ export default function TrainPage() {
         {practiceSelection ? (
           <>
             <Button variant="outline" size="sm" onClick={() => setPracticeSelection(null)}>
-              Torna alla lista
+              {t.train.backToList}
             </Button>
             {practicePuzzle ? (
               <PuzzleBoard
@@ -179,26 +181,22 @@ export default function TrainPage() {
                 onComplete={handlePracticeComplete}
               />
             ) : (
-              <p className="text-muted-foreground text-sm">Caricamento…</p>
+              <p className="text-muted-foreground text-sm">{t.common.loading}</p>
             )}
           </>
         ) : (
           <>
-            {loadingPuzzle && <p className="text-muted-foreground text-sm">Caricamento…</p>}
+            {loadingPuzzle && <p className="text-muted-foreground text-sm">{t.common.loading}</p>}
 
             {outcome?.status === 'quota_reached' && (
               <Card className="w-full max-w-sm">
                 <CardHeader>
-                  <CardTitle>Quota di oggi completata</CardTitle>
-                  <CardDescription>
-                    Hai raggiunto il target giornaliero per il giro {outcome.round}. Torna
-                    domani per continuare, oppure seleziona un puzzle dalla lista a sinistra
-                    per allenarti liberamente.
-                  </CardDescription>
+                  <CardTitle>{t.train.quotaTitle}</CardTitle>
+                  <CardDescription>{t.train.quotaDescription(outcome.round)}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button asChild variant="outline" className="w-full">
-                    <Link to="/dashboard">Torna alla dashboard</Link>
+                    <Link to="/dashboard">{t.train.backToDashboard}</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -207,15 +205,12 @@ export default function TrainPage() {
             {outcome?.status === 'session_complete' && (
               <Card className="w-full max-w-sm">
                 <CardHeader>
-                  <CardTitle>Sessione completata 🎉</CardTitle>
-                  <CardDescription>
-                    Hai finito tutti e 3 i giri di questa sessione. Puoi continuare a
-                    esercitarti liberamente selezionando un puzzle dalla lista a sinistra.
-                  </CardDescription>
+                  <CardTitle>{t.train.sessionCompleteTitle}</CardTitle>
+                  <CardDescription>{t.train.sessionCompleteDescription}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button asChild className="w-full">
-                    <Link to="/dashboard">Torna alla dashboard</Link>
+                    <Link to="/dashboard">{t.train.backToDashboard}</Link>
                   </Button>
                 </CardContent>
               </Card>

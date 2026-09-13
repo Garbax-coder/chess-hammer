@@ -2,21 +2,23 @@ import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { useSessionsList } from '@/hooks/use-session-history'
-import { sessionStatusLabel, sessionStatusVariant } from '@/lib/session-status'
+import { useTranslations } from '@/lib/language-context'
+import { sessionStatusVariant } from '@/lib/session-status'
 
 export default function SessionsHistoryPage() {
+  const t = useTranslations()
   const { data: sessions, isLoading } = useSessionsList()
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-8">
       <h1 className="text-foreground text-lg font-semibold tracking-tight">
-        Storico sessioni
+        {t.sessionsHistory.title}
       </h1>
 
-      {isLoading && <p className="text-muted-foreground text-sm">Caricamento…</p>}
+      {isLoading && <p className="text-muted-foreground text-sm">{t.common.loading}</p>}
 
       {sessions?.length === 0 && (
-        <p className="text-muted-foreground text-sm">Nessuna sessione ancora creata.</p>
+        <p className="text-muted-foreground text-sm">{t.sessionsHistory.empty}</p>
       )}
 
       <div className="flex flex-col gap-3">
@@ -26,14 +28,16 @@ export default function SessionsHistoryPage() {
               <CardContent className="flex items-center justify-between py-4">
                 <div>
                   <p className="text-foreground text-sm font-medium">
-                    {s.total_puzzles} puzzle — giro {s.current_round}/3
+                    {t.sessionsHistory.puzzlesRound(s.total_puzzles, s.current_round)}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    Creata il {new Date(s.created_at).toLocaleDateString('it-IT')}
+                    {t.sessionsHistory.createdOn(
+                      new Date(s.created_at).toLocaleDateString(t.meta.locale),
+                    )}
                   </p>
                 </div>
                 <Badge variant={sessionStatusVariant[s.status]}>
-                  {sessionStatusLabel[s.status]}
+                  {t.sessionStatus[s.status]}
                 </Badge>
               </CardContent>
             </Card>

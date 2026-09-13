@@ -13,8 +13,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { signUpWithEmail } from '@/lib/auth'
+import { useTranslations } from '@/lib/language-context'
 
 export default function SignupPage() {
+  const t = useTranslations()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -38,29 +40,25 @@ export default function SignupPage() {
     <main className="flex min-h-svh items-center justify-center px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Crea account</CardTitle>
-          <CardDescription>
-            Inizia a tracciare i tuoi allenamenti Woodpecker
-          </CardDescription>
+          <CardTitle className="text-2xl">{t.signup.title}</CardTitle>
+          <CardDescription>{t.signup.subtitle}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {done ? (
-            <p className="text-sm">
-              Controlla la tua email per confermare l'account prima di accedere.
-            </p>
+            <p className="text-sm">{t.signup.checkEmail}</p>
           ) : (
             <>
               <SocialLoginButtons onError={setError} />
 
               <div className="flex items-center gap-3">
                 <Separator className="flex-1" />
-                <span className="text-muted-foreground text-xs">oppure</span>
+                <span className="text-muted-foreground text-xs">{t.common.or}</span>
                 <Separator className="flex-1" />
               </div>
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t.common.email}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -71,7 +69,7 @@ export default function SignupPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t.common.password}</Label>
                   <Input
                     id="password"
                     type="password"
@@ -86,16 +84,16 @@ export default function SignupPage() {
                 {error && <p className="text-destructive text-sm">{error}</p>}
 
                 <Button type="submit" className="w-full" disabled={submitting}>
-                  {submitting ? 'Creazione account…' : 'Registrati'}
+                  {submitting ? t.signup.submitting : t.signup.submit}
                 </Button>
               </form>
             </>
           )}
 
           <p className="text-muted-foreground text-center text-sm">
-            Hai già un account?{' '}
+            {t.signup.haveAccount}{' '}
             <Link to="/login" className="text-foreground underline underline-offset-4">
-              Accedi
+              {t.signup.login}
             </Link>
           </p>
         </CardContent>

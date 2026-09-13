@@ -11,11 +11,13 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useActiveSession, useCreateTrainingSession } from '@/hooks/use-active-session'
+import { useTranslations } from '@/lib/language-context'
 import { daysForRound } from '@/lib/training-sessions'
 import { DEFAULT_SESSION_CONFIG, type NewTrainingSessionInput } from '@/types/training'
 
 export default function NewSessionPage() {
   const navigate = useNavigate()
+  const t = useTranslations()
   const { data: activeSession, isLoading: loadingActiveSession } = useActiveSession()
   const createSession = useCreateTrainingSession()
   const [form, setForm] = useState<NewTrainingSessionInput>(DEFAULT_SESSION_CONFIG)
@@ -41,25 +43,22 @@ export default function NewSessionPage() {
     label: string
     round: 1 | 2 | 3
   }[] = [
-    { field: 'daily_target_round1', label: '1° giro — puzzle/giorno', round: 1 },
-    { field: 'daily_target_round2', label: '2° giro — puzzle/giorno', round: 2 },
-    { field: 'daily_target_round3', label: '3° giro — puzzle/giorno', round: 3 },
+    { field: 'daily_target_round1', label: t.newSession.roundLabel(1), round: 1 },
+    { field: 'daily_target_round2', label: t.newSession.roundLabel(2), round: 2 },
+    { field: 'daily_target_round3', label: t.newSession.roundLabel(3), round: 3 },
   ]
 
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-8">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Nuova sessione</CardTitle>
-          <CardDescription>
-            Configura il tuo allenamento Woodpecker: stesso set di puzzle ripetuto per 3
-            giri, sempre più veloce.
-          </CardDescription>
+          <CardTitle className="text-2xl">{t.newSession.title}</CardTitle>
+          <CardDescription>{t.newSession.subtitle}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="total_puzzles">Totale puzzle nella sessione</Label>
+              <Label htmlFor="total_puzzles">{t.newSession.totalPuzzles}</Label>
               <Input
                 id="total_puzzles"
                 type="number"
@@ -84,11 +83,11 @@ export default function NewSessionPage() {
                       onChange={(e) => updateField(field, e.target.value)}
                     />
                     <span className="text-muted-foreground w-24 shrink-0 text-xs">
-                      ~
                       {form[field] > 0
-                        ? daysForRound(form.total_puzzles, form[field])
-                        : '–'}{' '}
-                      giorni
+                        ? t.newSession.daysEstimate(
+                            daysForRound(form.total_puzzles, form[field]),
+                          )
+                        : t.newSession.daysEstimate('–')}
                     </span>
                   </div>
                 </div>
@@ -99,12 +98,12 @@ export default function NewSessionPage() {
               <p className="text-destructive text-sm">
                 {createSession.error instanceof Error
                   ? createSession.error.message
-                  : 'Errore nella creazione della sessione'}
+                  : t.newSession.errorGeneric}
               </p>
             )}
 
             <Button type="submit" className="w-full" disabled={createSession.isPending}>
-              {createSession.isPending ? 'Avvio…' : 'Avvia sessione'}
+              {createSession.isPending ? t.newSession.starting : t.newSession.start}
             </Button>
           </form>
         </CardContent>

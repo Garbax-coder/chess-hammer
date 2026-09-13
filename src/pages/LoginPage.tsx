@@ -13,9 +13,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { signInWithEmail } from '@/lib/auth'
+import { useTranslations } from '@/lib/language-context'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const t = useTranslations()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -38,21 +40,21 @@ export default function LoginPage() {
     <main className="flex min-h-svh items-center justify-center px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Accedi</CardTitle>
-          <CardDescription>Continua il tuo allenamento Woodpecker</CardDescription>
+          <CardTitle className="text-2xl">{t.login.title}</CardTitle>
+          <CardDescription>{t.login.subtitle}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <SocialLoginButtons onError={setError} />
 
           <div className="flex items-center gap-3">
             <Separator className="flex-1" />
-            <span className="text-muted-foreground text-xs">oppure</span>
+            <span className="text-muted-foreground text-xs">{t.common.or}</span>
             <Separator className="flex-1" />
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.common.email}</Label>
               <Input
                 id="email"
                 type="email"
@@ -63,7 +65,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.common.password}</Label>
               <Input
                 id="password"
                 type="password"
@@ -77,14 +79,14 @@ export default function LoginPage() {
             {error && <p className="text-destructive text-sm">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? 'Accesso in corso…' : 'Accedi'}
+              {submitting ? t.login.submitting : t.login.submit}
             </Button>
           </form>
 
           <p className="text-muted-foreground text-center text-sm">
-            Non hai un account?{' '}
+            {t.login.noAccount}{' '}
             <Link to="/signup" className="text-foreground underline underline-offset-4">
-              Registrati
+              {t.login.signup}
             </Link>
           </p>
         </CardContent>
