@@ -1,13 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PuzzleMiniBoard } from '@/components/puzzle-mini-board'
 import { Skeleton } from '@/components/ui/skeleton'
+import type { BoardThemeId } from '@/lib/board-themes'
 import type { Translations } from '@/lib/i18n/translations'
 import { useTranslations } from '@/lib/language-context'
-import type { PracticeAttempt, PuzzleAttempt, SessionPuzzleResult } from '@/types/training'
+import type {
+  PracticeAttempt,
+  PuzzleAttempt,
+  SessionPuzzleResult,
+} from '@/types/training'
 
 function PuzzleRowSkeleton() {
   return (
-    <div className="flex w-full items-center gap-3 rounded-md border border-border/60 px-2.5 py-2">
+    <div className="border-border/60 flex w-full items-center gap-3 rounded-md border px-2.5 py-2">
       <Skeleton className="size-7 shrink-0 rounded" />
       <Skeleton className="size-10 shrink-0 rounded" />
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -90,7 +95,7 @@ function PracticeAttemptTags({
               solved
                 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                 : 'bg-destructive/10 text-destructive'
-            } ${isBest ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-background' : ''}`}
+            } ${isBest ? 'ring-offset-background ring-2 ring-amber-400 ring-offset-1' : ''}`}
           >
             {isBest && '★ '}
             {a.time_seconds}s
@@ -108,6 +113,7 @@ interface PuzzleRowProps {
   practiceAttempts: PracticeAttempt[] | undefined
   canPractice: boolean
   onSelect: (result: SessionPuzzleResult) => void
+  boardTheme: BoardThemeId | undefined
   t: Translations
 }
 
@@ -118,6 +124,7 @@ function PuzzleRow({
   practiceAttempts,
   canPractice,
   onSelect,
+  boardTheme,
   t,
 }: PuzzleRowProps) {
   const lastAttempt = lastAttemptOf(result)
@@ -136,7 +143,7 @@ function PuzzleRow({
       <span className="text-foreground shrink-0 text-2xl leading-none font-bold tabular-nums">
         {result.orderIndex}
       </span>
-      <PuzzleMiniBoard fen={result.fen} />
+      <PuzzleMiniBoard fen={result.fen} boardTheme={boardTheme} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1">
@@ -182,6 +189,7 @@ interface SessionPuzzleListProps {
   practiceAttemptsByPuzzle: Map<string, PracticeAttempt[]>
   canPractice: boolean
   onSelectPuzzle: (result: SessionPuzzleResult) => void
+  boardTheme?: BoardThemeId
 }
 
 export function SessionPuzzleList({
@@ -192,6 +200,7 @@ export function SessionPuzzleList({
   practiceAttemptsByPuzzle,
   canPractice,
   onSelectPuzzle,
+  boardTheme,
 }: SessionPuzzleListProps) {
   const t = useTranslations()
 
@@ -202,7 +211,9 @@ export function SessionPuzzleList({
       </CardHeader>
       <CardContent className="flex flex-col gap-1 pt-0">
         {canPractice && (
-          <p className="text-muted-foreground mb-1 text-xs">{t.sessionPuzzleList.quotaHint}</p>
+          <p className="text-muted-foreground mb-1 text-xs">
+            {t.sessionPuzzleList.quotaHint}
+          </p>
         )}
         <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
           {isLoading &&
@@ -220,6 +231,7 @@ export function SessionPuzzleList({
               practiceAttempts={practiceAttemptsByPuzzle.get(result.puzzleId)}
               canPractice={canPractice}
               onSelect={onSelectPuzzle}
+              boardTheme={boardTheme}
               t={t}
             />
           ))}

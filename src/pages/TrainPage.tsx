@@ -16,7 +16,11 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useActiveSession } from '@/hooks/use-active-session'
 import { useNextPuzzle, useRecordAttempt } from '@/hooks/use-puzzle-session'
-import { usePuzzleById, useRecordPracticeAttempt, usePracticeAttempts } from '@/hooks/use-practice'
+import {
+  usePuzzleById,
+  useRecordPracticeAttempt,
+  usePracticeAttempts,
+} from '@/hooks/use-practice'
 import { useSessionPuzzles } from '@/hooks/use-session-history'
 import { useSoundEnabled } from '@/hooks/use-sound-enabled'
 import { deriveSessionProgress } from '@/lib/session-progress'
@@ -77,7 +81,10 @@ export default function TrainPage() {
     })
   }
 
-  async function handlePracticeComplete(result: 'solved' | 'failed', timeSeconds: number) {
+  async function handlePracticeComplete(
+    result: 'solved' | 'failed',
+    timeSeconds: number,
+  ) {
     if (!practiceSelection) return
     await recordPracticeAttempt.mutateAsync({
       puzzleId: practiceSelection.puzzleId,
@@ -98,7 +105,10 @@ export default function TrainPage() {
       )
       const next = currentIndex >= 0 ? puzzles[currentIndex + 1] : undefined
       if (next) {
-        setPracticeSelection({ sessionPuzzleId: next.sessionPuzzleId, puzzleId: next.puzzleId })
+        setPracticeSelection({
+          sessionPuzzleId: next.sessionPuzzleId,
+          puzzleId: next.puzzleId,
+        })
         return
       }
     }
@@ -107,11 +117,17 @@ export default function TrainPage() {
   }
 
   function handleSelectPuzzle(result: SessionPuzzleResult) {
-    setPracticeSelection({ sessionPuzzleId: result.sessionPuzzleId, puzzleId: result.puzzleId })
+    setPracticeSelection({
+      sessionPuzzleId: result.sessionPuzzleId,
+      puzzleId: result.puzzleId,
+    })
   }
 
   const autoAdvance = stats?.auto_advance ?? true
-  const canPractice = outcome?.status === 'quota_reached' || outcome?.status === 'session_complete'
+  const boardTheme = stats?.board_theme
+  const pieceSet = stats?.piece_set
+  const canPractice =
+    outcome?.status === 'quota_reached' || outcome?.status === 'session_complete'
   const activeSessionPuzzleId =
     practiceSelection?.sessionPuzzleId ??
     (outcome?.status === 'next' ? outcome.data.sessionPuzzleId : null)
@@ -183,6 +199,7 @@ export default function TrainPage() {
           practiceAttemptsByPuzzle={practiceAttemptsByPuzzle ?? new Map()}
           canPractice={canPractice}
           onSelectPuzzle={handleSelectPuzzle}
+          boardTheme={boardTheme}
         />
       </aside>
 
@@ -195,6 +212,8 @@ export default function TrainPage() {
               autoAdvance={autoAdvance}
               onComplete={handlePracticeComplete}
               isCompleting={recordPracticeAttempt.isPending}
+              boardTheme={boardTheme}
+              pieceSet={pieceSet}
             />
           ) : (
             <PuzzleBoardSkeleton />
@@ -207,7 +226,9 @@ export default function TrainPage() {
               <Card className="w-full max-w-sm">
                 <CardHeader>
                   <CardTitle>{t.train.quotaTitle}</CardTitle>
-                  <CardDescription>{t.train.quotaDescription(outcome.round)}</CardDescription>
+                  <CardDescription>
+                    {t.train.quotaDescription(outcome.round)}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button asChild variant="outline" className="w-full">
@@ -237,6 +258,8 @@ export default function TrainPage() {
                 autoAdvance={autoAdvance}
                 onComplete={handleComplete}
                 isCompleting={recordAttempt.isPending}
+                boardTheme={boardTheme}
+                pieceSet={pieceSet}
               />
             )}
           </>

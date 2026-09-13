@@ -8,6 +8,11 @@ import { MoveHistoryPanel } from '@/components/move-history'
 import { SolvedFireworks } from '@/components/solved-fireworks'
 import { Button } from '@/components/ui/button'
 import { useStockfishAnalysis } from '@/hooks/use-stockfish-analysis'
+import {
+  boardThemeById,
+  DEFAULT_BOARD_THEME,
+  type BoardThemeId,
+} from '@/lib/board-themes'
 import { evalToWhitePercent } from '@/lib/chess-format'
 import { useEngineSettings } from '@/lib/engine-settings'
 import { useTranslations } from '@/lib/language-context'
@@ -18,6 +23,7 @@ import {
   ROOT_NODE_ID,
   type MoveTreeNode,
 } from '@/lib/move-tree'
+import { DEFAULT_PIECE_SET, pieceSetById, type PieceSetId } from '@/lib/piece-sets'
 import { playIllegalMoveSound, playMoveSound } from '@/lib/sound-effects'
 import { parseUci } from '@/lib/uci'
 import type { LichessPuzzle } from '@/types/training'
@@ -93,6 +99,8 @@ interface PuzzleBoardProps {
   // uno spinner, cosi' un click ripetuto o una rete lenta non passano
   // inosservati.
   isCompleting?: boolean
+  boardTheme?: BoardThemeId
+  pieceSet?: PieceSetId
 }
 
 export function PuzzleBoard({
@@ -100,8 +108,12 @@ export function PuzzleBoard({
   autoAdvance,
   onComplete,
   isCompleting = false,
+  boardTheme = DEFAULT_BOARD_THEME,
+  pieceSet = DEFAULT_PIECE_SET,
 }: PuzzleBoardProps) {
   const t = useTranslations()
+  const theme = useMemo(() => boardThemeById(boardTheme), [boardTheme])
+  const pieces = useMemo(() => pieceSetById(pieceSet).pieces, [pieceSet])
   const gameRef = useRef(new Chess())
   const solutionIndexRef = useRef(1)
   const startedAtRef = useRef(0)
@@ -571,7 +583,10 @@ export function PuzzleBoard({
   return (
     <div className="flex w-full flex-col items-center gap-4 lg:flex-row lg:items-start lg:justify-center">
       <div className="flex flex-col items-center gap-4">
-        <div style={{ width: BOARD_SIZE }} className="text-muted-foreground flex items-center justify-between text-xs">
+        <div
+          style={{ width: BOARD_SIZE }}
+          className="text-muted-foreground flex items-center justify-between text-xs"
+        >
           <span>{t.puzzleBoard.rating(puzzle.rating)}</span>
           <span>{statusText}</span>
           <span>{elapsed}s</span>
@@ -621,6 +636,9 @@ export function PuzzleBoard({
                       piece.pieceType[0] === gameRef.current.turn(),
                 animationDurationInMs: 200,
                 boardStyle: { borderRadius: '0.5rem', overflow: 'hidden' },
+                lightSquareStyle: { backgroundColor: theme.light },
+                darkSquareStyle: { backgroundColor: theme.dark },
+                pieces,
                 squareStyles,
                 arrows: bestMoveArrows,
                 // react-chessboard usa `id` per generare selettori CSS interni
@@ -632,7 +650,10 @@ export function PuzzleBoard({
             {feedback === 'solved' && <SolvedFireworks />}
             {finalOutcomeSquare &&
               (() => {
-                const { row, col } = squareToBoardPosition(finalOutcomeSquare, orientation)
+                const { row, col } = squareToBoardPosition(
+                  finalOutcomeSquare,
+                  orientation,
+                )
                 return (
                   <div
                     className="pointer-events-none absolute"
@@ -720,7 +741,9 @@ export function PuzzleBoard({
             className="w-full lg:hidden"
             style={{ width: BOARD_SIZE }}
             loading={isCompleting}
-            onClick={() => onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)}
+            onClick={() =>
+              onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)
+            }
           >
             {t.puzzleBoard.nextPuzzle}
           </Button>

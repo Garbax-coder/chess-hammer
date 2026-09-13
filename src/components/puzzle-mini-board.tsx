@@ -1,5 +1,10 @@
 import { useMemo } from 'react'
 import { solverColorFor } from '@/components/puzzle-board'
+import {
+  boardThemeById,
+  DEFAULT_BOARD_THEME,
+  type BoardThemeId,
+} from '@/lib/board-themes'
 
 const PIECE_GLYPHS: Record<string, string> = {
   K: '♔',
@@ -34,11 +39,20 @@ function parseFenBoard(fen: string): (string | null)[][] {
 // Anteprima statica e non interattiva: niente react-chessboard (che monta
 // sensori dnd-kit per ogni istanza) dato che questo componente puo' comparire
 // decine di volte nella lista puzzle di una sessione.
-export function PuzzleMiniBoard({ fen }: { fen: string }) {
+export function PuzzleMiniBoard({
+  fen,
+  boardTheme = DEFAULT_BOARD_THEME,
+}: {
+  fen: string
+  boardTheme?: BoardThemeId
+}) {
+  const theme = useMemo(() => boardThemeById(boardTheme), [boardTheme])
   const orientation = useMemo(() => solverColorFor(fen), [fen])
   const board = useMemo(() => {
     const rows = parseFenBoard(fen)
-    return orientation === 'white' ? rows : [...rows].reverse().map((row) => [...row].reverse())
+    return orientation === 'white'
+      ? rows
+      : [...rows].reverse().map((row) => [...row].reverse())
   }, [fen, orientation])
 
   return (
@@ -52,7 +66,8 @@ export function PuzzleMiniBoard({ fen }: { fen: string }) {
           return (
             <div
               key={`${rankIdx}-${fileIdx}`}
-              className={`flex min-h-0 items-center justify-center ${isLight ? 'bg-[#f0d9b5]' : 'bg-[#b58863]'}`}
+              className="flex min-h-0 items-center justify-center"
+              style={{ backgroundColor: isLight ? theme.light : theme.dark }}
             >
               {piece && (
                 <span
