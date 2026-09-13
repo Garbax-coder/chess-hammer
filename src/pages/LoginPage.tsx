@@ -78,8 +78,8 @@ export default function LoginPage() {
 
             {error && <p className="text-destructive text-sm">{error}</p>}
 
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? t.login.submitting : t.login.submit}
+            <Button type="submit" className="w-full" loading={submitting}>
+              {t.login.submit}
             </Button>
           </form>
 

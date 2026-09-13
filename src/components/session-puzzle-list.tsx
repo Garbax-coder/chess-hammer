@@ -23,14 +23,14 @@ function PuzzleRowSkeleton() {
   )
 }
 
-interface RoundIndicatorProps {
+export interface RoundIndicatorProps {
   round: 1 | 2 | 3
   attempt: PuzzleAttempt | undefined
   isCurrent: boolean
   t: Translations
 }
 
-function RoundIndicator({ round, attempt, isCurrent, t }: RoundIndicatorProps) {
+export function RoundIndicator({ round, attempt, isCurrent, t }: RoundIndicatorProps) {
   if (attempt) {
     const solved = attempt.result === 'solved'
     return (

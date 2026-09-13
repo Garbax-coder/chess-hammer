@@ -23,14 +23,18 @@ export default function DashboardPage() {
   const { data: stats } = useUserStats()
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-8 text-center">
+    <main className="flex flex-1 flex-col items-center gap-4 px-4 py-8 text-center">
       <div>
         <p className="text-muted-foreground text-sm">
           {t.dashboard.loggedInAs(user?.email ?? '')}
         </p>
         {stats && (
           <p className="text-muted-foreground text-xs">
-            {t.dashboard.stats(stats.current_elo, stats.puzzles_solved, stats.puzzles_failed)}
+            {t.dashboard.stats(
+              stats.current_elo,
+              stats.puzzles_solved,
+              stats.puzzles_failed,
+            )}
           </p>
         )}
       </div>
@@ -58,7 +62,10 @@ export default function DashboardPage() {
                     )}
                   </span>
                   <span>
-                    {t.dashboard.todayProgress(progress.attemptedToday, progress.dailyTarget)}
+                    {t.dashboard.todayProgress(
+                      progress.attemptedToday,
+                      progress.dailyTarget,
+                    )}
                   </span>
                 </div>
                 <Progress
