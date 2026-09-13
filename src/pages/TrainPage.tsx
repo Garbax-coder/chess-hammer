@@ -84,7 +84,14 @@ export default function TrainPage() {
       timeSeconds,
     })
 
-    if (autoAdvance && puzzles) {
+    // onComplete scatta solo quando e' il momento di passare oltre: in
+    // automatico se autoAdvance e' acceso, altrimenti solo per click
+    // esplicito sul bottone "Puzzle successivo" (mostrato apposta quando e'
+    // spento). In entrambi i casi l'intento e' lo stesso: andare al puzzle
+    // dopo in lista, non serve ricontrollare autoAdvance qui (altrimenti
+    // quel click, con l'automatico spento, uscirebbe dalla modalita'
+    // pratica invece di avanzare).
+    if (puzzles) {
       const currentIndex = puzzles.findIndex(
         (p) => p.sessionPuzzleId === practiceSelection.sessionPuzzleId,
       )
