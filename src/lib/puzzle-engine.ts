@@ -12,7 +12,7 @@ export function dailyTargetForRound(session: TrainingSession, round: 1 | 2 | 3):
   return session.daily_target_round3
 }
 
-function startOfTodayIso(): string {
+export function startOfTodayIso(): string {
   const d = new Date()
   d.setHours(0, 0, 0, 0)
   return d.toISOString()

@@ -1,6 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
-import { fetchAllSessions, fetchSessionDetail } from '@/lib/session-history'
+import {
+  fetchAllSessions,
+  fetchSessionDetail,
+  fetchSessionPuzzlesDetail,
+} from '@/lib/session-history'
 import { getSessionProgress } from '@/lib/session-progress'
 import type { TrainingSession } from '@/types/training'
 
@@ -18,6 +22,17 @@ export function useSessionDetail(sessionId: string | undefined) {
     queryKey: ['session-detail', sessionId],
     queryFn: () => fetchSessionDetail(sessionId!),
     enabled: !!sessionId,
+  })
+}
+
+// Per chi ha gia' l'oggetto sessione (es. TrainPage, via useActiveSession):
+// solo i puzzle, senza rileggere anche la riga training_sessions che il
+// chiamante ha gia' in mano.
+export function useSessionPuzzles(session: TrainingSession | null | undefined) {
+  return useQuery({
+    queryKey: ['session-puzzles', session?.id],
+    queryFn: () => fetchSessionPuzzlesDetail(session!.id),
+    enabled: !!session,
   })
 }
 

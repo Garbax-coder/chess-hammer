@@ -24,37 +24,51 @@ interface RawSessionPuzzleRow {
   puzzle_attempts: PuzzleAttempt[]
 }
 
-export async function fetchSessionDetail(sessionId: string): Promise<SessionDetail> {
-  const { data: session, error: sessionError } = await supabase
+async function fetchSessionById(sessionId: string): Promise<TrainingSession> {
+  const { data, error } = await supabase
     .from('training_sessions')
     .select('*')
     .eq('id', sessionId)
     .single()
-  if (sessionError) throw sessionError
+  if (error) throw error
+  return data
+}
 
-  const { data: rows, error: puzzlesError } = await supabase
+// Separata da fetchSessionDetail cosi' un chiamante che ha gia' l'oggetto
+// sessione (es. TrainPage, via useActiveSession) puo' chiedere solo i
+// puzzle senza rileggere anche la riga training_sessions che ha gia' in
+// mano (un round trip di rete in meno ad ogni tentativo registrato).
+export async function fetchSessionPuzzlesDetail(
+  sessionId: string,
+): Promise<SessionPuzzleResult[]> {
+  const { data: rows, error } = await supabase
     .from('session_puzzles')
     .select('id, order_index, puzzle_id, lichess_puzzles(rating, fen), puzzle_attempts(*)')
     .eq('session_id', sessionId)
     .order('order_index', { ascending: true })
-  if (puzzlesError) throw puzzlesError
+  if (error) throw error
 
-  const puzzles: SessionPuzzleResult[] = (rows as unknown as RawSessionPuzzleRow[]).map(
-    (row) => {
-      const attempts: SessionPuzzleResult['attempts'] = {}
-      for (const attempt of row.puzzle_attempts) {
-        attempts[attempt.round_number] = attempt
-      }
-      return {
-        sessionPuzzleId: row.id,
-        orderIndex: row.order_index,
-        puzzleId: row.puzzle_id,
-        rating: row.lichess_puzzles?.rating ?? 0,
-        fen: row.lichess_puzzles?.fen ?? '',
-        attempts,
-      }
-    },
-  )
+  return (rows as unknown as RawSessionPuzzleRow[]).map((row) => {
+    const attempts: SessionPuzzleResult['attempts'] = {}
+    for (const attempt of row.puzzle_attempts) {
+      attempts[attempt.round_number] = attempt
+    }
+    return {
+      sessionPuzzleId: row.id,
+      orderIndex: row.order_index,
+      puzzleId: row.puzzle_id,
+      rating: row.lichess_puzzles?.rating ?? 0,
+      fen: row.lichess_puzzles?.fen ?? '',
+      attempts,
+    }
+  })
+}
 
+export async function fetchSessionDetail(sessionId: string): Promise<SessionDetail> {
+  // Indipendenti l'una dall'altra: in parallelo invece che in sequenza.
+  const [session, puzzles] = await Promise.all([
+    fetchSessionById(sessionId),
+    fetchSessionPuzzlesDetail(sessionId),
+  ])
   return { session, puzzles }
 }

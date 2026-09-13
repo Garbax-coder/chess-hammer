@@ -16,8 +16,9 @@ import { Switch } from '@/components/ui/switch'
 import { useActiveSession } from '@/hooks/use-active-session'
 import { useNextPuzzle, useRecordAttempt } from '@/hooks/use-puzzle-session'
 import { usePuzzleById, useRecordPracticeAttempt, usePracticeAttempts } from '@/hooks/use-practice'
-import { useSessionDetail, useSessionProgress } from '@/hooks/use-session-history'
+import { useSessionPuzzles } from '@/hooks/use-session-history'
 import { useSoundEnabled } from '@/hooks/use-sound-enabled'
+import { deriveSessionProgress } from '@/lib/session-progress'
 import { useTranslations } from '@/lib/language-context'
 import { useUpdateAutoAdvance, useUserStats } from '@/hooks/use-user-stats'
 import type { SessionPuzzleResult } from '@/types/training'
@@ -29,10 +30,16 @@ export default function TrainPage() {
   const recordAttempt = useRecordAttempt(session)
   const { data: stats } = useUserStats()
   const updateAutoAdvance = useUpdateAutoAdvance()
-  const { data: progress } = useSessionProgress(session)
-  const { data: sessionDetail } = useSessionDetail(session?.id)
+  const { data: puzzles } = useSessionPuzzles(session)
   const recordPracticeAttempt = useRecordPracticeAttempt()
   const { enabled: soundEnabled, setEnabled: setSoundEnabled } = useSoundEnabled()
+
+  // Calcolati dagli stessi dati della lista puzzle in sidebar (puzzles), non
+  // da query di rete separate: vedi deriveSessionProgress e useSessionPuzzles.
+  const progress = useMemo(
+    () => (session && puzzles ? deriveSessionProgress(session, puzzles) : undefined),
+    [session, puzzles],
+  )
 
   const [practiceSelection, setPracticeSelection] = useState<{
     sessionPuzzleId: string
@@ -40,10 +47,7 @@ export default function TrainPage() {
   } | null>(null)
   const { data: practicePuzzle } = usePuzzleById(practiceSelection?.puzzleId)
 
-  const puzzleIds = useMemo(
-    () => sessionDetail?.puzzles.map((p) => p.puzzleId) ?? [],
-    [sessionDetail],
-  )
+  const puzzleIds = useMemo(() => puzzles?.map((p) => p.puzzleId) ?? [], [puzzles])
   const { data: practiceAttemptsByPuzzle } = usePracticeAttempts(puzzleIds)
 
   if (loadingSession) return null
@@ -80,8 +84,7 @@ export default function TrainPage() {
       timeSeconds,
     })
 
-    if (autoAdvance && sessionDetail) {
-      const puzzles = sessionDetail.puzzles
+    if (autoAdvance && puzzles) {
       const currentIndex = puzzles.findIndex(
         (p) => p.sessionPuzzleId === practiceSelection.sessionPuzzleId,
       )
@@ -165,7 +168,7 @@ export default function TrainPage() {
         )}
 
         <SessionPuzzleList
-          puzzles={sessionDetail?.puzzles ?? []}
+          puzzles={puzzles ?? []}
           activeSessionPuzzleId={activeSessionPuzzleId}
           currentRound={session.current_round}
           practiceAttemptsByPuzzle={practiceAttemptsByPuzzle ?? new Map()}
