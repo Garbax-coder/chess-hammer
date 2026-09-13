@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PuzzleMiniBoard } from '@/components/puzzle-mini-board'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -129,57 +129,91 @@ function PuzzleRow({
   t,
 }: PuzzleRowProps) {
   const lastAttempt = lastAttemptOf(result)
+  // Chiusa di default: con 200 puzzle in lista, mostrare subito i temi di
+  // ognuno affollerebbe la sidebar senza reale beneficio finche' non serve.
+  const [themesOpen, setThemesOpen] = useState(false)
 
   return (
-    <button
-      type="button"
-      data-session-puzzle-id={result.sessionPuzzleId}
-      disabled={!canPractice}
-      onClick={() => canPractice && onSelect(result)}
-      className={`flex w-full items-center gap-3 rounded-md border px-2.5 py-2 text-left transition-colors ${
-        isActive
-          ? 'border-primary bg-primary/10'
-          : 'border-border/60 bg-muted/40 enabled:hover:bg-muted'
-      } ${canPractice ? 'cursor-pointer' : 'cursor-default'}`}
+    <div
+      className={`flex w-full flex-col gap-1.5 rounded-md border px-2.5 py-2 transition-colors ${
+        isActive ? 'border-primary bg-primary/10' : 'border-border/60 bg-muted/40'
+      }`}
     >
-      <span className="text-foreground shrink-0 text-2xl leading-none font-bold tabular-nums">
-        {result.orderIndex}
-      </span>
-      <PuzzleMiniBoard fen={result.fen} boardTheme={boardTheme} />
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1">
-            <RoundIndicator
-              round={1}
-              attempt={result.attempts[1]}
-              isCurrent={currentRound === 1}
-              t={t}
-            />
-            <RoundIndicator
-              round={2}
-              attempt={result.attempts[2]}
-              isCurrent={currentRound === 2}
-              t={t}
-            />
-            <RoundIndicator
-              round={3}
-              attempt={result.attempts[3]}
-              isCurrent={currentRound === 3}
-              t={t}
-            />
+      <button
+        type="button"
+        data-session-puzzle-id={result.sessionPuzzleId}
+        disabled={!canPractice}
+        onClick={() => canPractice && onSelect(result)}
+        className={`flex w-full items-center gap-3 text-left ${
+          canPractice ? 'cursor-pointer' : 'cursor-default'
+        }`}
+      >
+        <span className="text-foreground shrink-0 text-2xl leading-none font-bold tabular-nums">
+          {result.orderIndex}
+        </span>
+        <PuzzleMiniBoard fen={result.fen} boardTheme={boardTheme} />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1">
+              <RoundIndicator
+                round={1}
+                attempt={result.attempts[1]}
+                isCurrent={currentRound === 1}
+                t={t}
+              />
+              <RoundIndicator
+                round={2}
+                attempt={result.attempts[2]}
+                isCurrent={currentRound === 2}
+                t={t}
+              />
+              <RoundIndicator
+                round={3}
+                attempt={result.attempts[3]}
+                isCurrent={currentRound === 3}
+                t={t}
+              />
+            </div>
+            <span className="text-muted-foreground shrink-0 text-[0.65rem]">
+              {result.rating}
+            </span>
           </div>
-          <span className="text-muted-foreground shrink-0 text-[0.65rem]">
-            {result.rating}
-          </span>
+          {lastAttempt && (
+            <span className="text-muted-foreground text-[0.6rem]">
+              {new Date(lastAttempt.attempted_at).toLocaleDateString(t.meta.locale)}
+            </span>
+          )}
+          <PracticeAttemptTags attempts={practiceAttempts} t={t} />
         </div>
-        {lastAttempt && (
-          <span className="text-muted-foreground text-[0.6rem]">
-            {new Date(lastAttempt.attempted_at).toLocaleDateString(t.meta.locale)}
-          </span>
-        )}
-        <PracticeAttemptTags attempts={practiceAttempts} t={t} />
-      </div>
-    </button>
+      </button>
+
+      <button
+        type="button"
+        aria-expanded={themesOpen}
+        onClick={() => setThemesOpen((v) => !v)}
+        className="text-muted-foreground hover:text-foreground flex items-center gap-1 self-start text-[0.6rem] transition-colors"
+      >
+        <span className={`transition-transform ${themesOpen ? 'rotate-90' : ''}`}>▸</span>
+        {t.sessionPuzzleList.themesToggle}
+      </button>
+      {themesOpen && (
+        <div className="flex flex-wrap gap-1 pl-3.5">
+          {result.themes.length === 0 && (
+            <span className="text-muted-foreground text-[0.6rem]">
+              {t.sessionPuzzleList.themesEmpty}
+            </span>
+          )}
+          {result.themes.map((theme) => (
+            <span
+              key={theme}
+              className="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[0.6rem]"
+            >
+              {t.puzzleThemes.labels[theme] ?? theme}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 

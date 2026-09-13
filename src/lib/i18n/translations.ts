@@ -182,6 +182,8 @@ export interface Translations {
       timeSeconds: number,
       isBest: boolean,
     ) => string
+    themesToggle: string
+    themesEmpty: string
   }
   devTools: {
     title: string
@@ -481,6 +483,8 @@ export const it: Translations = {
     roundTodo: (round) => `Giro ${round}: da fare`,
     practiceTooltip: (date, solved, timeSeconds, isBest) =>
       `Pratica libera — ${date}: ${solved ? 'risolto' : 'fallito'} in ${timeSeconds}s${isBest ? ' (miglior tempo)' : ''}`,
+    themesToggle: 'Temi',
+    themesEmpty: 'Nessun tema disponibile per questo puzzle.',
   },
   devTools: {
     title: '🔧 Debug (solo sviluppo)',
@@ -823,6 +827,8 @@ export const en: Translations = {
     roundTodo: (round) => `Round ${round}: to do`,
     practiceTooltip: (date, solved, timeSeconds, isBest) =>
       `Free practice — ${date}: ${solved ? 'solved' : 'failed'} in ${timeSeconds}s${isBest ? ' (best time)' : ''}`,
+    themesToggle: 'Themes',
+    themesEmpty: 'No themes available for this puzzle.',
   },
   devTools: {
     title: '🔧 Debug (dev only)',
