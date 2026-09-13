@@ -184,6 +184,8 @@ export interface Translations {
     ) => string
     themesToggle: string
     themesEmpty: string
+    copyFen: string
+    fenCopied: string
   }
   devTools: {
     title: string
@@ -485,6 +487,8 @@ export const it: Translations = {
       `Pratica libera — ${date}: ${solved ? 'risolto' : 'fallito'} in ${timeSeconds}s${isBest ? ' (miglior tempo)' : ''}`,
     themesToggle: 'Temi',
     themesEmpty: 'Nessun tema disponibile per questo puzzle.',
+    copyFen: 'Copia FEN',
+    fenCopied: 'Copiato!',
   },
   devTools: {
     title: '🔧 Debug (solo sviluppo)',
@@ -829,6 +833,8 @@ export const en: Translations = {
       `Free practice — ${date}: ${solved ? 'solved' : 'failed'} in ${timeSeconds}s${isBest ? ' (best time)' : ''}`,
     themesToggle: 'Themes',
     themesEmpty: 'No themes available for this puzzle.',
+    copyFen: 'Copy FEN',
+    fenCopied: 'Copied!',
   },
   devTools: {
     title: '🔧 Debug (dev only)',

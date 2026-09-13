@@ -1,3 +1,4 @@
+import { Check, Copy } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PuzzleMiniBoard } from '@/components/puzzle-mini-board'
@@ -197,23 +198,64 @@ function PuzzleRow({
         {t.sessionPuzzleList.themesToggle}
       </button>
       {themesOpen && (
-        <div className="flex flex-wrap gap-1 pl-3.5">
-          {result.themes.length === 0 && (
-            <span className="text-muted-foreground text-[0.6rem]">
-              {t.sessionPuzzleList.themesEmpty}
-            </span>
-          )}
-          {result.themes.map((theme) => (
-            <span
-              key={theme}
-              className="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[0.6rem]"
+        <div className="flex flex-col gap-1.5 pl-3.5">
+          <div className="flex flex-wrap gap-1">
+            {result.themes.length === 0 && (
+              <span className="text-muted-foreground text-[0.6rem]">
+                {t.sessionPuzzleList.themesEmpty}
+              </span>
+            )}
+            {result.themes.map((theme) => (
+              <span
+                key={theme}
+                className="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[0.6rem]"
+              >
+                {t.puzzleThemes.labels[theme] ?? theme}
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <code
+              title={result.fen}
+              className="text-muted-foreground min-w-0 flex-1 truncate text-[0.6rem]"
             >
-              {t.puzzleThemes.labels[theme] ?? theme}
-            </span>
-          ))}
+              {result.fen}
+            </code>
+            <CopyFenButton fen={result.fen} t={t} />
+          </div>
         </div>
       )}
     </div>
+  )
+}
+
+function CopyFenButton({ fen, t }: { fen: string; t: Translations }) {
+  const [copied, setCopied] = useState(false)
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(fen)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // Clipboard API non disponibile o permesso negato: nessun feedback
+      // di errore, il testo resta comunque selezionabile a mano.
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="text-muted-foreground hover:text-foreground flex shrink-0 items-center gap-1 text-[0.6rem] transition-colors"
+    >
+      {copied ? (
+        <Check className="size-3 shrink-0" />
+      ) : (
+        <Copy className="size-3 shrink-0" />
+      )}
+      {copied ? t.sessionPuzzleList.fenCopied : t.sessionPuzzleList.copyFen}
+    </button>
   )
 }
 
