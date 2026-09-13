@@ -118,6 +118,12 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     null,
   )
   const [selection, setSelection] = useState<SquareSelection | null>(null)
+  // Diventa true nel momento esatto in cui il puzzle finisce, e torna false
+  // alla prima mossa libera o navigazione in cronologia: isLive da solo non
+  // basta perche' ridiventa vero ad ogni mossa di analisi (e' sempre una
+  // nuova foglia dell'albero), riportando erroneamente il badge sull'ultima
+  // casa toccata invece che sulla vera mossa finale del puzzle.
+  const [outcomeVisible, setOutcomeVisible] = useState(false)
 
   // Quando il puzzle cambia, nodes/currentId non sono ancora stati
   // azzerati (lo state aggiornato da una setState chiamata qui durante il
@@ -139,6 +145,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     setWrongMove(null)
     setPendingCompletion(null)
     setSelection(null)
+    setOutcomeVisible(false)
     nodeIdCounterRef.current = 0
   }
   const effectiveNodes = isNewPuzzle ? INITIAL_MOVE_NODES : nodes
@@ -157,6 +164,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   function navigateTo(id: string) {
     setWrongMove(null)
     setSelection(null)
+    setOutcomeVisible(false)
     setCurrentId(id)
   }
 
@@ -292,10 +300,13 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   const effectiveSelection = isLive || analysisEnabled ? selection : null
 
   // La casella con l'esito finale (segno di spunta verde/croce rossa) si
-  // mostra solo sulla posizione dal vivo, non mentre si rivede una mossa
-  // precedente della stessa linea gia' risolta/fallita.
+  // mostra solo appena finito il puzzle, sulla mossa che lo ha concluso:
+  // outcomeVisible torna false alla prima mossa libera o navigazione in
+  // cronologia (vedi sopra), cosi' non segue le mosse fatte in analisi.
   const finalOutcomeSquare =
-    isLive && (feedback === 'solved' || feedback === 'wrong') ? lastMoveSquares?.to : undefined
+    outcomeVisible && (feedback === 'solved' || feedback === 'wrong')
+      ? lastMoveSquares?.to
+      : undefined
 
   const squareStyles = useMemo(() => {
     const styles: Record<string, CSSProperties> = {}
@@ -386,6 +397,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   function attemptFreeMove(sourceSquare: string, targetSquare: string): boolean {
     setSelection(null)
     setWrongMove(null)
+    setOutcomeVisible(false)
     const game = new Chess(displayFen)
     let move
     try {
@@ -414,6 +426,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
       tickIntervalRef.current = null
     }
     setFeedback(result === 'solved' ? 'solved' : 'wrong')
+    setOutcomeVisible(true)
     const timeSeconds = Math.round((Date.now() - startedAtRef.current) / 1000)
     setElapsed(timeSeconds)
     if (autoAdvanceRef.current) {
