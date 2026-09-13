@@ -1,3 +1,5 @@
+import type { BoardThemeId } from '@/lib/board-themes'
+
 export type Language = 'it' | 'en'
 
 export interface Translations {
@@ -144,7 +146,12 @@ export interface Translations {
     empty: string
     roundResult: (round: number, solved: boolean, timeSeconds: number) => string
     roundTodo: (round: number) => string
-    practiceTooltip: (date: string, solved: boolean, timeSeconds: number, isBest: boolean) => string
+    practiceTooltip: (
+      date: string,
+      solved: boolean,
+      timeSeconds: number,
+      isBest: boolean,
+    ) => string
   }
   devTools: {
     title: string
@@ -156,6 +163,11 @@ export interface Translations {
     openLabel: string
     title: string
     elo: (elo: number) => string
+  }
+  appearance: {
+    boardTheme: string
+    pieceSet: string
+    themes: Record<BoardThemeId, string>
   }
   errors: {
     noPuzzleAvailable: string
@@ -326,6 +338,17 @@ export const it: Translations = {
     title: 'Profilo',
     elo: (elo) => `ELO ${elo}`,
   },
+  appearance: {
+    boardTheme: 'Stile scacchiera',
+    pieceSet: 'Stile pezzi',
+    themes: {
+      classic: 'Classico',
+      ocean: 'Oceano',
+      forest: 'Foresta',
+      slate: 'Ardesia',
+      coral: 'Corallo',
+    },
+  },
   errors: {
     noPuzzleAvailable: 'Nessun puzzle disponibile per questo rating: pool esaurito.',
   },
@@ -494,6 +517,17 @@ export const en: Translations = {
     openLabel: 'Profile',
     title: 'Profile',
     elo: (elo) => `ELO ${elo}`,
+  },
+  appearance: {
+    boardTheme: 'Board style',
+    pieceSet: 'Piece style',
+    themes: {
+      classic: 'Classic',
+      ocean: 'Ocean',
+      forest: 'Forest',
+      slate: 'Slate',
+      coral: 'Coral',
+    },
   },
   errors: {
     noPuzzleAvailable: 'No puzzle available for this rating: pool exhausted.',
