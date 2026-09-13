@@ -27,6 +27,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Button asChild variant="ghost" size="sm">
               <Link to="/sessions">{t.nav.history}</Link>
             </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/faq">{t.nav.faq}</Link>
+            </Button>
             <Button
               variant="ghost"
               size="icon-sm"

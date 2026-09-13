@@ -1,4 +1,6 @@
+import { CircleHelp } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useEloHistory } from '@/hooks/use-elo-history'
 import type { EloRange } from '@/lib/elo-history'
@@ -50,7 +52,17 @@ export function EloHistoryChart() {
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <CardTitle>{t.dashboard.eloHistory.title}</CardTitle>
+        <div className="flex items-center gap-1.5">
+          <CardTitle>{t.dashboard.eloHistory.title}</CardTitle>
+          <Link
+            to="/faq"
+            aria-label={t.faq.title}
+            title={t.faq.title}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <CircleHelp className="size-3.5" />
+          </Link>
+        </div>
         <div className="flex gap-1">
           {RANGES.map((r) => (
             <button

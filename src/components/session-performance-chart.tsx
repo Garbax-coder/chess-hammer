@@ -1,4 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { PuzzleMiniBoard } from '@/components/puzzle-mini-board'
+import type { BoardThemeId } from '@/lib/board-themes'
 import { useTranslations } from '@/lib/language-context'
 import type { SessionPuzzleResult } from '@/types/training'
 
@@ -29,9 +31,24 @@ const SOLVED_COLOR = '#10b981'
 const FAILED_COLOR = 'var(--color-destructive)'
 const PENDING_COLOR = 'var(--color-muted)'
 
-export function SessionPerformanceChart({ puzzles }: { puzzles: SessionPuzzleResult[] }) {
+interface HoverInfo {
+  puzzle: SessionPuzzleResult
+  round: Round
+  rect: DOMRect
+}
+
+export function SessionPerformanceChart({
+  puzzles,
+  boardTheme,
+  onSelectPuzzle,
+}: {
+  puzzles: SessionPuzzleResult[]
+  boardTheme?: BoardThemeId
+  onSelectPuzzle: (sessionPuzzleId: string) => void
+}) {
   const t = useTranslations()
   const n = puzzles.length
+  const [hover, setHover] = useState<HoverInfo | null>(null)
 
   const chart = useMemo(() => {
     const width = Math.max(n * COLUMN_WIDTH, COLUMN_WIDTH)
@@ -66,7 +83,16 @@ export function SessionPerformanceChart({ puzzles }: { puzzles: SessionPuzzleRes
       return { round, points: roundPoints, path }
     })
 
-    return { width, xForIndex, linesByRound }
+    // Ticks per l'asse Y del grafico tempi (max / meta' / 0), mostrati nella
+    // colonna fissa a sinistra: senza non era chiaro che quelle linee
+    // rappresentassero secondi di risoluzione.
+    const yTicks = [
+      { value: maxTime, y: CHART_MARGIN_TOP },
+      { value: Math.round(maxTime / 2), y: CHART_MARGIN_TOP + innerHeight / 2 },
+      { value: 0, y: CHART_MARGIN_TOP + innerHeight },
+    ]
+
+    return { width, xForIndex, linesByRound, yTicks }
   }, [puzzles, n])
 
   if (n === 0) {
@@ -75,6 +101,14 @@ export function SessionPerformanceChart({ puzzles }: { puzzles: SessionPuzzleRes
         {t.dashboard.puzzlePerformance.empty}
       </p>
     )
+  }
+
+  function showHover(
+    e: React.MouseEvent<SVGRectElement>,
+    puzzle: SessionPuzzleResult,
+    round: Round,
+  ) {
+    setHover({ puzzle, round, rect: e.currentTarget.getBoundingClientRect() })
   }
 
   return (
@@ -114,10 +148,19 @@ export function SessionPerformanceChart({ puzzles }: { puzzles: SessionPuzzleRes
       </div>
 
       <div className="flex gap-2">
-        <div
-          className="text-muted-foreground flex shrink-0 flex-col text-[0.65rem]"
-          style={{ paddingTop: HEATMAP_TOP }}
-        >
+        <div className="text-muted-foreground flex shrink-0 flex-col text-[0.6rem]">
+          <div style={{ height: CHART_HEIGHT }} className="relative w-7">
+            {chart.yTicks.map((tick) => (
+              <span
+                key={tick.value}
+                className="absolute right-0 -translate-y-1/2"
+                style={{ top: tick.y }}
+              >
+                {tick.value}s
+              </span>
+            ))}
+          </div>
+          <div style={{ height: GAP_BETWEEN }} />
           {ROUNDS.map((round) => (
             <div key={round} style={{ height: ROW_HEIGHT }} className="flex items-center">
               {round}
@@ -132,6 +175,18 @@ export function SessionPerformanceChart({ puzzles }: { puzzles: SessionPuzzleRes
             role="img"
             aria-label={t.dashboard.puzzlePerformance.title}
           >
+            {chart.yTicks.map((tick) => (
+              <line
+                key={tick.value}
+                x1={0}
+                x2={chart.width}
+                y1={tick.y}
+                y2={tick.y}
+                stroke="var(--color-border)"
+                strokeWidth={1}
+              />
+            ))}
+
             {chart.linesByRound.map(
               ({ round, path }) =>
                 path && (
@@ -172,13 +227,6 @@ export function SessionPerformanceChart({ puzzles }: { puzzles: SessionPuzzleRes
                   : attempt.result === 'solved'
                     ? SOLVED_COLOR
                     : FAILED_COLOR
-                const label = attempt
-                  ? t.sessionPuzzleList.roundResult(
-                      round,
-                      attempt.result === 'solved',
-                      attempt.time_seconds,
-                    )
-                  : t.sessionPuzzleList.roundTodo(round)
                 return (
                   <rect
                     key={`${p.sessionPuzzleId}-${round}`}
@@ -188,13 +236,71 @@ export function SessionPerformanceChart({ puzzles }: { puzzles: SessionPuzzleRes
                     height={CELL_SIZE}
                     rx={3}
                     fill={fill}
-                  >
-                    <title>{`#${p.orderIndex} · ${label}`}</title>
-                  </rect>
+                    className="cursor-pointer"
+                    onMouseEnter={(e) => showHover(e, p, round)}
+                    onMouseMove={(e) => showHover(e, p, round)}
+                    onMouseLeave={() => setHover(null)}
+                    onClick={() => onSelectPuzzle(p.sessionPuzzleId)}
+                  />
                 )
               }),
             )}
           </svg>
+        </div>
+      </div>
+
+      {hover && <PuzzleHoverPopover hover={hover} boardTheme={boardTheme} />}
+    </div>
+  )
+}
+
+function PuzzleHoverPopover({
+  hover,
+  boardTheme,
+}: {
+  hover: HoverInfo
+  boardTheme: BoardThemeId | undefined
+}) {
+  const t = useTranslations()
+  const { puzzle, round, rect } = hover
+  const attempt = puzzle.attempts[round]
+
+  const showAbove = rect.top > 160
+  const style: React.CSSProperties = {
+    left: Math.min(Math.max(rect.left + rect.width / 2, 90), window.innerWidth - 90),
+    top: showAbove ? rect.top - 8 : rect.bottom + 8,
+    transform: `translate(-50%, ${showAbove ? '-100%' : '0'})`,
+  }
+
+  return (
+    <div
+      className="bg-popover text-popover-foreground ring-foreground/10 pointer-events-none fixed z-50 flex w-44 flex-col gap-2 rounded-lg p-2.5 text-xs shadow-lg ring-1"
+      style={style}
+    >
+      <div className="flex items-center gap-2">
+        <PuzzleMiniBoard fen={puzzle.fen} boardTheme={boardTheme} />
+        <div className="flex flex-col gap-0.5">
+          <span className="text-foreground font-medium">
+            {`#${puzzle.orderIndex} · ${t.dashboard.puzzlePerformance.roundLabel(round)}`}
+          </span>
+          {attempt ? (
+            <span
+              className={
+                attempt.result === 'solved'
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-destructive'
+              }
+            >
+              {attempt.result === 'solved'
+                ? t.dashboard.puzzlePerformance.legendSolved
+                : t.dashboard.puzzlePerformance.legendFailed}
+              {` · ${attempt.time_seconds}s`}
+            </span>
+          ) : (
+            <span className="text-muted-foreground">
+              {t.dashboard.puzzlePerformance.legendPending}
+            </span>
+          )}
         </div>
       </div>
     </div>
