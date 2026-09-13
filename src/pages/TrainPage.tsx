@@ -105,7 +105,7 @@ export default function TrainPage() {
     (outcome?.status === 'next' ? outcome.data.sessionPuzzleId : null)
 
   return (
-    <main className="flex w-full flex-1 flex-col gap-6 px-4 py-8 lg:flex-row lg:justify-center">
+    <main className="flex w-full flex-1 flex-col gap-4 px-4 py-8 lg:flex-row lg:justify-center lg:gap-3">
       <aside className="order-2 flex w-full flex-col gap-4 lg:order-1 lg:w-64 lg:shrink-0 lg:self-start">
         <div className="flex flex-col gap-3">
           {practiceSelection ? (
@@ -157,6 +157,12 @@ export default function TrainPage() {
           </div>
         </div>
 
+        {practiceSelection && (
+          <Button variant="outline" size="sm" onClick={() => setPracticeSelection(null)}>
+            {t.train.backToList}
+          </Button>
+        )}
+
         <SessionPuzzleList
           puzzles={sessionDetail?.puzzles ?? []}
           activeSessionPuzzleId={activeSessionPuzzleId}
@@ -169,21 +175,16 @@ export default function TrainPage() {
 
       <div className="order-1 flex flex-1 flex-col items-center justify-center gap-6 lg:order-2">
         {practiceSelection ? (
-          <>
-            <Button variant="outline" size="sm" onClick={() => setPracticeSelection(null)}>
-              {t.train.backToList}
-            </Button>
-            {practicePuzzle ? (
-              <PuzzleBoard
-                key={practicePuzzle.puzzle_id}
-                puzzle={practicePuzzle}
-                autoAdvance={autoAdvance}
-                onComplete={handlePracticeComplete}
-              />
-            ) : (
-              <p className="text-muted-foreground text-sm">{t.common.loading}</p>
-            )}
-          </>
+          practicePuzzle ? (
+            <PuzzleBoard
+              key={practicePuzzle.puzzle_id}
+              puzzle={practicePuzzle}
+              autoAdvance={autoAdvance}
+              onComplete={handlePracticeComplete}
+            />
+          ) : (
+            <p className="text-muted-foreground text-sm">{t.common.loading}</p>
+          )
         ) : (
           <>
             {loadingPuzzle && <p className="text-muted-foreground text-sm">{t.common.loading}</p>}

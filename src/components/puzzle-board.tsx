@@ -1,5 +1,5 @@
 import { Chess, type Square } from 'chess.js'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Chessboard, type Arrow } from 'react-chessboard'
 import { AnalysisPanel } from '@/components/analysis-panel'
@@ -38,25 +38,19 @@ const MOVE_HINT_STYLE = {
 }
 const CAPTURE_HINT_STYLE = { boxShadow: 'inset 0 0 0 3px rgba(0,0,0,0.22)' }
 
-function svgDataUri(svg: string): string {
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`
-}
-
-const CHECK_BADGE_STYLE = {
-  backgroundImage: `url("${svgDataUri(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#16a34a"/><path d="M7 12.5l3 3 7-7" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  )}")`,
-  backgroundRepeat: 'no-repeat',
-  backgroundPosition: 'top right',
-  backgroundSize: '38% 38%',
-}
-const CROSS_BADGE_STYLE = {
-  backgroundImage: `url("${svgDataUri(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#dc2626"/><path d="M8 8l8 8M16 8l-8 8" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>',
-  )}")`,
-  backgroundRepeat: 'no-repeat',
-  backgroundPosition: 'top right',
-  backgroundSize: '38% 38%',
+// Posizione (riga/colonna, 0-7 dall'alto a sinistra) di una casa sulla
+// scacchiera COSI' COM'E' VISUALIZZATA (tiene conto dell'orientamento), per
+// posizionare l'overlay dell'esito finale sopra il pezzo invece che dietro
+// (squareStyles del componente Chessboard finisce dietro ai pezzi).
+function squareToBoardPosition(
+  square: string,
+  orientation: 'white' | 'black',
+): { row: number; col: number } {
+  const file = square.charCodeAt(0) - 'a'.charCodeAt(0)
+  const rank = Number(square[1]) - 1
+  return orientation === 'white'
+    ? { row: 7 - rank, col: file }
+    : { row: rank, col: 7 - file }
 }
 
 // Il lato che deve risolvere il puzzle e' l'opposto di chi gioca la mossa di
@@ -316,9 +310,6 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     if (effectiveWrongMove) {
       merge(effectiveWrongMove.square, WRONG_SQUARE_STYLE)
     }
-    if (finalOutcomeSquare) {
-      merge(finalOutcomeSquare, feedback === 'solved' ? CHECK_BADGE_STYLE : CROSS_BADGE_STYLE)
-    }
     if (effectiveSelection) {
       merge(effectiveSelection.square, SELECTED_SQUARE_STYLE)
       for (const target of effectiveSelection.targets) {
@@ -327,7 +318,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     }
 
     return Object.keys(styles).length > 0 ? styles : undefined
-  }, [lastMoveSquares, effectiveWrongMove, finalOutcomeSquare, feedback, effectiveSelection])
+  }, [lastMoveSquares, effectiveWrongMove, effectiveSelection])
 
   // Calcolate qui (in un event handler, non durante il render) cosi'
   // gameRef puo' essere letto liberamente senza toccare la logica di
@@ -543,50 +534,84 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
           <span>{elapsed}s</span>
         </div>
 
-        {analysisEnabled && (
-          <div style={{ width: BOARD_SIZE }}>
-            <EvalBar
-              whitePercent={whitePercent}
-              scoreCp={topLine?.scoreCp ?? null}
-              scoreMate={topLine?.scoreMate ?? null}
-              sideToMove={displayTurn}
-            />
+        <div className="flex items-stretch gap-2" style={{ width: BOARD_SIZE }}>
+          {/* Colonna riservata SEMPRE (anche vuota) cosi' la comparsa della
+              barra di valutazione a fine puzzle non fa "scattare" la
+              scacchiera (ne' in larghezza ne' in altezza, dato che non sta
+              piu' sopra ma di lato). */}
+          <div className="w-5 shrink-0">
+            {analysisEnabled && (
+              <EvalBar
+                orientation="vertical"
+                whitePercent={whitePercent}
+                scoreCp={topLine?.scoreCp ?? null}
+                scoreMate={topLine?.scoreMate ?? null}
+                sideToMove={displayTurn}
+              />
+            )}
           </div>
-        )}
 
-        <div
-          className={`relative rounded-lg ring-2 transition-all duration-300 ${
-            feedback === 'wrong'
-              ? 'ring-destructive'
-              : feedback === 'solved' || feedback === 'correct'
-                ? 'ring-primary/50'
-                : 'ring-transparent'
-          }`}
-          style={{ width: BOARD_SIZE, aspectRatio: '1 / 1' }}
-        >
-          <Chessboard
-            options={{
-              position: displayFen,
-              onPieceDrop: handlePieceDrop,
-              onSquareClick: handleSquareClick,
-              boardOrientation: orientation,
-              canDragPiece: ({ piece }) =>
-                analysisEnabled
-                  ? piece.pieceType[0] === displayTurn
-                  : isLive &&
-                    !lockedRef.current &&
-                    piece.pieceType[0] === gameRef.current.turn(),
-              animationDurationInMs: 200,
-              boardStyle: { borderRadius: '0.5rem', overflow: 'hidden' },
-              squareStyles,
-              arrows: bestMoveArrows,
-              // react-chessboard usa `id` per generare selettori CSS interni
-              // (es. `#${id}-square-a1`): un ID CSS non puo' iniziare con una
-              // cifra, mentre molti puzzle_id Lichess sì (es. "00rTX").
-              id: `puzzle-${puzzle.puzzle_id}`,
-            }}
-          />
-          {feedback === 'solved' && <SolvedFireworks />}
+          <div
+            className={`relative min-w-0 flex-1 rounded-lg ring-2 transition-all duration-300 ${
+              feedback === 'wrong'
+                ? 'ring-destructive'
+                : feedback === 'solved' || feedback === 'correct'
+                  ? 'ring-primary/50'
+                  : 'ring-transparent'
+            }`}
+            style={{ aspectRatio: '1 / 1' }}
+          >
+            <Chessboard
+              options={{
+                position: displayFen,
+                onPieceDrop: handlePieceDrop,
+                onSquareClick: handleSquareClick,
+                boardOrientation: orientation,
+                canDragPiece: ({ piece }) =>
+                  analysisEnabled
+                    ? piece.pieceType[0] === displayTurn
+                    : isLive &&
+                      !lockedRef.current &&
+                      piece.pieceType[0] === gameRef.current.turn(),
+                animationDurationInMs: 200,
+                boardStyle: { borderRadius: '0.5rem', overflow: 'hidden' },
+                squareStyles,
+                arrows: bestMoveArrows,
+                // react-chessboard usa `id` per generare selettori CSS interni
+                // (es. `#${id}-square-a1`): un ID CSS non puo' iniziare con una
+                // cifra, mentre molti puzzle_id Lichess sì (es. "00rTX").
+                id: `puzzle-${puzzle.puzzle_id}`,
+              }}
+            />
+            {feedback === 'solved' && <SolvedFireworks />}
+            {finalOutcomeSquare &&
+              (() => {
+                const { row, col } = squareToBoardPosition(finalOutcomeSquare, orientation)
+                return (
+                  <div
+                    className="pointer-events-none absolute"
+                    style={{
+                      left: `${col * 12.5}%`,
+                      top: `${row * 12.5}%`,
+                      width: '12.5%',
+                      height: '12.5%',
+                    }}
+                  >
+                    <div
+                      className={`absolute top-0.5 right-0.5 flex size-[38%] items-center justify-center rounded-full ${
+                        feedback === 'solved' ? 'bg-emerald-600' : 'bg-destructive'
+                      }`}
+                    >
+                      {feedback === 'solved' ? (
+                        <Check className="size-[70%] text-white" strokeWidth={3} />
+                      ) : (
+                        <X className="size-[70%] text-white" strokeWidth={3} />
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
