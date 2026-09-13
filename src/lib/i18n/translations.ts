@@ -185,6 +185,7 @@ export interface Translations {
     themesToggle: string
     themesEmpty: string
     copyFen: string
+    copyPgn: string
     fenCopied: string
   }
   devTools: {
@@ -485,9 +486,10 @@ export const it: Translations = {
     roundTodo: (round) => `Giro ${round}: da fare`,
     practiceTooltip: (date, solved, timeSeconds, isBest) =>
       `Pratica libera — ${date}: ${solved ? 'risolto' : 'fallito'} in ${timeSeconds}s${isBest ? ' (miglior tempo)' : ''}`,
-    themesToggle: 'Temi',
+    themesToggle: 'Info',
     themesEmpty: 'Nessun tema disponibile per questo puzzle.',
     copyFen: 'Copia FEN',
+    copyPgn: 'Copia PGN',
     fenCopied: 'Copiato!',
   },
   devTools: {
@@ -831,9 +833,10 @@ export const en: Translations = {
     roundTodo: (round) => `Round ${round}: to do`,
     practiceTooltip: (date, solved, timeSeconds, isBest) =>
       `Free practice — ${date}: ${solved ? 'solved' : 'failed'} in ${timeSeconds}s${isBest ? ' (best time)' : ''}`,
-    themesToggle: 'Themes',
+    themesToggle: 'Info',
     themesEmpty: 'No themes available for this puzzle.',
     copyFen: 'Copy FEN',
+    copyPgn: 'Copy PGN',
     fenCopied: 'Copied!',
   },
   devTools: {

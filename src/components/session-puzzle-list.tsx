@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PuzzleMiniBoard } from '@/components/puzzle-mini-board'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { BoardThemeId } from '@/lib/board-themes'
+import { puzzlePgn } from '@/lib/chess-format'
 import type { Translations } from '@/lib/i18n/translations'
 import { useTranslations } from '@/lib/language-context'
 import type {
@@ -214,14 +215,17 @@ function PuzzleRow({
               </span>
             ))}
           </div>
-          <div className="flex items-center gap-1.5">
-            <code
-              title={result.fen}
-              className="text-muted-foreground min-w-0 flex-1 truncate text-[0.6rem]"
-            >
-              {result.fen}
-            </code>
-            <CopyFenButton fen={result.fen} t={t} />
+          <div className="flex items-center gap-3">
+            <CopyButton
+              getText={() => result.fen}
+              label={t.sessionPuzzleList.copyFen}
+              copiedLabel={t.sessionPuzzleList.fenCopied}
+            />
+            <CopyButton
+              getText={() => puzzlePgn(result.fen, result.moves)}
+              label={t.sessionPuzzleList.copyPgn}
+              copiedLabel={t.sessionPuzzleList.fenCopied}
+            />
           </div>
         </div>
       )}
@@ -229,17 +233,25 @@ function PuzzleRow({
   )
 }
 
-function CopyFenButton({ fen, t }: { fen: string; t: Translations }) {
+function CopyButton({
+  getText,
+  label,
+  copiedLabel,
+}: {
+  getText: () => string
+  label: string
+  copiedLabel: string
+}) {
   const [copied, setCopied] = useState(false)
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(fen)
+      await navigator.clipboard.writeText(getText())
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     } catch {
       // Clipboard API non disponibile o permesso negato: nessun feedback
-      // di errore, il testo resta comunque selezionabile a mano.
+      // di errore, l'utente puo' comunque riprovare.
     }
   }
 
@@ -254,7 +266,7 @@ function CopyFenButton({ fen, t }: { fen: string; t: Translations }) {
       ) : (
         <Copy className="size-3 shrink-0" />
       )}
-      {copied ? t.sessionPuzzleList.fenCopied : t.sessionPuzzleList.copyFen}
+      {copied ? copiedLabel : label}
     </button>
   )
 }

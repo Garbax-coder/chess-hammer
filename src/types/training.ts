@@ -103,6 +103,7 @@ export interface SessionPuzzleResult {
   puzzleId: string
   rating: number
   fen: string
+  moves: string[]
   themes: string[]
   attempts: Partial<Record<1 | 2 | 3, PuzzleAttempt>>
 }
