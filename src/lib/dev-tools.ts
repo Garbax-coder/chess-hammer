@@ -54,6 +54,7 @@ export async function resetSession(sessionId: string, userId: string) {
     .from('user_stats')
     .update({
       current_elo: 1500,
+      rating_deviation: 350,
       puzzles_solved: 0,
       puzzles_failed: 0,
       updated_at: new Date().toISOString(),
