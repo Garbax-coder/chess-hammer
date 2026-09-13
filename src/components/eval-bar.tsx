@@ -19,18 +19,18 @@ export function EvalBar({
 
   if (orientation === 'vertical') {
     return (
-      <div
-        className="bg-muted relative h-full w-full overflow-hidden rounded-full"
-        title={label}
-      >
-        <div
-          className="bg-foreground absolute inset-x-0 bottom-0 transition-all duration-500"
-          style={{ height: `${whitePercent}%` }}
-        />
-        <span
-          className="absolute inset-x-0 top-1 text-center text-[0.55rem] leading-none font-semibold text-white mix-blend-difference"
-          style={{ writingMode: 'vertical-rl' }}
-        >
+      <div className="relative h-full w-full" title={label}>
+        <div className="bg-muted absolute inset-0 overflow-hidden rounded-full">
+          <div
+            className="bg-foreground absolute inset-x-0 bottom-0 transition-all duration-500"
+            style={{ height: `${whitePercent}%` }}
+          />
+        </div>
+        {/* Il contenitore del testo NON e' quello con overflow-hidden: la
+            barra e' stretta (poche decine di px), quindi l'etichetta in
+            orizzontale deve poter sporgere oltre i suoi bordi senza
+            essere tagliata. */}
+        <span className="bg-background text-foreground absolute top-2 left-1/2 -translate-x-1/2 rounded px-1 text-[0.65rem] font-semibold whitespace-nowrap shadow-sm">
           {label}
         </span>
       </div>

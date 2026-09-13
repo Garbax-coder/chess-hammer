@@ -105,8 +105,8 @@ export default function TrainPage() {
     (outcome?.status === 'next' ? outcome.data.sessionPuzzleId : null)
 
   return (
-    <main className="flex w-full flex-1 flex-col gap-4 px-4 py-8 lg:flex-row lg:justify-center lg:gap-3">
-      <aside className="order-2 flex w-full flex-col gap-4 lg:order-1 lg:w-64 lg:shrink-0 lg:self-start">
+    <main className="grid w-full flex-1 grid-cols-1 gap-4 px-4 py-8 lg:grid-cols-[16rem_1fr_16rem] lg:gap-3">
+      <aside className="order-2 flex w-full flex-col gap-4 lg:order-none lg:col-start-1 lg:self-start">
         <div className="flex flex-col gap-3">
           {practiceSelection ? (
             <div>
@@ -173,7 +173,7 @@ export default function TrainPage() {
         />
       </aside>
 
-      <div className="order-1 flex flex-1 flex-col items-center justify-center gap-6 lg:order-2">
+      <div className="order-1 flex flex-1 flex-col items-center justify-center gap-6 lg:order-none lg:col-start-2">
         {practiceSelection ? (
           practicePuzzle ? (
             <PuzzleBoard
@@ -229,6 +229,8 @@ export default function TrainPage() {
 
         {import.meta.env.DEV && <DevToolsPanel />}
       </div>
+
+      <div className="order-3 hidden lg:col-start-3 lg:block" aria-hidden="true" />
     </main>
   )
 }
