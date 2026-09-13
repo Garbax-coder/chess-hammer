@@ -56,6 +56,19 @@ export interface Translations {
     noActiveSessionTitle: string
     noActiveSessionDescription: string
     createSession: string
+    eloHistory: {
+      title: string
+      empty: string
+      range: { week: string; month: string; year: string; all: string }
+    }
+    puzzlePerformance: {
+      title: string
+      empty: string
+      roundLabel: (round: number) => string
+      legendSolved: string
+      legendFailed: string
+      legendPending: string
+    }
   }
   newSession: {
     title: string
@@ -224,6 +237,19 @@ export const it: Translations = {
     noActiveSessionTitle: 'Nessuna sessione attiva',
     noActiveSessionDescription: 'Configura un nuovo allenamento Woodpecker per iniziare.',
     createSession: 'Crea nuova sessione',
+    eloHistory: {
+      title: 'Andamento ELO',
+      empty: 'Nessun puzzle risolto in questo periodo.',
+      range: { week: 'Settimana', month: 'Mese', year: 'Anno', all: 'Tutto' },
+    },
+    puzzlePerformance: {
+      title: 'Prestazioni puzzle',
+      empty: 'Nessun puzzle ancora nel pool di questa sessione.',
+      roundLabel: (round) => `Giro ${round}`,
+      legendSolved: 'Risolto',
+      legendFailed: 'Fallito',
+      legendPending: 'Da fare',
+    },
   },
   newSession: {
     title: 'Nuova sessione',
@@ -399,6 +425,19 @@ export const en: Translations = {
     noActiveSessionTitle: 'No active session',
     noActiveSessionDescription: 'Set up a new Woodpecker training to get started.',
     createSession: 'Create new session',
+    eloHistory: {
+      title: 'ELO trend',
+      empty: 'No puzzles solved in this period.',
+      range: { week: 'Week', month: 'Month', year: 'Year', all: 'All' },
+    },
+    puzzlePerformance: {
+      title: 'Puzzle performance',
+      empty: 'No puzzles in this session pool yet.',
+      roundLabel: (round) => `Round ${round}`,
+      legendSolved: 'Solved',
+      legendFailed: 'Failed',
+      legendPending: 'To do',
+    },
   },
   newSession: {
     title: 'New session',
