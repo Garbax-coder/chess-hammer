@@ -184,6 +184,7 @@ export interface Translations {
     ) => string
     themesToggle: string
     themesEmpty: string
+    infoDisabledHint: string
     copyFen: string
     copyPgn: string
     fenCopied: string
@@ -488,6 +489,7 @@ export const it: Translations = {
       `Pratica libera — ${date}: ${solved ? 'risolto' : 'fallito'} in ${timeSeconds}s${isBest ? ' (miglior tempo)' : ''}`,
     themesToggle: 'Info',
     themesEmpty: 'Nessun tema disponibile per questo puzzle.',
+    infoDisabledHint: 'Disponibile dopo aver tentato il puzzle in questo giro.',
     copyFen: 'Copia FEN',
     copyPgn: 'Copia PGN',
     fenCopied: 'Copiato!',
@@ -835,6 +837,7 @@ export const en: Translations = {
       `Free practice — ${date}: ${solved ? 'solved' : 'failed'} in ${timeSeconds}s${isBest ? ' (best time)' : ''}`,
     themesToggle: 'Info',
     themesEmpty: 'No themes available for this puzzle.',
+    infoDisabledHint: 'Available after attempting the puzzle in this round.',
     copyFen: 'Copy FEN',
     copyPgn: 'Copy PGN',
     fenCopied: 'Copied!',

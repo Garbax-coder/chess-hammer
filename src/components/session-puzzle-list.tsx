@@ -134,6 +134,10 @@ function PuzzleRow({
   // Chiusa di default: con 200 puzzle in lista, mostrare subito i temi di
   // ognuno affollerebbe la sidebar senza reale beneficio finche' non serve.
   const [themesOpen, setThemesOpen] = useState(false)
+  // Il PGN copiato contiene la soluzione: va nascosto finche' il puzzle non
+  // e' stato tentato nel giro corrente, altrimenti l'utente potrebbe
+  // sbirciarla prima di risolverlo.
+  const isPending = !result.attempts[currentRound]
 
   return (
     <div
@@ -192,13 +196,19 @@ function PuzzleRow({
       <button
         type="button"
         aria-expanded={themesOpen}
+        disabled={isPending}
+        title={isPending ? t.sessionPuzzleList.infoDisabledHint : undefined}
         onClick={() => setThemesOpen((v) => !v)}
-        className="text-muted-foreground hover:text-foreground flex items-center gap-1 self-start text-[0.6rem] transition-colors"
+        className={`flex items-center gap-1 self-start text-[0.6rem] transition-colors ${
+          isPending
+            ? 'text-muted-foreground/50 cursor-not-allowed'
+            : 'text-muted-foreground hover:text-foreground cursor-pointer'
+        }`}
       >
         <span className={`transition-transform ${themesOpen ? 'rotate-90' : ''}`}>▸</span>
         {t.sessionPuzzleList.themesToggle}
       </button>
-      {themesOpen && (
+      {themesOpen && !isPending && (
         <div className="flex flex-col gap-1.5 pl-3.5">
           <div className="flex flex-wrap gap-1">
             {result.themes.length === 0 && (
