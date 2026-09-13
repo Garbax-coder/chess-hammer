@@ -98,29 +98,45 @@ function PuzzleRow({
       type="button"
       disabled={!canPractice}
       onClick={() => canPractice && onSelect(result)}
-      className={`flex w-full flex-col gap-1.5 rounded-md border px-2 py-1.5 text-left transition-colors ${
+      className={`flex w-full items-center gap-3 rounded-md border px-2.5 py-2 text-left transition-colors ${
         isActive
-          ? 'border-primary bg-primary/5'
-          : 'border-transparent enabled:hover:bg-muted'
+          ? 'border-primary bg-primary/10'
+          : 'border-border/60 bg-muted/40 enabled:hover:bg-muted'
       } ${canPractice ? 'cursor-pointer' : 'cursor-default'}`}
     >
-      <div className="flex items-center justify-between">
-        <span className="text-muted-foreground font-mono text-[0.65rem]">
-          #{result.orderIndex}
-        </span>
-        <span className="text-muted-foreground text-[0.65rem]">{result.rating}</span>
+      <span className="text-foreground shrink-0 text-2xl leading-none font-bold tabular-nums">
+        {result.orderIndex}
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1">
+            <RoundIndicator
+              round={1}
+              attempt={result.attempts[1]}
+              isCurrent={currentRound === 1}
+            />
+            <RoundIndicator
+              round={2}
+              attempt={result.attempts[2]}
+              isCurrent={currentRound === 2}
+            />
+            <RoundIndicator
+              round={3}
+              attempt={result.attempts[3]}
+              isCurrent={currentRound === 3}
+            />
+          </div>
+          <span className="text-muted-foreground shrink-0 text-[0.65rem]">
+            {result.rating}
+          </span>
+        </div>
+        {lastAttempt && (
+          <span className="text-muted-foreground text-[0.6rem]">
+            {new Date(lastAttempt.attempted_at).toLocaleDateString('it-IT')}
+          </span>
+        )}
+        <PracticeAttemptTags attempts={practiceAttempts} />
       </div>
-      <div className="flex items-center gap-1">
-        <RoundIndicator round={1} attempt={result.attempts[1]} isCurrent={currentRound === 1} />
-        <RoundIndicator round={2} attempt={result.attempts[2]} isCurrent={currentRound === 2} />
-        <RoundIndicator round={3} attempt={result.attempts[3]} isCurrent={currentRound === 3} />
-      </div>
-      {lastAttempt && (
-        <span className="text-muted-foreground text-[0.6rem]">
-          {new Date(lastAttempt.attempted_at).toLocaleDateString('it-IT')}
-        </span>
-      )}
-      <PracticeAttemptTags attempts={practiceAttempts} />
     </button>
   )
 }
@@ -153,11 +169,11 @@ export function SessionPuzzleList({
             Quota di oggi completata: seleziona un puzzle per allenarti liberamente.
           </p>
         )}
-        <div className="flex max-h-[70vh] flex-col gap-1 overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
+        <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
           {puzzles.length === 0 && (
             <p className="text-muted-foreground text-xs">Nessun puzzle ancora eseguito.</p>
           )}
-          {puzzles.map((result) => (
+          {[...puzzles].reverse().map((result) => (
             <PuzzleRow
               key={result.sessionPuzzleId}
               result={result}

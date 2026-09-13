@@ -6,8 +6,15 @@
 // qualcosa: comportamento standard, non un bug.
 
 let audioCtx: AudioContext | null = null
+let soundEnabled = true
+
+/** Attiva/disattiva globalmente gli effetti sonori (letto dalle funzioni play* qui sotto). */
+export function setSoundEnabled(enabled: boolean) {
+  soundEnabled = enabled
+}
 
 function getContext(): AudioContext | null {
+  if (!soundEnabled) return null
   if (typeof window === 'undefined') return null
   const Ctor =
     window.AudioContext ||

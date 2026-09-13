@@ -17,6 +17,7 @@ import { useActiveSession } from '@/hooks/use-active-session'
 import { useNextPuzzle, useRecordAttempt } from '@/hooks/use-puzzle-session'
 import { usePuzzleById, useRecordPracticeAttempt, usePracticeAttempts } from '@/hooks/use-practice'
 import { useSessionDetail, useSessionProgress } from '@/hooks/use-session-history'
+import { useSoundEnabled } from '@/hooks/use-sound-enabled'
 import { useUpdateAutoAdvance, useUserStats } from '@/hooks/use-user-stats'
 import type { SessionPuzzleResult } from '@/types/training'
 
@@ -29,6 +30,7 @@ export default function TrainPage() {
   const { data: progress } = useSessionProgress(session)
   const { data: sessionDetail } = useSessionDetail(session?.id)
   const recordPracticeAttempt = useRecordPracticeAttempt()
+  const { enabled: soundEnabled, setEnabled: setSoundEnabled } = useSoundEnabled()
 
   const [practiceSelection, setPracticeSelection] = useState<{
     sessionPuzzleId: string
@@ -101,8 +103,58 @@ export default function TrainPage() {
     (outcome?.status === 'next' ? outcome.data.sessionPuzzleId : null)
 
   return (
-    <main className="flex w-full flex-1 flex-col gap-6 px-4 py-8 lg:flex-row lg:items-start lg:justify-center">
-      <aside className="order-2 w-full lg:order-1 lg:w-64 lg:shrink-0">
+    <main className="flex w-full flex-1 flex-col gap-6 px-4 py-8 lg:flex-row lg:justify-center">
+      <aside className="order-2 flex w-full flex-col gap-4 lg:order-1 lg:w-64 lg:shrink-0 lg:self-start">
+        <div className="flex flex-col gap-3">
+          {practiceSelection ? (
+            <div>
+              <h1 className="text-foreground text-lg font-semibold tracking-tight">
+                Pratica libera
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                Il risultato non viene tracciato nella sessione ufficiale.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <h1 className="text-foreground text-lg font-semibold tracking-tight">
+                Allenamento
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                Giro {session.current_round} di 3 — {session.total_puzzles} puzzle totali
+              </p>
+              {progress && (
+                <p className="text-muted-foreground text-sm">
+                  Puzzle di oggi: {Math.min(progress.attemptedToday + 1, progress.dailyTarget)}/
+                  {progress.dailyTarget}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <Switch
+              id="auto-advance"
+              checked={autoAdvance}
+              onCheckedChange={(checked) => updateAutoAdvance.mutate(checked)}
+            />
+            <Label htmlFor="auto-advance" className="text-muted-foreground text-sm">
+              Avanzamento automatico
+            </Label>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Switch
+              id="sound-enabled"
+              checked={soundEnabled}
+              onCheckedChange={setSoundEnabled}
+            />
+            <Label htmlFor="sound-enabled" className="text-muted-foreground text-sm">
+              Suoni
+            </Label>
+          </div>
+        </div>
+
         <SessionPuzzleList
           puzzles={sessionDetail?.puzzles ?? []}
           activeSessionPuzzleId={activeSessionPuzzleId}
@@ -113,44 +165,7 @@ export default function TrainPage() {
         />
       </aside>
 
-      <div className="order-1 flex flex-col items-center gap-6 lg:order-2">
-        {practiceSelection ? (
-          <div className="text-center">
-            <h1 className="text-foreground text-lg font-semibold tracking-tight">
-              Pratica libera
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Il risultato non viene tracciato nella sessione ufficiale.
-            </p>
-          </div>
-        ) : (
-          <div className="text-center">
-            <h1 className="text-foreground text-lg font-semibold tracking-tight">
-              Allenamento
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Giro {session.current_round} di 3 — {session.total_puzzles} puzzle totali
-            </p>
-            {progress && (
-              <p className="text-muted-foreground text-sm">
-                Puzzle di oggi: {Math.min(progress.attemptedToday + 1, progress.dailyTarget)}/
-                {progress.dailyTarget}
-              </p>
-            )}
-          </div>
-        )}
-
-        <div className="flex items-center gap-2">
-          <Switch
-            id="auto-advance"
-            checked={autoAdvance}
-            onCheckedChange={(checked) => updateAutoAdvance.mutate(checked)}
-          />
-          <Label htmlFor="auto-advance" className="text-muted-foreground text-sm">
-            Avanzamento automatico
-          </Label>
-        </div>
-
+      <div className="order-1 flex flex-1 flex-col items-center justify-center gap-6 lg:order-2">
         {practiceSelection ? (
           <>
             <Button variant="outline" size="sm" onClick={() => setPracticeSelection(null)}>

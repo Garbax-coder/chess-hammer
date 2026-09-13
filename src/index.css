@@ -126,6 +126,11 @@
   }
   html {
     @apply font-sans;
+    /* La scrollbar verticale riserva sempre il proprio spazio: senza
+       questo, la comparsa/scomparsa del pannello di analisi in /train puo'
+       far apparire/sparire la scrollbar e spostare di qualche pixel il
+       contenuto centrato (inclusa la scacchiera). */
+    scrollbar-gutter: stable;
   }
 }
 

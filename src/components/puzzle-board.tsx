@@ -22,6 +22,7 @@ import { parseUci } from '@/lib/uci'
 import type { LichessPuzzle } from '@/types/training'
 
 const BEST_MOVE_ARROW_COLOR = 'rgba(37, 99, 235, 0.8)'
+const BOARD_SIZE = 'min(90vw, 78vh, 720px)'
 
 type Feedback = 'intro' | 'playing' | 'correct' | 'wrong' | 'solved'
 
@@ -30,10 +31,32 @@ const AUTO_MOVE_DELAY_MS = 400
 const FEEDBACK_HOLD_MS = 900
 const WRONG_SQUARE_STYLE = { backgroundColor: 'rgba(220, 38, 38, 0.55)' }
 const SELECTED_SQUARE_STYLE = { backgroundColor: 'rgba(59, 130, 246, 0.35)' }
+const LAST_MOVE_STYLE = { backgroundColor: 'rgba(250, 204, 21, 0.35)' }
 const MOVE_HINT_STYLE = {
   backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.22) 22%, transparent 24%)',
 }
 const CAPTURE_HINT_STYLE = { boxShadow: 'inset 0 0 0 3px rgba(0,0,0,0.22)' }
+
+function svgDataUri(svg: string): string {
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`
+}
+
+const CHECK_BADGE_STYLE = {
+  backgroundImage: `url("${svgDataUri(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#16a34a"/><path d="M7 12.5l3 3 7-7" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  )}")`,
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'top right',
+  backgroundSize: '38% 38%',
+}
+const CROSS_BADGE_STYLE = {
+  backgroundImage: `url("${svgDataUri(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#dc2626"/><path d="M8 8l8 8M16 8l-8 8" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>',
+  )}")`,
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'top right',
+  backgroundSize: '38% 38%',
+}
 
 // Il lato che deve risolvere il puzzle e' l'opposto di chi gioca la mossa di
 // apertura (il colore a muovere nella FEN originale, prima del setup).
@@ -90,7 +113,11 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
   const [feedback, setFeedback] = useState<Feedback>('intro')
   const [elapsed, setElapsed] = useState(0)
   const [loadedPuzzleId, setLoadedPuzzleId] = useState(puzzle.puzzle_id)
-  const [wrongMove, setWrongMove] = useState<{ fen: string; square: string } | null>(null)
+  const [wrongMove, setWrongMove] = useState<{
+    fen: string
+    square: string
+    from: string
+  } | null>(null)
   const [pendingCompletion, setPendingCompletion] = useState<PendingCompletion | null>(
     null,
   )
@@ -220,6 +247,18 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
 
   const displayFen = isLive && effectiveWrongMove ? effectiveWrongMove.fen : replayFen
 
+  // Casa di partenza/arrivo dell'ultima mossa alla posizione ATTUALMENTE
+  // VISUALIZZATA (che sia la punta della linea o un punto della cronologia
+  // in fase di revisione: timelinePath riflette gia' effectiveCurrentId).
+  const lastMoveSquares = useMemo(() => {
+    if (isLive && effectiveWrongMove) {
+      return { from: effectiveWrongMove.from, to: effectiveWrongMove.square }
+    }
+    const lastNode = timelinePath[timelinePath.length - 1]
+    if (!lastNode?.uci) return null
+    return { from: lastNode.uci.slice(0, 2), to: lastNode.uci.slice(2, 4) }
+  }, [isLive, effectiveWrongMove, timelinePath])
+
   // Modalita' di analisi: attiva solo dopo la fine del puzzle quando
   // l'avanzamento automatico e' spento (altrimenti si passa subito al
   // puzzle successivo e non avrebbe senso). Analizza la posizione
@@ -256,22 +295,37 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
 
   const effectiveSelection = isLive || analysisEnabled ? selection : null
 
+  // La casella con l'esito finale (segno di spunta verde/croce rossa) si
+  // mostra solo sulla posizione dal vivo, non mentre si rivede una mossa
+  // precedente della stessa linea gia' risolta/fallita.
+  const finalOutcomeSquare =
+    isLive && (feedback === 'solved' || feedback === 'wrong') ? lastMoveSquares?.to : undefined
+
   const squareStyles = useMemo(() => {
-    if (!isLive && !analysisEnabled) return undefined
+    const styles: Record<string, CSSProperties> = {}
+    const merge = (square: string, style: CSSProperties) => {
+      styles[square] = { ...styles[square], ...style }
+    }
+
+    if (lastMoveSquares) {
+      merge(lastMoveSquares.from, LAST_MOVE_STYLE)
+      merge(lastMoveSquares.to, LAST_MOVE_STYLE)
+    }
     if (effectiveWrongMove) {
-      return { [effectiveWrongMove.square]: WRONG_SQUARE_STYLE }
+      merge(effectiveWrongMove.square, WRONG_SQUARE_STYLE)
+    }
+    if (finalOutcomeSquare) {
+      merge(finalOutcomeSquare, feedback === 'solved' ? CHECK_BADGE_STYLE : CROSS_BADGE_STYLE)
     }
     if (effectiveSelection) {
-      const styles: Record<string, CSSProperties> = {
-        [effectiveSelection.square]: SELECTED_SQUARE_STYLE,
-      }
+      merge(effectiveSelection.square, SELECTED_SQUARE_STYLE)
       for (const target of effectiveSelection.targets) {
-        styles[target.to] = target.capture ? CAPTURE_HINT_STYLE : MOVE_HINT_STYLE
+        merge(target.to, target.capture ? CAPTURE_HINT_STYLE : MOVE_HINT_STYLE)
       }
-      return styles
     }
-    return undefined
-  }, [isLive, analysisEnabled, effectiveWrongMove, effectiveSelection])
+
+    return Object.keys(styles).length > 0 ? styles : undefined
+  }, [lastMoveSquares, effectiveWrongMove, finalOutcomeSquare, feedback, effectiveSelection])
 
   // Calcolate qui (in un event handler, non durante il render) cosi'
   // gameRef puo' essere letto liberamente senza toccare la logica di
@@ -413,7 +467,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
       // e' la fonte di verita' per le mosse valide del puzzle.
       const wrongFen = game.fen()
       game.undo()
-      setWrongMove({ fen: wrongFen, square: targetSquare })
+      setWrongMove({ fen: wrongFen, square: targetSquare, from: sourceSquare })
       playIllegalMoveSound()
       finish('failed')
       return true
@@ -479,16 +533,16 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
             : `Muovi con il ${turnLabel}`
 
   return (
-    <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-start lg:justify-center">
+    <div className="flex w-full flex-col items-center gap-4 lg:flex-row lg:items-start lg:justify-center">
       <div className="flex flex-col items-center gap-4">
-        <div className="text-muted-foreground flex w-full max-w-[480px] items-center justify-between text-xs">
+        <div style={{ width: BOARD_SIZE }} className="text-muted-foreground flex items-center justify-between text-xs">
           <span>Rating {puzzle.rating}</span>
           <span>{statusText}</span>
           <span>{elapsed}s</span>
         </div>
 
         {analysisEnabled && (
-          <div style={{ width: 'min(90vw, 480px)' }}>
+          <div style={{ width: BOARD_SIZE }}>
             <EvalBar
               whitePercent={whitePercent}
               scoreCp={topLine?.scoreCp ?? null}
@@ -506,7 +560,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
                 ? 'ring-primary/50'
                 : 'ring-transparent'
           }`}
-          style={{ width: 'min(90vw, 480px)', aspectRatio: '1 / 1' }}
+          style={{ width: BOARD_SIZE, aspectRatio: '1 / 1' }}
         >
           <Chessboard
             options={{
@@ -566,31 +620,36 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
         </div>
       </div>
 
-      {pendingCompletion && (
-        <div className="flex w-full flex-col gap-4 lg:w-72">
-          <AnalysisPanel
-            fen={displayFen}
-            lines={engineLines}
-            analyzing={analyzing}
-            settings={engineSettings}
-            onUpdateSettings={updateEngineSettings}
-          />
-          <MoveHistoryPanel
-            nodes={effectiveNodes}
-            currentId={effectiveCurrentId}
-            startTurn={startTurn}
-            onSelect={navigateTo}
-          />
-          <Button
-            type="button"
-            onClick={() =>
-              onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)
-            }
-          >
-            Puzzle successivo →
-          </Button>
-        </div>
-      )}
+      {/* Questa colonna riserva SEMPRE lo spazio (anche vuota) cosi' la
+          scacchiera a sinistra non si sposta quando il pannello di analisi
+          appare/scompare al termine del puzzle. */}
+      <div className="w-full lg:w-72 lg:shrink-0">
+        {pendingCompletion && (
+          <div className="flex w-full flex-col gap-4">
+            <AnalysisPanel
+              fen={displayFen}
+              lines={engineLines}
+              analyzing={analyzing}
+              settings={engineSettings}
+              onUpdateSettings={updateEngineSettings}
+            />
+            <MoveHistoryPanel
+              nodes={effectiveNodes}
+              currentId={effectiveCurrentId}
+              startTurn={startTurn}
+              onSelect={navigateTo}
+            />
+            <Button
+              type="button"
+              onClick={() =>
+                onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)
+              }
+            >
+              Puzzle successivo →
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
