@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DevToolsPanel } from '@/components/dev-tools-panel'
@@ -30,6 +31,7 @@ import type { SessionPuzzleResult } from '@/types/training'
 
 export default function TrainPage() {
   const t = useTranslations()
+  const queryClient = useQueryClient()
   const { data: session, isLoading: loadingSession } = useActiveSession()
   const { data: outcome, isLoading: loadingPuzzle } = useNextPuzzle(session)
   const recordAttempt = useRecordAttempt(session)
@@ -127,7 +129,9 @@ export default function TrainPage() {
   const boardTheme = stats?.board_theme
   const pieceSet = stats?.piece_set
   const canPractice =
-    outcome?.status === 'quota_reached' || outcome?.status === 'session_complete'
+    outcome?.status === 'quota_reached' ||
+    outcome?.status === 'resting' ||
+    outcome?.status === 'session_complete'
   const activeSessionPuzzleId =
     practiceSelection?.sessionPuzzleId ??
     (outcome?.status === 'next' ? outcome.data.sessionPuzzleId : null)
@@ -236,6 +240,36 @@ export default function TrainPage() {
                 </CardHeader>
                 <CardContent>
                   <Button asChild variant="outline" className="w-full">
+                    <Link to="/dashboard">{t.train.backToDashboard}</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {outcome?.status === 'resting' && (
+              <Card className="w-full max-w-sm">
+                <CardHeader>
+                  <CardTitle>{t.train.restingTitle}</CardTitle>
+                  <CardDescription>
+                    {t.train.restingDescription(
+                      new Date(outcome.restingUntil).toLocaleDateString(t.meta.locale),
+                      outcome.round,
+                    )}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() =>
+                      queryClient.invalidateQueries({
+                        queryKey: ['next-puzzle', session.id],
+                      })
+                    }
+                  >
+                    {t.train.checkAgain}
+                  </Button>
+                  <Button asChild variant="ghost" className="w-full">
                     <Link to="/dashboard">{t.train.backToDashboard}</Link>
                   </Button>
                 </CardContent>

@@ -53,6 +53,14 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
+            {session.resting_until && new Date(session.resting_until) > new Date() && (
+              <p className="text-muted-foreground text-xs">
+                {t.dashboard.restingNote(
+                  new Date(session.resting_until).toLocaleDateString(t.meta.locale),
+                )}
+              </p>
+            )}
+
             {progress && (
               <div className="flex flex-col gap-1.5">
                 <div className="text-muted-foreground flex justify-between text-xs">

@@ -127,10 +127,14 @@ async function pickAndInsertNewRound1Puzzle(
   return { sessionPuzzle: data, puzzle: candidate }
 }
 
-async function advanceRound(sessionId: string, nextRound: 1 | 2 | 3) {
+async function advanceRound(
+  sessionId: string,
+  nextRound: 1 | 2 | 3,
+  restingUntil: string | null,
+) {
   const { error } = await supabase
     .from('training_sessions')
-    .update({ current_round: nextRound })
+    .update({ current_round: nextRound, resting_until: restingUntil })
     .eq('id', sessionId)
   if (error) throw error
 }
@@ -146,6 +150,7 @@ async function completeSession(sessionId: string) {
 export type NextPuzzleOutcome =
   | { status: 'next'; data: NextPuzzle }
   | { status: 'quota_reached'; round: 1 | 2 | 3 }
+  | { status: 'resting'; round: 1 | 2 | 3; restingUntil: string }
   | { status: 'session_complete' }
 
 /**
@@ -160,6 +165,7 @@ export async function getNextPuzzle(
   userElo: number,
 ): Promise<NextPuzzleOutcome> {
   let round = session.current_round
+  let restingUntil = session.resting_until
   const pool = await fetchSessionPuzzles(session.id)
   let roundAttempts = await fetchRoundAttempts(
     pool.map((p) => p.id),
@@ -177,13 +183,23 @@ export async function getNextPuzzle(
       return { status: 'session_complete' }
     }
     const nextRound = (round + 1) as 2 | 3
-    await advanceRound(session.id, nextRound)
+    restingUntil =
+      session.rest_days > 0
+        ? new Date(Date.now() + session.rest_days * 24 * 60 * 60 * 1000).toISOString()
+        : null
+    await advanceRound(session.id, nextRound, restingUntil)
     round = nextRound
     roundAttempts = await fetchRoundAttempts(
       pool.map((p) => p.id),
       round,
     )
     attempted = attemptedIdsFrom(roundAttempts)
+  }
+
+  // Pausa tra i giri (metodo Woodpecker): finche' non e' scaduta non si
+  // procede ne' con la quota giornaliera ne' con un nuovo puzzle.
+  if (restingUntil && new Date(restingUntil) > new Date()) {
+    return { status: 'resting', round, restingUntil }
   }
 
   const dailyTarget = dailyTargetForRound(session, round)

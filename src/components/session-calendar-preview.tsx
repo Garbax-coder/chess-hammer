@@ -32,6 +32,24 @@ function mondayIndex(jsWeekday: number): number {
   return (jsWeekday + 6) % 7
 }
 
+// I giorni di pausa sono comunque "pianificati" (a differenza delle celle
+// vuote fuori dal periodo della sessione): un cerchio tratteggiato, non
+// colorato, li distingue da entrambi.
+function cellAppearance(day: CalendarDay | null): {
+  background?: string
+  className: string
+} {
+  if (day?.kind === 'round') {
+    return { background: ROUND_COLORS[day.round], className: 'text-white' }
+  }
+  if (day?.kind === 'rest') {
+    return {
+      className: 'border border-dashed border-muted-foreground/40 text-muted-foreground',
+    }
+  }
+  return { className: '' }
+}
+
 function MonthCalendar({
   year,
   month,
@@ -77,20 +95,18 @@ function MonthCalendar({
         className="grid"
         style={{ gridTemplateColumns: `repeat(${COLS}, ${CELL}px)`, gap: GAP }}
       >
-        {cells.map((cell, i) => (
-          <div
-            key={i}
-            className="flex items-center justify-center rounded-full text-[0.65rem] font-medium"
-            style={{
-              width: CELL,
-              height: CELL,
-              backgroundColor: cell.day ? ROUND_COLORS[cell.day.round] : undefined,
-              color: cell.day ? 'white' : undefined,
-            }}
-          >
-            {cell.date?.getDate() ?? ''}
-          </div>
-        ))}
+        {cells.map((cell, i) => {
+          const { background, className } = cellAppearance(cell.day)
+          return (
+            <div
+              key={i}
+              className={`flex items-center justify-center rounded-full text-[0.65rem] font-medium ${className}`}
+              style={{ width: CELL, height: CELL, backgroundColor: background }}
+            >
+              {cell.date?.getDate() ?? ''}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -99,16 +115,18 @@ function MonthCalendar({
 export function SessionCalendarPreview({
   totalPuzzles,
   dailyTargets,
+  restDays,
 }: {
   totalPuzzles: number
   dailyTargets: readonly [number, number, number]
+  restDays: number
 }) {
   const t = useTranslations()
 
   const result = useMemo(
-    () => computeSessionCalendar(new Date(), totalPuzzles, dailyTargets),
+    () => computeSessionCalendar(new Date(), totalPuzzles, dailyTargets, restDays),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [totalPuzzles, dailyTargets[0], dailyTargets[1], dailyTargets[2]],
+    [totalPuzzles, dailyTargets[0], dailyTargets[1], dailyTargets[2], restDays],
   )
 
   const weekdayLabels = useMemo(() => {
@@ -122,12 +140,12 @@ export function SessionCalendarPreview({
     })
   }, [t.meta.locale])
 
-  if (!result || result.days.length === 0) return null
+  const isInvalid = !result || result.days.length === 0
 
-  const byDate = new Map(result.days.map((d) => [dateKey(d.date), d]))
+  const byDate = new Map(result?.days.map((d) => [dateKey(d.date), d]) ?? [])
   const months: { year: number; month: number }[] = []
   const seenMonths = new Set<string>()
-  for (const d of result.days) {
+  for (const d of result?.days ?? []) {
     const key = `${d.date.getFullYear()}-${d.date.getMonth()}`
     if (!seenMonths.has(key)) {
       seenMonths.add(key)
@@ -135,7 +153,7 @@ export function SessionCalendarPreview({
     }
   }
 
-  const lastDay = result.days[result.days.length - 1].date
+  const lastDay = result?.days[result.days.length - 1]?.date
 
   return (
     <Card className="w-full max-w-md lg:max-w-xs">
@@ -143,38 +161,53 @@ export function SessionCalendarPreview({
         <CardTitle className="text-base">{t.newSession.calendarTitle}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="flex flex-wrap gap-3 text-xs">
-          {ROUNDS.map((round) => (
-            <span key={round} className="text-muted-foreground flex items-center gap-1">
-              <span
-                className="inline-block size-2 rounded-full"
-                style={{ backgroundColor: ROUND_COLORS[round] }}
-              />
-              {t.dashboard.puzzlePerformance.roundLabel(round)}
-            </span>
-          ))}
-        </div>
+        {isInvalid ? (
+          <p className="text-muted-foreground text-sm">{t.newSession.calendarInvalid}</p>
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-3 text-xs">
+              {ROUNDS.map((round) => (
+                <span
+                  key={round}
+                  className="text-muted-foreground flex items-center gap-1"
+                >
+                  <span
+                    className="inline-block size-2 rounded-full"
+                    style={{ backgroundColor: ROUND_COLORS[round] }}
+                  />
+                  {t.dashboard.puzzlePerformance.roundLabel(round)}
+                </span>
+              ))}
+              {restDays > 0 && (
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <span className="border-muted-foreground/60 inline-block size-2 rounded-full border border-dashed" />
+                  {t.newSession.calendarRestLabel}
+                </span>
+              )}
+            </div>
 
-        <div className="flex flex-col gap-4">
-          {months.map(({ year, month }) => (
-            <MonthCalendar
-              key={`${year}-${month}`}
-              year={year}
-              month={month}
-              byDate={byDate}
-              locale={t.meta.locale}
-              weekdayLabels={weekdayLabels}
-            />
-          ))}
-        </div>
+            <div className="flex flex-col gap-4">
+              {months.map(({ year, month }) => (
+                <MonthCalendar
+                  key={`${year}-${month}`}
+                  year={year}
+                  month={month}
+                  byDate={byDate}
+                  locale={t.meta.locale}
+                  weekdayLabels={weekdayLabels}
+                />
+              ))}
+            </div>
 
-        <p className="text-muted-foreground text-sm">
-          {t.newSession.calendarEndDate(lastDay.toLocaleDateString(t.meta.locale))}
-        </p>
-        {result.truncated && (
-          <p className="text-muted-foreground text-xs">
-            {t.newSession.calendarTruncated}
-          </p>
+            <p className="text-muted-foreground text-sm">
+              {t.newSession.calendarEndDate(lastDay!.toLocaleDateString(t.meta.locale))}
+            </p>
+            {result.truncated && (
+              <p className="text-muted-foreground text-xs">
+                {t.newSession.calendarTruncated}
+              </p>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

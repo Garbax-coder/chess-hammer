@@ -46,7 +46,7 @@ export async function resetSession(sessionId: string, userId: string) {
 
   const { error: sessionError } = await supabase
     .from('training_sessions')
-    .update({ current_round: 1 })
+    .update({ current_round: 1, resting_until: null })
     .eq('id', sessionId)
   if (sessionError) throw sessionError
 
@@ -71,5 +71,14 @@ export async function resetSession(sessionId: string, userId: string) {
  */
 export async function deleteActiveSession(sessionId: string) {
   const { error } = await supabase.from('training_sessions').delete().eq('id', sessionId)
+  if (error) throw error
+}
+
+/** Annulla subito l'eventuale pausa tra i giri in corso, per testare senza aspettare i giorni impostati. */
+export async function skipRest(sessionId: string) {
+  const { error } = await supabase
+    .from('training_sessions')
+    .update({ resting_until: null })
+    .eq('id', sessionId)
   if (error) throw error
 }

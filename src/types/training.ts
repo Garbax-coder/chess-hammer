@@ -11,6 +11,11 @@ export interface TrainingSession {
   status: SessionStatus
   created_at: string
   completed_at: string | null
+  /** Giorni di pausa consigliati tra un giro e il successivo (0 = nessuna pausa). */
+  rest_days: number
+  /** Se impostato e nel futuro, la sessione e' in pausa fino a questa data prima
+   *  di poter proseguire col prossimo giro. */
+  resting_until: string | null
 }
 
 export interface NewTrainingSessionInput {
@@ -18,6 +23,7 @@ export interface NewTrainingSessionInput {
   daily_target_round1: number
   daily_target_round2: number
   daily_target_round3: number
+  rest_days: number
 }
 
 export const DEFAULT_SESSION_CONFIG: NewTrainingSessionInput = {
@@ -25,6 +31,10 @@ export const DEFAULT_SESSION_CONFIG: NewTrainingSessionInput = {
   daily_target_round1: 10,
   daily_target_round2: 20,
   daily_target_round3: 40,
+  // Il metodo Woodpecker consiglia qualche giorno di pausa tra un giro e
+  // l'altro, cosi' il giro successivo e' un vero richiamo dalla memoria
+  // invece di una semplice ripetizione a breve termine.
+  rest_days: 2,
 }
 
 export interface LichessPuzzle {
