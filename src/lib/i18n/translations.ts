@@ -182,6 +182,12 @@ export interface Translations {
       timeSeconds: number,
       isBest: boolean,
     ) => string
+    themesToggle: string
+    themesEmpty: string
+    infoDisabledHint: string
+    copyFen: string
+    copyPgn: string
+    fenCopied: string
   }
   devTools: {
     title: string
@@ -481,6 +487,12 @@ export const it: Translations = {
     roundTodo: (round) => `Giro ${round}: da fare`,
     practiceTooltip: (date, solved, timeSeconds, isBest) =>
       `Pratica libera — ${date}: ${solved ? 'risolto' : 'fallito'} in ${timeSeconds}s${isBest ? ' (miglior tempo)' : ''}`,
+    themesToggle: 'Info',
+    themesEmpty: 'Nessun tema disponibile per questo puzzle.',
+    infoDisabledHint: 'Disponibile dopo aver tentato il puzzle in questo giro.',
+    copyFen: 'Copia FEN',
+    copyPgn: 'Copia PGN',
+    fenCopied: 'Copiato!',
   },
   devTools: {
     title: '🔧 Debug (solo sviluppo)',
@@ -823,6 +835,12 @@ export const en: Translations = {
     roundTodo: (round) => `Round ${round}: to do`,
     practiceTooltip: (date, solved, timeSeconds, isBest) =>
       `Free practice — ${date}: ${solved ? 'solved' : 'failed'} in ${timeSeconds}s${isBest ? ' (best time)' : ''}`,
+    themesToggle: 'Info',
+    themesEmpty: 'No themes available for this puzzle.',
+    infoDisabledHint: 'Available after attempting the puzzle in this round.',
+    copyFen: 'Copy FEN',
+    copyPgn: 'Copy PGN',
+    fenCopied: 'Copied!',
   },
   devTools: {
     title: '🔧 Debug (dev only)',

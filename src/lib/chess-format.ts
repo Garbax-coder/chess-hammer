@@ -1,6 +1,23 @@
 import { Chess } from 'chess.js'
 import { parseUci } from '@/lib/uci'
 
+/**
+ * Genera il PGN completo di un puzzle: chess.js aggiunge da solo gli header
+ * [FEN]/[SetUp] quando la partita non parte dalla posizione iniziale, quindi
+ * basta rigiocare le mosse della soluzione (UCI) sopra il FEN di partenza.
+ */
+export function puzzlePgn(fen: string, movesUci: string[]): string {
+  const game = new Chess(fen)
+  for (const uci of movesUci) {
+    try {
+      game.move(parseUci(uci))
+    } catch {
+      break
+    }
+  }
+  return game.pgn()
+}
+
 /** Converte una linea principale (mosse UCI) in notazione SAN leggibile, troncata a maxPly mezze-mosse. */
 export function pvToSan(fen: string, pvUci: string[], maxPly = 8): string {
   const game = new Chess(fen)

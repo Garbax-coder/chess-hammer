@@ -1,8 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { Check, Copy } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PuzzleMiniBoard } from '@/components/puzzle-mini-board'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { BoardThemeId } from '@/lib/board-themes'
+import { puzzlePgn } from '@/lib/chess-format'
 import type { Translations } from '@/lib/i18n/translations'
 import { useTranslations } from '@/lib/language-context'
 import type {
@@ -129,56 +131,152 @@ function PuzzleRow({
   t,
 }: PuzzleRowProps) {
   const lastAttempt = lastAttemptOf(result)
+  // Chiusa di default: con 200 puzzle in lista, mostrare subito i temi di
+  // ognuno affollerebbe la sidebar senza reale beneficio finche' non serve.
+  const [themesOpen, setThemesOpen] = useState(false)
+  // Il PGN copiato contiene la soluzione: va nascosto finche' il puzzle non
+  // e' stato tentato nel giro corrente, altrimenti l'utente potrebbe
+  // sbirciarla prima di risolverlo.
+  const isPending = !result.attempts[currentRound]
+
+  return (
+    <div
+      className={`flex w-full flex-col gap-1.5 rounded-md border px-2.5 py-2 transition-colors ${
+        isActive ? 'border-primary bg-primary/10' : 'border-border/60 bg-muted/40'
+      }`}
+    >
+      <button
+        type="button"
+        data-session-puzzle-id={result.sessionPuzzleId}
+        disabled={!canPractice}
+        onClick={() => canPractice && onSelect(result)}
+        className={`flex w-full items-center gap-3 text-left ${
+          canPractice ? 'cursor-pointer' : 'cursor-default'
+        }`}
+      >
+        <span className="text-foreground shrink-0 text-2xl leading-none font-bold tabular-nums">
+          {result.orderIndex}
+        </span>
+        <PuzzleMiniBoard fen={result.fen} boardTheme={boardTheme} />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1">
+              <RoundIndicator
+                round={1}
+                attempt={result.attempts[1]}
+                isCurrent={currentRound === 1}
+                t={t}
+              />
+              <RoundIndicator
+                round={2}
+                attempt={result.attempts[2]}
+                isCurrent={currentRound === 2}
+                t={t}
+              />
+              <RoundIndicator
+                round={3}
+                attempt={result.attempts[3]}
+                isCurrent={currentRound === 3}
+                t={t}
+              />
+            </div>
+            <span className="text-muted-foreground shrink-0 text-[0.65rem]">
+              {result.rating}
+            </span>
+          </div>
+          {lastAttempt && (
+            <span className="text-muted-foreground text-[0.6rem]">
+              {new Date(lastAttempt.attempted_at).toLocaleDateString(t.meta.locale)}
+            </span>
+          )}
+          <PracticeAttemptTags attempts={practiceAttempts} t={t} />
+        </div>
+      </button>
+
+      <button
+        type="button"
+        aria-expanded={themesOpen}
+        disabled={isPending}
+        title={isPending ? t.sessionPuzzleList.infoDisabledHint : undefined}
+        onClick={() => setThemesOpen((v) => !v)}
+        className={`flex items-center gap-1 self-start text-[0.6rem] transition-colors ${
+          isPending
+            ? 'text-muted-foreground/50 cursor-not-allowed'
+            : 'text-muted-foreground hover:text-foreground cursor-pointer'
+        }`}
+      >
+        <span className={`transition-transform ${themesOpen ? 'rotate-90' : ''}`}>▸</span>
+        {t.sessionPuzzleList.themesToggle}
+      </button>
+      {themesOpen && !isPending && (
+        <div className="flex flex-col gap-1.5 pl-3.5">
+          <div className="flex flex-wrap gap-1">
+            {result.themes.length === 0 && (
+              <span className="text-muted-foreground text-[0.6rem]">
+                {t.sessionPuzzleList.themesEmpty}
+              </span>
+            )}
+            {result.themes.map((theme) => (
+              <span
+                key={theme}
+                className="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[0.6rem]"
+              >
+                {t.puzzleThemes.labels[theme] ?? theme}
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <CopyButton
+              getText={() => result.fen}
+              label={t.sessionPuzzleList.copyFen}
+              copiedLabel={t.sessionPuzzleList.fenCopied}
+            />
+            <CopyButton
+              getText={() => puzzlePgn(result.fen, result.moves)}
+              label={t.sessionPuzzleList.copyPgn}
+              copiedLabel={t.sessionPuzzleList.fenCopied}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CopyButton({
+  getText,
+  label,
+  copiedLabel,
+}: {
+  getText: () => string
+  label: string
+  copiedLabel: string
+}) {
+  const [copied, setCopied] = useState(false)
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(getText())
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // Clipboard API non disponibile o permesso negato: nessun feedback
+      // di errore, l'utente puo' comunque riprovare.
+    }
+  }
 
   return (
     <button
       type="button"
-      data-session-puzzle-id={result.sessionPuzzleId}
-      disabled={!canPractice}
-      onClick={() => canPractice && onSelect(result)}
-      className={`flex w-full items-center gap-3 rounded-md border px-2.5 py-2 text-left transition-colors ${
-        isActive
-          ? 'border-primary bg-primary/10'
-          : 'border-border/60 bg-muted/40 enabled:hover:bg-muted'
-      } ${canPractice ? 'cursor-pointer' : 'cursor-default'}`}
+      onClick={handleCopy}
+      className="text-muted-foreground hover:text-foreground flex shrink-0 items-center gap-1 text-[0.6rem] transition-colors"
     >
-      <span className="text-foreground shrink-0 text-2xl leading-none font-bold tabular-nums">
-        {result.orderIndex}
-      </span>
-      <PuzzleMiniBoard fen={result.fen} boardTheme={boardTheme} />
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1">
-            <RoundIndicator
-              round={1}
-              attempt={result.attempts[1]}
-              isCurrent={currentRound === 1}
-              t={t}
-            />
-            <RoundIndicator
-              round={2}
-              attempt={result.attempts[2]}
-              isCurrent={currentRound === 2}
-              t={t}
-            />
-            <RoundIndicator
-              round={3}
-              attempt={result.attempts[3]}
-              isCurrent={currentRound === 3}
-              t={t}
-            />
-          </div>
-          <span className="text-muted-foreground shrink-0 text-[0.65rem]">
-            {result.rating}
-          </span>
-        </div>
-        {lastAttempt && (
-          <span className="text-muted-foreground text-[0.6rem]">
-            {new Date(lastAttempt.attempted_at).toLocaleDateString(t.meta.locale)}
-          </span>
-        )}
-        <PracticeAttemptTags attempts={practiceAttempts} t={t} />
-      </div>
+      {copied ? (
+        <Check className="size-3 shrink-0" />
+      ) : (
+        <Copy className="size-3 shrink-0" />
+      )}
+      {copied ? copiedLabel : label}
     </button>
   )
 }

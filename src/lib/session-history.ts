@@ -20,7 +20,12 @@ interface RawSessionPuzzleRow {
   id: string
   order_index: number
   puzzle_id: string
-  lichess_puzzles: { rating: number; fen: string } | null
+  lichess_puzzles: {
+    rating: number
+    fen: string
+    moves: string[]
+    themes: string[]
+  } | null
   puzzle_attempts: PuzzleAttempt[]
 }
 
@@ -43,7 +48,9 @@ export async function fetchSessionPuzzlesDetail(
 ): Promise<SessionPuzzleResult[]> {
   const { data: rows, error } = await supabase
     .from('session_puzzles')
-    .select('id, order_index, puzzle_id, lichess_puzzles(rating, fen), puzzle_attempts(*)')
+    .select(
+      'id, order_index, puzzle_id, lichess_puzzles(rating, fen, moves, themes), puzzle_attempts(*)',
+    )
     .eq('session_id', sessionId)
     .order('order_index', { ascending: true })
   if (error) throw error
@@ -59,6 +66,8 @@ export async function fetchSessionPuzzlesDetail(
       puzzleId: row.puzzle_id,
       rating: row.lichess_puzzles?.rating ?? 0,
       fen: row.lichess_puzzles?.fen ?? '',
+      moves: row.lichess_puzzles?.moves ?? [],
+      themes: row.lichess_puzzles?.themes ?? [],
       attempts,
     }
   })
