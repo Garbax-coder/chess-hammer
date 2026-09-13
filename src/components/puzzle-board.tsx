@@ -470,11 +470,25 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
     if (!isCorrect) {
       // Il pezzo resta sulla casa sbagliata (evidenziata in rosso) invece di
       // tornare subito indietro: gameRef resta pero' "pulito" (undo) dato che
-      // e' la fonte di verita' per le mosse valide del puzzle.
+      // e' la fonte di verita' per le mosse valide del puzzle. La mossa va
+      // comunque registrata nell'albero (e' cio' che si vede sulla
+      // scacchiera): altrimenti un'eventuale mossa libera successiva in
+      // analisi verrebbe agganciata come figlia della posizione PRIMA della
+      // mossa sbagliata, incoerente con la posizione realmente visualizzata,
+      // e chess.js lancia "Invalid move" al replay della cronologia.
       const wrongFen = game.fen()
       game.undo()
-      setWrongMove({ fen: wrongFen, square: targetSquare, from: sourceSquare })
       playIllegalMoveSound()
+      const { nodes: newNodes, id } = addMoveNode(
+        nodesRef.current,
+        currentIdRef.current,
+        move.lan,
+        move.san,
+        `n${nodeIdCounterRef.current++}`,
+      )
+      setNodes(newNodes)
+      setCurrentId(id)
+      setWrongMove({ fen: wrongFen, square: targetSquare, from: sourceSquare })
       finish('failed')
       return true
     }
