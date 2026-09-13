@@ -91,6 +91,7 @@ async function pickAndInsertNewRound1Puzzle(
   sessionId: string,
   orderIndex: number,
   targetRating: number,
+  puzzleThemes: string[] | null,
 ): Promise<{ sessionPuzzle: SessionPuzzleRow; puzzle: LichessPuzzle }> {
   const windows = [100, 250, 500, 1000, 3000]
   let candidate: LichessPuzzle | null = null
@@ -100,6 +101,7 @@ async function pickAndInsertNewRound1Puzzle(
       p_session_id: sessionId,
       p_target_rating: targetRating,
       p_window: window,
+      p_themes: puzzleThemes,
     })
     if (error) throw error
     if (data && data.length > 0) {
@@ -217,6 +219,7 @@ export async function getNextPuzzle(
       session.id,
       pool.length + 1,
       userElo,
+      session.puzzle_themes,
     )
     return { status: 'next', data: { sessionPuzzleId: sessionPuzzle.id, puzzle, round } }
   }

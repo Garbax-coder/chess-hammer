@@ -1,3 +1,5 @@
+import { ALL_PUZZLE_THEME_IDS } from '@/lib/puzzle-themes'
+
 export type SessionStatus = 'in_progress' | 'completed' | 'abandoned'
 
 export interface TrainingSession {
@@ -16,6 +18,10 @@ export interface TrainingSession {
   /** Se impostato e nel futuro, la sessione e' in pausa fino a questa data prima
    *  di poter proseguire col prossimo giro. */
   resting_until: string | null
+  /** Temi puzzle (Lichess) a cui restringere la scelta del giro 1.
+   *  Null/vuoto = nessuna restrizione (sessioni create prima di questa
+   *  colonna, o utente che ha lasciato tutti i temi selezionati). */
+  puzzle_themes: string[] | null
 }
 
 export interface NewTrainingSessionInput {
@@ -24,6 +30,7 @@ export interface NewTrainingSessionInput {
   daily_target_round2: number
   daily_target_round3: number
   rest_days: number
+  puzzle_themes: string[]
 }
 
 export const DEFAULT_SESSION_CONFIG: NewTrainingSessionInput = {
@@ -35,6 +42,9 @@ export const DEFAULT_SESSION_CONFIG: NewTrainingSessionInput = {
   // l'altro, cosi' il giro successivo e' un vero richiamo dalla memoria
   // invece di una semplice ripetizione a breve termine.
   rest_days: 2,
+  // Tutti i temi selezionati di default: l'utente restringe solo se vuole
+  // allenarsi su motivi tattici specifici.
+  puzzle_themes: [...ALL_PUZZLE_THEME_IDS],
 }
 
 export interface LichessPuzzle {
