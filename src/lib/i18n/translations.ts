@@ -169,6 +169,7 @@ export interface Translations {
     resetting: string
     resetQuota: string
     resetSession: string
+    deleteActiveSession: string
   }
   profile: {
     openLabel: string
@@ -361,6 +362,7 @@ export const it: Translations = {
     resetting: 'Reset…',
     resetQuota: 'Reset quota oggi',
     resetSession: 'Reset sessione (ELO incluso)',
+    deleteActiveSession: 'Elimina sessione attiva',
   },
   profile: {
     openLabel: 'Profilo',
@@ -595,6 +597,7 @@ export const en: Translations = {
     resetting: 'Resetting…',
     resetQuota: "Reset today's quota",
     resetSession: 'Reset session (incl. ELO)',
+    deleteActiveSession: 'Delete active session',
   },
   profile: {
     openLabel: 'Profile',
