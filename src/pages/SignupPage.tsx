@@ -83,8 +83,8 @@ export default function SignupPage() {
 
                 {error && <p className="text-destructive text-sm">{error}</p>}
 
-                <Button type="submit" className="w-full" disabled={submitting}>
-                  {submitting ? t.signup.submitting : t.signup.submit}
+                <Button type="submit" className="w-full" loading={submitting}>
+                  {t.signup.submit}
                 </Button>
               </form>
             </>

@@ -12,7 +12,7 @@ export default function HomePage() {
       <h1 className="text-foreground text-3xl font-semibold tracking-tight">
         Chess Hammer
       </h1>
-      <p className="text-muted-foreground">{t.home.subtitle}</p>
+      <p className="text-muted-foreground max-w-md px-4">{t.home.subtitle}</p>
       {!loading && (
         <Button asChild>
           <Link to={session ? '/dashboard' : '/login'}>

@@ -29,7 +29,6 @@ export interface Translations {
   login: {
     title: string
     subtitle: string
-    submitting: string
     submit: string
     noAccount: string
     signup: string
@@ -38,7 +37,6 @@ export interface Translations {
     title: string
     subtitle: string
     checkEmail: string
-    submitting: string
     submit: string
     haveAccount: string
     login: string
@@ -66,7 +64,7 @@ export interface Translations {
     roundLabel: (round: number) => string
     daysEstimate: (days: number | string) => string
     errorGeneric: string
-    starting: string
+    errorInvalidValues: string
     start: string
   }
   sessionsHistory: {
@@ -78,11 +76,6 @@ export interface Translations {
   sessionDetail: {
     title: (date: string) => string
     subtitle: (total: number, round: number, status: string) => string
-    columnNumber: string
-    columnRating: string
-    columnRound: (round: number) => string
-    solved: string
-    failed: string
     empty: string
   }
   sessionStatus: {
@@ -188,7 +181,8 @@ export const it: Translations = {
     en: 'English',
   },
   home: {
-    subtitle: 'Woodpecker method trainer — setup in corso.',
+    subtitle:
+      'Allena la tattica con il Metodo Woodpecker: risolvi lo stesso set di puzzle per 3 giri, sempre più veloce, e traccia il tuo rating ELO nel tempo.',
     goToDashboard: 'Vai alla dashboard',
     startTraining: 'Inizia allenamento',
   },
@@ -201,7 +195,6 @@ export const it: Translations = {
   login: {
     title: 'Accedi',
     subtitle: 'Continua il tuo allenamento Woodpecker',
-    submitting: 'Accesso in corso…',
     submit: 'Accedi',
     noAccount: 'Non hai un account?',
     signup: 'Registrati',
@@ -210,7 +203,6 @@ export const it: Translations = {
     title: 'Crea account',
     subtitle: 'Inizia a tracciare i tuoi allenamenti Woodpecker',
     checkEmail: "Controlla la tua email per confermare l'account prima di accedere.",
-    submitting: 'Creazione account…',
     submit: 'Registrati',
     haveAccount: 'Hai già un account?',
     login: 'Accedi',
@@ -241,7 +233,8 @@ export const it: Translations = {
     roundLabel: (round) => `${round}° giro — puzzle/giorno`,
     daysEstimate: (days) => `~${days} giorni`,
     errorGeneric: 'Errore nella creazione della sessione',
-    starting: 'Avvio…',
+    errorInvalidValues:
+      'Tutti i valori devono essere numeri interi maggiori o uguali a 1.',
     start: 'Avvia sessione',
   },
   sessionsHistory: {
@@ -253,11 +246,6 @@ export const it: Translations = {
   sessionDetail: {
     title: (date) => `Sessione del ${date}`,
     subtitle: (total, round, status) => `${total} puzzle · giro ${round}/3 · ${status}`,
-    columnNumber: '#',
-    columnRating: 'Rating',
-    columnRound: (round) => `Giro ${round}`,
-    solved: 'Risolto',
-    failed: 'Fallito',
     empty: 'Nessun puzzle ancora nel pool di questa sessione.',
   },
   sessionStatus: {
@@ -368,7 +356,8 @@ export const en: Translations = {
     en: 'English',
   },
   home: {
-    subtitle: 'Woodpecker method trainer — setup in progress.',
+    subtitle:
+      'Train your tactics with the Woodpecker Method: solve the same puzzle set over 3 rounds, faster each time, and track your ELO rating over time.',
     goToDashboard: 'Go to dashboard',
     startTraining: 'Start training',
   },
@@ -381,7 +370,6 @@ export const en: Translations = {
   login: {
     title: 'Log in',
     subtitle: 'Continue your Woodpecker training',
-    submitting: 'Signing in…',
     submit: 'Log in',
     noAccount: "Don't have an account?",
     signup: 'Sign up',
@@ -390,7 +378,6 @@ export const en: Translations = {
     title: 'Create account',
     subtitle: 'Start tracking your Woodpecker training',
     checkEmail: 'Check your email to confirm your account before logging in.',
-    submitting: 'Creating account…',
     submit: 'Sign up',
     haveAccount: 'Already have an account?',
     login: 'Log in',
@@ -421,7 +408,7 @@ export const en: Translations = {
     roundLabel: (round) => `Round ${round} — puzzles/day`,
     daysEstimate: (days) => `~${days} days`,
     errorGeneric: 'Error creating the session',
-    starting: 'Starting…',
+    errorInvalidValues: 'All values must be whole numbers greater than or equal to 1.',
     start: 'Start session',
   },
   sessionsHistory: {
@@ -433,11 +420,6 @@ export const en: Translations = {
   sessionDetail: {
     title: (date) => `Session from ${date}`,
     subtitle: (total, round, status) => `${total} puzzles · round ${round}/3 · ${status}`,
-    columnNumber: '#',
-    columnRating: 'Rating',
-    columnRound: (round) => `Round ${round}`,
-    solved: 'Solved',
-    failed: 'Failed',
     empty: 'No puzzles in this session pool yet.',
   },
   sessionStatus: {

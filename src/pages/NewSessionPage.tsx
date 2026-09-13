@@ -21,6 +21,7 @@ export default function NewSessionPage() {
   const { data: activeSession, isLoading: loadingActiveSession } = useActiveSession()
   const createSession = useCreateTrainingSession()
   const [form, setForm] = useState<NewTrainingSessionInput>(DEFAULT_SESSION_CONFIG)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   // Vincolo: una sola sessione attiva alla volta.
   if (!loadingActiveSession && activeSession) {
@@ -34,6 +35,17 @@ export default function NewSessionPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    const values = [
+      form.total_puzzles,
+      form.daily_target_round1,
+      form.daily_target_round2,
+      form.daily_target_round3,
+    ]
+    if (values.some((v) => !Number.isInteger(v) || v < 1)) {
+      setValidationError(t.newSession.errorInvalidValues)
+      return
+    }
+    setValidationError(null)
     await createSession.mutateAsync(form)
     navigate('/dashboard')
   }
@@ -56,14 +68,13 @@ export default function NewSessionPage() {
           <CardDescription>{t.newSession.subtitle}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="total_puzzles">{t.newSession.totalPuzzles}</Label>
               <Input
                 id="total_puzzles"
                 type="number"
                 min={1}
-                required
                 value={form.total_puzzles}
                 onChange={(e) => updateField('total_puzzles', e.target.value)}
               />
@@ -78,7 +89,6 @@ export default function NewSessionPage() {
                       id={field}
                       type="number"
                       min={1}
-                      required
                       value={form[field]}
                       onChange={(e) => updateField(field, e.target.value)}
                     />
@@ -94,7 +104,11 @@ export default function NewSessionPage() {
               ))}
             </div>
 
-            {createSession.isError && (
+            {validationError && (
+              <p className="text-destructive text-sm">{validationError}</p>
+            )}
+
+            {!validationError && createSession.isError && (
               <p className="text-destructive text-sm">
                 {createSession.error instanceof Error
                   ? createSession.error.message
@@ -102,8 +116,8 @@ export default function NewSessionPage() {
               </p>
             )}
 
-            <Button type="submit" className="w-full" disabled={createSession.isPending}>
-              {createSession.isPending ? t.newSession.starting : t.newSession.start}
+            <Button type="submit" className="w-full" loading={createSession.isPending}>
+              {t.newSession.start}
             </Button>
           </form>
         </CardContent>
