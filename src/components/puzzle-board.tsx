@@ -652,6 +652,20 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
           <div className="hidden w-5 shrink-0 lg:block" aria-hidden="true" />
         </div>
 
+        {/* Su mobile la barra di valutazione (nascosta di lato da lg: in su,
+            vedi sopra) si sposta qui sotto la scacchiera, in orizzontale. */}
+        {analysisEnabled && (
+          <div style={{ width: BOARD_SIZE }} className="lg:hidden">
+            <EvalBar
+              orientation="horizontal"
+              whitePercent={whitePercent}
+              scoreCp={topLine?.scoreCp ?? null}
+              scoreMate={topLine?.scoreMate ?? null}
+              sideToMove={displayTurn}
+            />
+          </div>
+        )}
+
         <div className="flex items-center gap-3">
           <Button
             type="button"
@@ -683,6 +697,21 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
             <ChevronRight className="size-4" />
           </Button>
         </div>
+
+        {/* Su mobile il bottone "puzzle successivo" si sposta qui, tra le
+            frecce di navigazione e la card di analisi motore (su desktop
+            resta invece in fondo alla colonna di analisi, sotto la
+            cronologia mosse: vedi piu' sotto, nascosto qui da lg: in su). */}
+        {pendingCompletion && (
+          <Button
+            type="button"
+            className="w-full lg:hidden"
+            style={{ width: BOARD_SIZE }}
+            onClick={() => onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)}
+          >
+            {t.puzzleBoard.nextPuzzle}
+          </Button>
+        )}
       </div>
 
       {/* Questa colonna riserva SEMPRE lo spazio (anche vuota) cosi' la
@@ -706,6 +735,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
             />
             <Button
               type="button"
+              className="hidden lg:inline-flex"
               onClick={() =>
                 onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)
               }
