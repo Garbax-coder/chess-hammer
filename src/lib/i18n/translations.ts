@@ -152,6 +152,11 @@ export interface Translations {
     resetQuota: string
     resetSession: string
   }
+  profile: {
+    openLabel: string
+    title: string
+    elo: (elo: number) => string
+  }
   errors: {
     noPuzzleAvailable: string
   }
@@ -316,6 +321,11 @@ export const it: Translations = {
     resetQuota: 'Reset quota oggi',
     resetSession: 'Reset sessione (ELO incluso)',
   },
+  profile: {
+    openLabel: 'Profilo',
+    title: 'Profilo',
+    elo: (elo) => `ELO ${elo}`,
+  },
   errors: {
     noPuzzleAvailable: 'Nessun puzzle disponibile per questo rating: pool esaurito.',
   },
@@ -479,6 +489,11 @@ export const en: Translations = {
     resetting: 'Resetting…',
     resetQuota: "Reset today's quota",
     resetSession: 'Reset session (incl. ELO)',
+  },
+  profile: {
+    openLabel: 'Profile',
+    title: 'Profile',
+    elo: (elo) => `ELO ${elo}`,
   },
   errors: {
     noPuzzleAvailable: 'No puzzle available for this rating: pool exhausted.',

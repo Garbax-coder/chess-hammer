@@ -82,6 +82,7 @@ export interface SessionPuzzleResult {
   orderIndex: number
   puzzleId: string
   rating: number
+  fen: string
   attempts: Partial<Record<1 | 2 | 3, PuzzleAttempt>>
 }
 

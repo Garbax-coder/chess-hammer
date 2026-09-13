@@ -55,7 +55,8 @@ function squareToBoardPosition(
 
 // Il lato che deve risolvere il puzzle e' l'opposto di chi gioca la mossa di
 // apertura (il colore a muovere nella FEN originale, prima del setup).
-function solverColorFor(fen: string): 'white' | 'black' {
+// Esportata per riuso nell'anteprima mini-scacchiera della lista puzzle.
+export function solverColorFor(fen: string): 'white' | 'black' {
   return new Chess(fen).turn() === 'w' ? 'black' : 'white'
 }
 

@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PuzzleMiniBoard } from '@/components/puzzle-mini-board'
 import type { Translations } from '@/lib/i18n/translations'
 import { useTranslations } from '@/lib/language-context'
 import type { PracticeAttempt, PuzzleAttempt, SessionPuzzleResult } from '@/types/training'
@@ -121,6 +122,7 @@ function PuzzleRow({
       <span className="text-foreground shrink-0 text-2xl leading-none font-bold tabular-nums">
         {result.orderIndex}
       </span>
+      <PuzzleMiniBoard fen={result.fen} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1">

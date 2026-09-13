@@ -1,20 +1,14 @@
-import { LogOut, Moon, Sun } from 'lucide-react'
+import { Moon, Sun } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { ProfileDialog } from '@/components/profile-dialog'
 import { useTheme } from '@/hooks/use-theme'
-import { signOut } from '@/lib/auth'
 import { useLanguage } from '@/lib/language-context'
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { theme, toggleTheme } = useTheme()
-  const { language, setLanguage, t } = useLanguage()
-  const navigate = useNavigate()
-
-  async function handleSignOut() {
-    await signOut()
-    navigate('/login')
-  }
+  const { t } = useLanguage()
 
   return (
     <div className="bg-background flex min-h-svh flex-col">
@@ -35,14 +29,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Button>
             <Button
               variant="ghost"
-              size="sm"
-              onClick={() => setLanguage(language === 'it' ? 'en' : 'it')}
-              aria-label={t.language.label}
-            >
-              {language === 'it' ? 'IT' : 'EN'}
-            </Button>
-            <Button
-              variant="ghost"
               size="icon-sm"
               onClick={toggleTheme}
               aria-label={t.nav.toggleTheme}
@@ -53,14 +39,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Moon className="size-4" />
               )}
             </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={handleSignOut}
-              aria-label={t.nav.signOut}
-            >
-              <LogOut className="size-4" />
-            </Button>
+            <ProfileDialog />
           </nav>
         </div>
       </header>
