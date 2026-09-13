@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { SessionCalendarPreview } from '@/components/session-calendar-preview'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -61,7 +62,7 @@ export default function NewSessionPage() {
   ]
 
   return (
-    <main className="flex flex-1 items-center justify-center px-4 py-8">
+    <main className="flex flex-1 flex-col items-center gap-6 px-4 py-8">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">{t.newSession.title}</CardTitle>
@@ -122,6 +123,15 @@ export default function NewSessionPage() {
           </form>
         </CardContent>
       </Card>
+
+      <SessionCalendarPreview
+        totalPuzzles={form.total_puzzles}
+        dailyTargets={[
+          form.daily_target_round1,
+          form.daily_target_round2,
+          form.daily_target_round3,
+        ]}
+      />
     </main>
   )
 }

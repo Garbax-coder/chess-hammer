@@ -81,6 +81,9 @@ export interface Translations {
     errorGeneric: string
     errorInvalidValues: string
     start: string
+    calendarTitle: string
+    calendarEndDate: (date: string) => string
+    calendarTruncated: string
   }
   sessionsHistory: {
     title: string
@@ -271,6 +274,9 @@ export const it: Translations = {
     errorInvalidValues:
       'Tutti i valori devono essere numeri interi maggiori o uguali a 1.',
     start: 'Avvia sessione',
+    calendarTitle: 'Anteprima calendario',
+    calendarEndDate: (date) => `Fine prevista: ${date}`,
+    calendarTruncated: 'Durata troppo lunga per essere mostrata per intero.',
   },
   sessionsHistory: {
     title: 'Storico sessioni',
@@ -502,6 +508,9 @@ export const en: Translations = {
     errorGeneric: 'Error creating the session',
     errorInvalidValues: 'All values must be whole numbers greater than or equal to 1.',
     start: 'Start session',
+    calendarTitle: 'Calendar preview',
+    calendarEndDate: (date) => `Estimated finish: ${date}`,
+    calendarTruncated: 'Too long to show in full.',
   },
   sessionsHistory: {
     title: 'Session history',
