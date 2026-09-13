@@ -27,9 +27,11 @@ export function useRecordAttempt(session: TrainingSession | null | undefined) {
       result: AttemptResult
       timeSeconds: number
       puzzleRating: number
-    }) => recordAttempt({ userId: user!.id, ...params }),
+    }) => recordAttempt(params),
+    // 'next-puzzle' non va invalidato qui: TrainPage chiama gia' refetch()
+    // subito dopo mutateAsync, invalidarlo anche qui causerebbe una seconda
+    // (ridondante) esecuzione dell'intera catena getNextPuzzle.
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['next-puzzle', session?.id] })
       queryClient.invalidateQueries({ queryKey: ['active-session', user?.id] })
       queryClient.invalidateQueries({ queryKey: ['session-progress', session?.id] })
       queryClient.invalidateQueries({ queryKey: ['session-detail', session?.id] })

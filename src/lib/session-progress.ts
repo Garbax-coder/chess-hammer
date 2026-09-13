@@ -1,7 +1,8 @@
 import {
-  countAttemptsToday,
+  attemptedIdsFrom,
+  countAttemptedToday,
   dailyTargetForRound,
-  fetchAttemptedSessionPuzzleIds,
+  fetchRoundAttempts,
   fetchSessionPuzzles,
 } from '@/lib/puzzle-engine'
 import type { SessionProgress, TrainingSession } from '@/types/training'
@@ -11,11 +12,7 @@ export async function getSessionProgress(
 ): Promise<SessionProgress> {
   const round = session.current_round
   const pool = await fetchSessionPuzzles(session.id)
-  const attempted = await fetchAttemptedSessionPuzzleIds(
-    pool.map((p) => p.id),
-    round,
-  )
-  const attemptedToday = await countAttemptsToday(
+  const roundAttempts = await fetchRoundAttempts(
     pool.map((p) => p.id),
     round,
   )
@@ -24,8 +21,8 @@ export async function getSessionProgress(
     round,
     poolSize: pool.length,
     roundTargetSize: session.total_puzzles,
-    attemptedThisRound: attempted.size,
+    attemptedThisRound: attemptedIdsFrom(roundAttempts).size,
     dailyTarget: dailyTargetForRound(session, round),
-    attemptedToday,
+    attemptedToday: countAttemptedToday(roundAttempts),
   }
 }

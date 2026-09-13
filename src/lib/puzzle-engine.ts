@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase'
-import { updateElo } from '@/lib/elo'
 import type {
   AttemptResult,
   LichessPuzzle,
@@ -47,33 +46,35 @@ export async function fetchSessionPuzzles(
   return data
 }
 
-export async function fetchAttemptedSessionPuzzleIds(
-  sessionPuzzleIds: string[],
-  round: 1 | 2 | 3,
-): Promise<Set<string>> {
-  if (sessionPuzzleIds.length === 0) return new Set()
-  const { data, error } = await supabase
-    .from('puzzle_attempts')
-    .select('session_puzzle_id')
-    .eq('round_number', round)
-    .in('session_puzzle_id', sessionPuzzleIds)
-  if (error) throw error
-  return new Set(data.map((r) => r.session_puzzle_id))
+interface RoundAttemptRow {
+  session_puzzle_id: string
+  attempted_at: string
 }
 
-export async function countAttemptsToday(
+// Un'unica query invece di due (attempted-ids + count-oggi): entrambe le
+// informazioni si ricavano dagli stessi tentativi del giro, non serve un
+// secondo round trip di rete verso Supabase solo per il conteggio.
+export async function fetchRoundAttempts(
   sessionPuzzleIds: string[],
   round: 1 | 2 | 3,
-): Promise<number> {
-  if (sessionPuzzleIds.length === 0) return 0
-  const { count, error } = await supabase
+): Promise<RoundAttemptRow[]> {
+  if (sessionPuzzleIds.length === 0) return []
+  const { data, error } = await supabase
     .from('puzzle_attempts')
-    .select('id', { count: 'exact', head: true })
+    .select('session_puzzle_id, attempted_at')
     .eq('round_number', round)
     .in('session_puzzle_id', sessionPuzzleIds)
-    .gte('attempted_at', startOfTodayIso())
   if (error) throw error
-  return count ?? 0
+  return data
+}
+
+export function attemptedIdsFrom(rows: RoundAttemptRow[]): Set<string> {
+  return new Set(rows.map((r) => r.session_puzzle_id))
+}
+
+export function countAttemptedToday(rows: RoundAttemptRow[]): number {
+  const startOfToday = startOfTodayIso()
+  return rows.filter((r) => r.attempted_at >= startOfToday).length
 }
 
 export async function fetchPuzzleById(puzzleId: string): Promise<LichessPuzzle> {
@@ -90,7 +91,7 @@ async function pickAndInsertNewRound1Puzzle(
   sessionId: string,
   orderIndex: number,
   targetRating: number,
-): Promise<SessionPuzzleRow> {
+): Promise<{ sessionPuzzle: SessionPuzzleRow; puzzle: LichessPuzzle }> {
   const windows = [100, 250, 500, 1000, 3000]
   let candidate: LichessPuzzle | null = null
 
@@ -121,7 +122,9 @@ async function pickAndInsertNewRound1Puzzle(
     .select('id, puzzle_id, order_index')
     .single()
   if (error) throw error
-  return data
+  // Il candidato dell'RPC e' gia' il puzzle completo: evita un'altra query
+  // (fetchPuzzleById) solo per ririleggere dati che abbiamo gia' in mano.
+  return { sessionPuzzle: data, puzzle: candidate }
 }
 
 async function advanceRound(sessionId: string, nextRound: 1 | 2 | 3) {
@@ -157,11 +160,12 @@ export async function getNextPuzzle(
   userElo: number,
 ): Promise<NextPuzzleOutcome> {
   let round = session.current_round
-  let pool = await fetchSessionPuzzles(session.id)
-  let attempted = await fetchAttemptedSessionPuzzleIds(
+  const pool = await fetchSessionPuzzles(session.id)
+  let roundAttempts = await fetchRoundAttempts(
     pool.map((p) => p.id),
     round,
   )
+  let attempted = attemptedIdsFrom(roundAttempts)
 
   const roundTargetSize = session.total_puzzles
   const roundIsComplete =
@@ -175,27 +179,29 @@ export async function getNextPuzzle(
     const nextRound = (round + 1) as 2 | 3
     await advanceRound(session.id, nextRound)
     round = nextRound
-    attempted = await fetchAttemptedSessionPuzzleIds(
+    roundAttempts = await fetchRoundAttempts(
       pool.map((p) => p.id),
       round,
     )
+    attempted = attemptedIdsFrom(roundAttempts)
   }
 
   const dailyTarget = dailyTargetForRound(session, round)
-  const attemptedToday = await countAttemptsToday(
-    pool.map((p) => p.id),
-    round,
-  )
-  if (attemptedToday >= dailyTarget) {
+  if (countAttemptedToday(roundAttempts) >= dailyTarget) {
     return { status: 'quota_reached', round }
   }
 
   if (round === 1) {
     const pending = pool.find((p) => !attempted.has(p.id))
-    const sessionPuzzle =
-      pending ??
-      (await pickAndInsertNewRound1Puzzle(session.id, pool.length + 1, userElo))
-    const puzzle = await fetchPuzzleById(sessionPuzzle.puzzle_id)
+    if (pending) {
+      const puzzle = await fetchPuzzleById(pending.puzzle_id)
+      return { status: 'next', data: { sessionPuzzleId: pending.id, puzzle, round } }
+    }
+    const { sessionPuzzle, puzzle } = await pickAndInsertNewRound1Puzzle(
+      session.id,
+      pool.length + 1,
+      userElo,
+    )
     return { status: 'next', data: { sessionPuzzleId: sessionPuzzle.id, puzzle, round } }
   }
 
@@ -208,49 +214,24 @@ export async function getNextPuzzle(
   return { status: 'next', data: { sessionPuzzleId: nextInPool.id, puzzle, round } }
 }
 
+// Un'unica chiamata RPC invece di 4 round trip sequenziali (lettura ELO,
+// insert tentativo, lettura contatori, update stats): la logica gira in una
+// singola transazione lato Postgres, vedi supabase/migrations/0009_*.sql.
 export async function recordAttempt(params: {
-  userId: string
   sessionPuzzleId: string
   round: 1 | 2 | 3
   result: AttemptResult
   timeSeconds: number
   puzzleRating: number
 }) {
-  const { userId, sessionPuzzleId, round, result, timeSeconds, puzzleRating } = params
-  const eloBefore = await getUserElo(userId)
-  const eloAfter = updateElo(eloBefore, puzzleRating, result === 'solved')
-
-  const { data: attempt, error: attemptError } = await supabase
-    .from('puzzle_attempts')
-    .insert({
-      session_puzzle_id: sessionPuzzleId,
-      round_number: round,
-      result,
-      time_seconds: timeSeconds,
-      elo_before: eloBefore,
-      elo_after: eloAfter,
-    })
-    .select('*')
-    .single()
-  if (attemptError) throw attemptError
-
-  const { data: stats, error: statsError } = await supabase
-    .from('user_stats')
-    .select('puzzles_solved, puzzles_failed')
-    .eq('user_id', userId)
-    .single()
-  if (statsError) throw statsError
-
-  const { error: updateError } = await supabase
-    .from('user_stats')
-    .update({
-      current_elo: eloAfter,
-      puzzles_solved: stats.puzzles_solved + (result === 'solved' ? 1 : 0),
-      puzzles_failed: stats.puzzles_failed + (result === 'failed' ? 1 : 0),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('user_id', userId)
-  if (updateError) throw updateError
-
-  return attempt
+  const { sessionPuzzleId, round, result, timeSeconds, puzzleRating } = params
+  const { data, error } = await supabase.rpc('record_puzzle_attempt', {
+    p_session_puzzle_id: sessionPuzzleId,
+    p_round: round,
+    p_result: result,
+    p_time_seconds: timeSeconds,
+    p_puzzle_rating: puzzleRating,
+  })
+  if (error) throw error
+  return data
 }
