@@ -23,7 +23,10 @@ import { parseUci } from '@/lib/uci'
 import type { LichessPuzzle } from '@/types/training'
 
 const BEST_MOVE_ARROW_COLOR = 'rgba(37, 99, 235, 0.8)'
-const BOARD_SIZE = 'min(90vw, 78vh, 720px)'
+// calc(100vw - 2rem) invece di una frazione fissa (es. 90vw): la scacchiera
+// deve occupare tutto lo spazio orizzontale disponibile dentro il padding
+// della pagina (px-4 = 1rem per lato), non lasciare margine extra su mobile.
+const BOARD_SIZE = 'min(calc(100vw - 2rem), 78vh, 720px)'
 
 type Feedback = 'intro' | 'playing' | 'correct' | 'wrong' | 'solved'
 
@@ -566,8 +569,11 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
           {/* Colonna riservata SEMPRE (anche vuota) cosi' la comparsa della
               barra di valutazione a fine puzzle non fa "scattare" la
               scacchiera (ne' in larghezza ne' in altezza, dato che non sta
-              piu' sopra ma di lato). */}
-          <div className="w-5 shrink-0">
+              piu' sopra ma di lato). Nascosta sotto lg: la scacchiera deve
+              occupare tutto lo spazio disponibile su mobile, dove comunque
+              il pannello di analisi finisce sotto a piena larghezza e non a
+              fianco, quindi la barra laterale non avrebbe senso li'. */}
+          <div className="hidden w-5 shrink-0 lg:block">
             {analysisEnabled && (
               <EvalBar
                 orientation="vertical"
@@ -640,7 +646,25 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
                 )
               })()}
           </div>
+
+          {/* Spacer vuoto speculare alla colonna della barra di valutazione
+              (nascosto sotto lg: insieme ad essa, vedi sopra). */}
+          <div className="hidden w-5 shrink-0 lg:block" aria-hidden="true" />
         </div>
+
+        {/* Su mobile la barra di valutazione (nascosta di lato da lg: in su,
+            vedi sopra) si sposta qui sotto la scacchiera, in orizzontale. */}
+        {analysisEnabled && (
+          <div style={{ width: BOARD_SIZE }} className="lg:hidden">
+            <EvalBar
+              orientation="horizontal"
+              whitePercent={whitePercent}
+              scoreCp={topLine?.scoreCp ?? null}
+              scoreMate={topLine?.scoreMate ?? null}
+              sideToMove={displayTurn}
+            />
+          </div>
+        )}
 
         <div className="flex items-center gap-3">
           <Button
@@ -673,6 +697,21 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
             <ChevronRight className="size-4" />
           </Button>
         </div>
+
+        {/* Su mobile il bottone "puzzle successivo" si sposta qui, tra le
+            frecce di navigazione e la card di analisi motore (su desktop
+            resta invece in fondo alla colonna di analisi, sotto la
+            cronologia mosse: vedi piu' sotto, nascosto qui da lg: in su). */}
+        {pendingCompletion && (
+          <Button
+            type="button"
+            className="w-full lg:hidden"
+            style={{ width: BOARD_SIZE }}
+            onClick={() => onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)}
+          >
+            {t.puzzleBoard.nextPuzzle}
+          </Button>
+        )}
       </div>
 
       {/* Questa colonna riserva SEMPRE lo spazio (anche vuota) cosi' la
@@ -696,6 +735,7 @@ export function PuzzleBoard({ puzzle, autoAdvance, onComplete }: PuzzleBoardProp
             />
             <Button
               type="button"
+              className="hidden lg:inline-flex"
               onClick={() =>
                 onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)
               }
