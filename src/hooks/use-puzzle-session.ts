@@ -12,7 +12,8 @@ import type { AttemptResult, TrainingSession } from '@/types/training'
 // implica sempre un cambio di status della sessione da segnalare).
 function outcomeRound(outcome: NextPuzzleOutcome): 1 | 2 | 3 | null {
   if (outcome.status === 'next') return outcome.data.round
-  if (outcome.status === 'quota_reached') return outcome.round
+  if (outcome.status === 'quota_reached' || outcome.status === 'resting')
+    return outcome.round
   return null
 }
 
@@ -71,7 +72,8 @@ export function useRecordAttempt(session: TrainingSession | null | undefined) {
       // altri casi rileggerla sarebbe un round trip sprecato, dato che
       // tornerebbe la stessa identica riga.
       const roundChanged =
-        outcome.status === 'session_complete' || outcomeRound(outcome) !== session?.current_round
+        outcome.status === 'session_complete' ||
+        outcomeRound(outcome) !== session?.current_round
       if (roundChanged) {
         queryClient.invalidateQueries({ queryKey: ['active-session', user?.id] })
       }

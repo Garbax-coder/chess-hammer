@@ -5,7 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useActiveSession } from '@/hooks/use-active-session'
 import { useAuth } from '@/lib/auth-context'
-import { deleteActiveSession, resetSession, resetTodayQuota } from '@/lib/dev-tools'
+import {
+  deleteActiveSession,
+  resetSession,
+  resetTodayQuota,
+  skipRest,
+} from '@/lib/dev-tools'
 import { useTranslations } from '@/lib/language-context'
 
 /**
@@ -19,7 +24,7 @@ export function DevToolsPanel() {
   const { data: session } = useActiveSession()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const [busy, setBusy] = useState<'quota' | 'session' | 'delete' | null>(null)
+  const [busy, setBusy] = useState<'quota' | 'session' | 'delete' | 'rest' | null>(null)
 
   if (!session || !user) return null
 
@@ -49,6 +54,16 @@ export function DevToolsPanel() {
       await deleteActiveSession(session!.id)
       await queryClient.invalidateQueries()
       navigate('/dashboard')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function handleSkipRest() {
+    setBusy('rest')
+    try {
+      await skipRest(session!.id)
+      await queryClient.invalidateQueries()
     } finally {
       setBusy(null)
     }
@@ -86,6 +101,15 @@ export function DevToolsPanel() {
           onClick={handleDeleteActiveSession}
         >
           {busy === 'delete' ? t.devTools.resetting : t.devTools.deleteActiveSession}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={busy !== null}
+          onClick={handleSkipRest}
+        >
+          {busy === 'rest' ? t.devTools.resetting : t.devTools.skipRest}
         </Button>
       </CardContent>
     </Card>

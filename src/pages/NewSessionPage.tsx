@@ -36,13 +36,17 @@ export default function NewSessionPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    const values = [
+    const atLeastOne = [
       form.total_puzzles,
       form.daily_target_round1,
       form.daily_target_round2,
       form.daily_target_round3,
     ]
-    if (values.some((v) => !Number.isInteger(v) || v < 1)) {
+    const invalid =
+      atLeastOne.some((v) => !Number.isInteger(v) || v < 1) ||
+      !Number.isInteger(form.rest_days) ||
+      form.rest_days < 0
+    if (invalid) {
       setValidationError(t.newSession.errorInvalidValues)
       return
     }
@@ -105,6 +109,18 @@ export default function NewSessionPage() {
               ))}
             </div>
 
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="rest_days">{t.newSession.restDays}</Label>
+              <Input
+                id="rest_days"
+                type="number"
+                min={0}
+                value={form.rest_days}
+                onChange={(e) => updateField('rest_days', e.target.value)}
+              />
+              <p className="text-muted-foreground text-xs">{t.newSession.restDaysHint}</p>
+            </div>
+
             {validationError && (
               <p className="text-destructive text-sm">{validationError}</p>
             )}
@@ -131,6 +147,7 @@ export default function NewSessionPage() {
           form.daily_target_round2,
           form.daily_target_round3,
         ]}
+        restDays={form.rest_days}
       />
     </main>
   )

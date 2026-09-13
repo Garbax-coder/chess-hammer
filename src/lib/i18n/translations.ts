@@ -53,6 +53,7 @@ export interface Translations {
     roundProgress: (round: number, attempted: number, target: number) => string
     todayProgress: (attempted: number, target: number) => string
     roundSummary: (round: number, perDay: number, days: number) => string
+    restingNote: (date: string) => string
     continueTraining: string
     noActiveSessionTitle: string
     noActiveSessionDescription: string
@@ -78,12 +79,16 @@ export interface Translations {
     totalPuzzles: string
     roundLabel: (round: number) => string
     daysEstimate: (days: number | string) => string
+    restDays: string
+    restDaysHint: string
     errorGeneric: string
     errorInvalidValues: string
     start: string
     calendarTitle: string
     calendarEndDate: (date: string) => string
     calendarTruncated: string
+    calendarRestLabel: string
+    calendarInvalid: string
   }
   sessionsHistory: {
     title: string
@@ -114,6 +119,9 @@ export interface Translations {
     backToList: string
     quotaTitle: string
     quotaDescription: (round: number) => string
+    restingTitle: string
+    restingDescription: (date: string, round: number) => string
+    checkAgain: string
     sessionCompleteTitle: string
     sessionCompleteDescription: string
     backToDashboard: string
@@ -170,6 +178,7 @@ export interface Translations {
     resetQuota: string
     resetSession: string
     deleteActiveSession: string
+    skipRest: string
   }
   profile: {
     openLabel: string
@@ -245,6 +254,7 @@ export const it: Translations = {
     todayProgress: (attempted, target) => `Oggi: ${attempted}/${target}`,
     roundSummary: (round, perDay, days) =>
       `${round}° giro: ${perDay}/giorno (~${days} giorni)`,
+    restingNote: (date) => `⏸ In pausa fino al ${date}`,
     continueTraining: 'Continua allenamento',
     noActiveSessionTitle: 'Nessuna sessione attiva',
     noActiveSessionDescription: 'Configura un nuovo allenamento Woodpecker per iniziare.',
@@ -271,13 +281,19 @@ export const it: Translations = {
     totalPuzzles: 'Totale puzzle nella sessione',
     roundLabel: (round) => `${round}° giro — puzzle/giorno`,
     daysEstimate: (days) => `~${days} giorni`,
+    restDays: 'Giorni di pausa tra un giro e l’altro',
+    restDaysHint:
+      'Il metodo Woodpecker consiglia qualche giorno di riposo tra un giro e il successivo, così il richiamo dalla memoria è più efficace. 0 = nessuna pausa.',
     errorGeneric: 'Errore nella creazione della sessione',
     errorInvalidValues:
-      'Tutti i valori devono essere numeri interi maggiori o uguali a 1.',
+      'Puzzle e puzzle/giorno devono essere numeri interi ≥ 1; i giorni di pausa devono essere ≥ 0.',
     start: 'Avvia sessione',
     calendarTitle: 'Anteprima calendario',
     calendarEndDate: (date) => `Fine prevista: ${date}`,
     calendarTruncated: 'Durata troppo lunga per essere mostrata per intero.',
+    calendarRestLabel: 'Pausa',
+    calendarInvalid:
+      "Inserisci un totale puzzle e almeno 1 puzzle/giorno per ogni giro per vedere l'anteprima.",
   },
   sessionsHistory: {
     title: 'Storico sessioni',
@@ -309,6 +325,10 @@ export const it: Translations = {
     quotaTitle: 'Quota di oggi completata',
     quotaDescription: (round) =>
       `Hai raggiunto il target giornaliero per il giro ${round}. Torna domani per continuare, oppure seleziona un puzzle dalla lista a sinistra per allenarti liberamente.`,
+    restingTitle: 'In pausa tra un giro e l’altro',
+    restingDescription: (date, round) =>
+      `Il giro ${round} inizia il ${date}: il metodo Woodpecker consiglia qualche giorno di riposo, così il prossimo giro è un vero richiamo dalla memoria invece di una ripetizione a breve termine. Nel frattempo puoi allenarti liberamente selezionando un puzzle dalla lista a sinistra.`,
+    checkAgain: 'Controlla di nuovo',
     sessionCompleteTitle: 'Sessione completata 🎉',
     sessionCompleteDescription:
       'Hai finito tutti e 3 i giri di questa sessione. Puoi continuare a esercitarti liberamente selezionando un puzzle dalla lista a sinistra.',
@@ -363,6 +383,7 @@ export const it: Translations = {
     resetQuota: 'Reset quota oggi',
     resetSession: 'Reset sessione (ELO incluso)',
     deleteActiveSession: 'Elimina sessione attiva',
+    skipRest: 'Salta pausa',
   },
   profile: {
     openLabel: 'Profilo',
@@ -393,7 +414,7 @@ export const it: Translations = {
       {
         question: 'Come viene applicato in Chess Hammer?',
         answer:
-          "Ogni sessione ha un pool fisso di puzzle (impostabile alla creazione, es. 200) e si articola in 3 giri:\n\n1° giro — scoperta: i puzzle vengono scelti uno alla volta in base al tuo rating ELO attuale, e formano il pool fisso della sessione.\n2° e 3° giro — ripetizione: si ripercorre esattamente lo stesso pool, nello stesso ordine, cercando di risolverlo più in fretta.\n\nOgni giro ha una quota giornaliera configurabile (es. 10/20/40 puzzle al giorno per giro 1/2/3): l'app calcola automaticamente quanti giorni servono per completare ciascun giro.",
+          "Ogni sessione ha un pool fisso di puzzle (impostabile alla creazione, es. 200) e si articola in 3 giri:\n\n1° giro — scoperta: i puzzle vengono scelti uno alla volta in base al tuo rating ELO attuale, e formano il pool fisso della sessione.\n2° e 3° giro — ripetizione: si ripercorre esattamente lo stesso pool, nello stesso ordine, cercando di risolverlo più in fretta.\n\nOgni giro ha una quota giornaliera configurabile (es. 10/20/40 puzzle al giorno per giro 1/2/3): l'app calcola automaticamente quanti giorni servono per completare ciascun giro.\n\nTra un giro e il successivo è anche possibile impostare qualche giorno di pausa (0 = nessuna, come consigliato dal metodo originale): finché la pausa non è scaduta la sessione ufficiale resta in attesa, ma puoi comunque allenarti liberamente in modalità pratica.",
       },
       {
         question: "Cosa rappresenta l'ELO?",
@@ -408,7 +429,7 @@ export const it: Translations = {
       {
         question: 'Cosa posso impostare io?',
         answer:
-          'Alla creazione di una sessione: il numero totale di puzzle e la quota giornaliera per ciascuno dei 3 giri.\n\nNel profilo: lingua, stile della scacchiera, set dei pezzi, avanzamento automatico al puzzle successivo, suoni.',
+          'Alla creazione di una sessione: il numero totale di puzzle, la quota giornaliera per ciascuno dei 3 giri, e i giorni di pausa tra un giro e il successivo.\n\nNel profilo: lingua, stile della scacchiera, set dei pezzi, avanzamento automatico al puzzle successivo, suoni.',
       },
       {
         question: 'Quali dati vengono misurati, e a cosa servono?',
@@ -481,6 +502,7 @@ export const en: Translations = {
     todayProgress: (attempted, target) => `Today: ${attempted}/${target}`,
     roundSummary: (round, perDay, days) =>
       `Round ${round}: ${perDay}/day (~${days} days)`,
+    restingNote: (date) => `⏸ Resting until ${date}`,
     continueTraining: 'Continue training',
     noActiveSessionTitle: 'No active session',
     noActiveSessionDescription: 'Set up a new Woodpecker training to get started.',
@@ -507,12 +529,19 @@ export const en: Translations = {
     totalPuzzles: 'Total puzzles in the session',
     roundLabel: (round) => `Round ${round} — puzzles/day`,
     daysEstimate: (days) => `~${days} days`,
+    restDays: 'Rest days between rounds',
+    restDaysHint:
+      'The Woodpecker Method recommends a few days of rest between one round and the next, so recall from memory is more effective. 0 = no rest.',
     errorGeneric: 'Error creating the session',
-    errorInvalidValues: 'All values must be whole numbers greater than or equal to 1.',
+    errorInvalidValues:
+      'Puzzles and puzzles/day must be whole numbers ≥ 1; rest days must be ≥ 0.',
     start: 'Start session',
     calendarTitle: 'Calendar preview',
     calendarEndDate: (date) => `Estimated finish: ${date}`,
     calendarTruncated: 'Too long to show in full.',
+    calendarRestLabel: 'Rest',
+    calendarInvalid:
+      'Enter a puzzle total and at least 1 puzzle/day for each round to see the preview.',
   },
   sessionsHistory: {
     title: 'Session history',
@@ -544,6 +573,10 @@ export const en: Translations = {
     quotaTitle: "Today's quota completed",
     quotaDescription: (round) =>
       `You've reached the daily target for round ${round}. Come back tomorrow to continue, or pick a puzzle from the list on the left to practice freely.`,
+    restingTitle: 'Resting between rounds',
+    restingDescription: (date, round) =>
+      `Round ${round} starts on ${date}: the Woodpecker Method recommends a few days of rest, so the next round is real recall instead of short-term repetition. In the meantime you can practice freely by picking a puzzle from the list on the left.`,
+    checkAgain: 'Check again',
     sessionCompleteTitle: 'Session completed 🎉',
     sessionCompleteDescription:
       "You've finished all 3 rounds of this session. You can keep practicing freely by picking a puzzle from the list on the left.",
@@ -598,6 +631,7 @@ export const en: Translations = {
     resetQuota: "Reset today's quota",
     resetSession: 'Reset session (incl. ELO)',
     deleteActiveSession: 'Delete active session',
+    skipRest: 'Skip rest',
   },
   profile: {
     openLabel: 'Profile',
@@ -628,7 +662,7 @@ export const en: Translations = {
       {
         question: 'How is it applied in Chess Hammer?',
         answer:
-          "Each session has a fixed puzzle pool (configurable when you create it, e.g. 200) and unfolds over 3 rounds:\n\nRound 1 — discovery: puzzles are picked one at a time based on your current ELO rating, and form the session's fixed pool.\nRounds 2 and 3 — repetition: you go through the exact same pool, in the same order, trying to solve it faster.\n\nEach round has a configurable daily target (e.g. 10/20/40 puzzles a day for rounds 1/2/3): the app automatically works out how many days each round will take.",
+          "Each session has a fixed puzzle pool (configurable when you create it, e.g. 200) and unfolds over 3 rounds:\n\nRound 1 — discovery: puzzles are picked one at a time based on your current ELO rating, and form the session's fixed pool.\nRounds 2 and 3 — repetition: you go through the exact same pool, in the same order, trying to solve it faster.\n\nEach round has a configurable daily target (e.g. 10/20/40 puzzles a day for rounds 1/2/3): the app automatically works out how many days each round will take.\n\nYou can also set a few days of rest between one round and the next (0 = none, as the original method recommends): while the rest period hasn't elapsed the official session waits, but you can still train freely in practice mode.",
       },
       {
         question: 'What does ELO represent?',
@@ -643,7 +677,7 @@ export const en: Translations = {
       {
         question: 'What can I configure?',
         answer:
-          'When creating a session: the total number of puzzles and the daily target for each of the 3 rounds.\n\nIn your profile: language, board style, piece set, auto-advance to the next puzzle, sounds.',
+          'When creating a session: the total number of puzzles, the daily target for each of the 3 rounds, and the rest days between one round and the next.\n\nIn your profile: language, board style, piece set, auto-advance to the next puzzle, sounds.',
       },
       {
         question: 'What data is measured, and how does it help?',

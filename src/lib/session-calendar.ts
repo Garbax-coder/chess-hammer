@@ -1,9 +1,7 @@
 export type RoundNumber = 1 | 2 | 3
 
-export interface CalendarDay {
-  date: Date
-  round: RoundNumber
-}
+export type CalendarDay =
+  { date: Date; kind: 'round'; round: RoundNumber } | { date: Date; kind: 'rest' }
 
 export interface SessionCalendarResult {
   days: CalendarDay[]
@@ -30,14 +28,18 @@ function startOfDay(date: Date): Date {
 // Giorno per giorno, dall'inizio sessione alla fine del 3° giro: stessa
 // formula (Math.ceil(totale/quota)) gia' usata per la stima testuale
 // "~N giorni" di ogni giro, ma qui applicata giorno-per-giorno per poterla
-// disegnare su un calendario reale.
+// disegnare su un calendario reale. Tra un giro e il successivo (non dopo
+// il 3°) inserisce restDays giorni di pausa, come consigliato dal metodo
+// Woodpecker.
 export function computeSessionCalendar(
   startDate: Date,
   totalPuzzles: number,
   dailyTargets: readonly [number, number, number],
+  restDays: number,
 ): SessionCalendarResult | null {
   if (!Number.isFinite(totalPuzzles) || totalPuzzles < 1) return null
   if (dailyTargets.some((target) => !Number.isFinite(target) || target < 1)) return null
+  if (!Number.isFinite(restDays) || restDays < 0) return null
 
   const days: CalendarDay[] = []
   let cursor = startOfDay(startDate)
@@ -51,8 +53,19 @@ export function computeSessionCalendar(
         truncated = true
         break outer
       }
-      days.push({ date: cursor, round })
+      days.push({ date: cursor, kind: 'round', round })
       cursor = addDays(cursor, 1)
+    }
+
+    if (round < 3) {
+      for (let r = 0; r < restDays; r++) {
+        if (days.length >= MAX_PREVIEW_DAYS) {
+          truncated = true
+          break outer
+        }
+        days.push({ date: cursor, kind: 'rest' })
+        cursor = addDays(cursor, 1)
+      }
     }
   }
 
