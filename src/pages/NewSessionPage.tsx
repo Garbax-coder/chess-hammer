@@ -62,7 +62,7 @@ export default function NewSessionPage() {
   ]
 
   return (
-    <main className="flex flex-1 flex-col items-center gap-6 px-4 py-8">
+    <main className="flex w-full flex-1 flex-col items-center gap-6 px-4 py-8 lg:flex-row lg:items-start lg:justify-center">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">{t.newSession.title}</CardTitle>

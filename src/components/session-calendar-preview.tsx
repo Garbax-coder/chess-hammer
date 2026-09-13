@@ -55,26 +55,6 @@ function MonthCalendar({
     const date = new Date(year, month, d)
     cells.push({ date, day: byDate.get(dateKey(date)) ?? null })
   }
-  const rows = Math.ceil(cells.length / COLS)
-  const gridHeight = rows * STRIDE - GAP
-
-  // Una polilinea per giro, che collega i centri delle celle consecutive
-  // dello stesso giro presenti in QUESTO mese (un giro a cavallo di due
-  // mesi si interrompe al bordo: il colore da solo segnala la continuita').
-  const linesByRound: Record<RoundNumber, { x: number; y: number }[]> = {
-    1: [],
-    2: [],
-    3: [],
-  }
-  cells.forEach((cell, i) => {
-    if (!cell.day) return
-    const col = i % COLS
-    const row = Math.floor(i / COLS)
-    linesByRound[cell.day.round].push({
-      x: col * STRIDE + CELL / 2,
-      y: row * STRIDE + CELL / 2,
-    })
-  })
 
   const monthLabel = first.toLocaleDateString(locale, { month: 'long', year: 'numeric' })
 
@@ -93,47 +73,24 @@ function MonthCalendar({
           <span key={i}>{label}</span>
         ))}
       </div>
-      <div className="relative" style={{ width: GRID_WIDTH, height: gridHeight }}>
-        <svg
-          width={GRID_WIDTH}
-          height={gridHeight}
-          className="pointer-events-none absolute inset-0"
-        >
-          {ROUNDS.map(
-            (round) =>
-              linesByRound[round].length > 1 && (
-                <polyline
-                  key={round}
-                  points={linesByRound[round].map((p) => `${p.x},${p.y}`).join(' ')}
-                  fill="none"
-                  stroke={ROUND_COLORS[round]}
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  opacity={0.55}
-                />
-              ),
-          )}
-        </svg>
-        <div
-          className="relative grid"
-          style={{ gridTemplateColumns: `repeat(${COLS}, ${CELL}px)`, gap: GAP }}
-        >
-          {cells.map((cell, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-center rounded-full text-[0.65rem] font-medium"
-              style={{
-                width: CELL,
-                height: CELL,
-                backgroundColor: cell.day ? ROUND_COLORS[cell.day.round] : undefined,
-                color: cell.day ? 'white' : undefined,
-              }}
-            >
-              {cell.date?.getDate() ?? ''}
-            </div>
-          ))}
-        </div>
+      <div
+        className="grid"
+        style={{ gridTemplateColumns: `repeat(${COLS}, ${CELL}px)`, gap: GAP }}
+      >
+        {cells.map((cell, i) => (
+          <div
+            key={i}
+            className="flex items-center justify-center rounded-full text-[0.65rem] font-medium"
+            style={{
+              width: CELL,
+              height: CELL,
+              backgroundColor: cell.day ? ROUND_COLORS[cell.day.round] : undefined,
+              color: cell.day ? 'white' : undefined,
+            }}
+          >
+            {cell.date?.getDate() ?? ''}
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -181,7 +138,7 @@ export function SessionCalendarPreview({
   const lastDay = result.days[result.days.length - 1].date
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md lg:max-w-xs">
       <CardHeader>
         <CardTitle className="text-base">{t.newSession.calendarTitle}</CardTitle>
       </CardHeader>
