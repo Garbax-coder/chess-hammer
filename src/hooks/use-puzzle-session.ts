@@ -28,12 +28,23 @@ function nextPuzzleQueryKey(sessionId: string | undefined) {
 
 export function useNextPuzzle(session: TrainingSession | null | undefined) {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
 
   return useQuery({
     queryKey: nextPuzzleQueryKey(session?.id),
     queryFn: async () => {
       const elo = await getUserElo(user!.id)
-      return getNextPuzzle(session!, elo)
+      const outcome = await getNextPuzzle(session!, elo)
+      // getNextPuzzle puo', come effetto collaterale, inserire un nuovo
+      // session_puzzle (nuova pesca al giro 1) o avanzare di giro: senza
+      // invalidare, la sidebar (useSessionPuzzles, cache separata) resta
+      // ferma alla lista di prima finche' non arriva il prossimo tentativo
+      // registrato (vedi useRecordAttempt piu' sotto, che invalida
+      // esplicitamente dopo OGNI tentativo) — qui serve lo stesso, dato che
+      // questa query gira anche al primo caricamento di un giorno nuovo,
+      // prima di qualunque tentativo.
+      queryClient.invalidateQueries({ queryKey: ['session-puzzles', session?.id] })
+      return outcome
     },
     enabled: !!session && !!user,
     // Dopo il fetch iniziale, questa entry e' gestita a mano (vedi

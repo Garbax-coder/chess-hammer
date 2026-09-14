@@ -83,3 +83,35 @@ export async function skipRest(sessionId: string) {
     .eq('id', sessionId)
   if (error) throw error
 }
+
+// Puzzle Lichess reale: prima mossa del risolutore e' b7b8n (sottopromozione
+// a cavallo, tema "underPromotion"), utile per testare il selettore di
+// promozione senza dover cercare a mano un puzzle adatto.
+const KNIGHT_PROMOTION_PUZZLE_ID = 'FEaBa'
+
+/**
+ * Inserisce il puzzle di test sopra nel pool della sessione attiva, in cima
+ * (order_index piu' basso di tutti) cosi' diventa subito il prossimo da
+ * risolvere invece di dover prima finire quelli gia' in coda. Pensato per
+ * il giro 1: in giro 2/3 il pool e' un replay fisso, quindi aggiungerne uno
+ * a meta' rompe l'invariante "stesso pool del giro 1" (accettabile per uno
+ * strumento di debug, non per l'uso normale).
+ */
+export async function addKnightPromotionDebugPuzzle(sessionId: string) {
+  const { data: existing, error: fetchError } = await supabase
+    .from('session_puzzles')
+    .select('order_index, puzzle_id')
+    .eq('session_id', sessionId)
+    .order('order_index', { ascending: true })
+  if (fetchError) throw fetchError
+
+  if (existing.some((p) => p.puzzle_id === KNIGHT_PROMOTION_PUZZLE_ID)) return
+
+  const minOrderIndex = existing[0]?.order_index ?? 1
+  const { error } = await supabase.from('session_puzzles').insert({
+    session_id: sessionId,
+    puzzle_id: KNIGHT_PROMOTION_PUZZLE_ID,
+    order_index: minOrderIndex - 1,
+  })
+  if (error) throw error
+}

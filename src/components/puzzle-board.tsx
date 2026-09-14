@@ -5,6 +5,7 @@ import { Chessboard, type Arrow } from 'react-chessboard'
 import { AnalysisPanel } from '@/components/analysis-panel'
 import { EvalBar } from '@/components/eval-bar'
 import { MoveHistoryPanel } from '@/components/move-history'
+import { PromotionPicker, type PromotionPieceType } from '@/components/promotion-picker'
 import { SolvedFireworks } from '@/components/solved-fireworks'
 import { Button } from '@/components/ui/button'
 import { useStockfishAnalysis } from '@/hooks/use-stockfish-analysis'
@@ -53,7 +54,7 @@ const CAPTURE_HINT_STYLE = { boxShadow: 'inset 0 0 0 3px rgba(0,0,0,0.22)' }
 // scacchiera COSI' COM'E' VISUALIZZATA (tiene conto dell'orientamento), per
 // posizionare l'overlay dell'esito finale sopra il pezzo invece che dietro
 // (squareStyles del componente Chessboard finisce dietro ai pezzi).
-function squareToBoardPosition(
+export function squareToBoardPosition(
   square: string,
   orientation: 'white' | 'black',
 ): { row: number; col: number } {
@@ -88,6 +89,28 @@ interface PendingCompletion {
 interface SquareSelection {
   square: string
   targets: { to: string; capture: boolean }[]
+}
+
+interface PendingPromotion {
+  source: string
+  target: string
+  color: 'w' | 'b'
+  mode: 'puzzle' | 'free'
+}
+
+// Un pedone che arriva sull'ultima traversa del proprio colore ha sempre
+// bisogno di una scelta di promozione, indipendentemente da quale sia la
+// mossa "attesa" dalla soluzione del puzzle: prima si rileva la necessita',
+// poi si chiede all'utente, invece di dedurre il pezzo dalla soluzione (che
+// tra l'altro rivelerebbe la risposta corretta in anticipo).
+function needsPromotion(game: Chess, source: string, target: string): boolean {
+  const piece = game.get(source as Square)
+  if (!piece || piece.type !== 'p') return false
+  const targetRank = target[1]
+  return (
+    (piece.color === 'w' && targetRank === '8') ||
+    (piece.color === 'b' && targetRank === '1')
+  )
 }
 
 interface PuzzleBoardProps {
@@ -146,6 +169,10 @@ export function PuzzleBoard({
     null,
   )
   const [selection, setSelection] = useState<SquareSelection | null>(null)
+  // Mossa di promozione in attesa della scelta del pezzo da parte
+  // dell'utente: la mossa non viene giocata su gameRef/displayFen finche'
+  // non arriva la scelta (vedi attemptMove/attemptFreeMove).
+  const [pendingPromotion, setPendingPromotion] = useState<PendingPromotion | null>(null)
   // Diventa true nel momento esatto in cui il puzzle finisce, e torna false
   // alla prima mossa libera o navigazione in cronologia: isLive da solo non
   // basta perche' ridiventa vero ad ogni mossa di analisi (e' sempre una
@@ -173,6 +200,7 @@ export function PuzzleBoard({
     setWrongMove(null)
     setPendingCompletion(null)
     setSelection(null)
+    setPendingPromotion(null)
     setOutcomeVisible(false)
     nodeIdCounterRef.current = 0
   }
@@ -192,6 +220,7 @@ export function PuzzleBoard({
   function navigateTo(id: string) {
     setWrongMove(null)
     setSelection(null)
+    setPendingPromotion(null)
     setOutcomeVisible(false)
     setCurrentId(id)
   }
@@ -242,12 +271,15 @@ export function PuzzleBoard({
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'ArrowLeft') {
+      if (e.key === 'Escape') {
+        setPendingPromotion(null)
+      } else if (e.key === 'ArrowLeft') {
         e.preventDefault()
         const cur = nodesRef.current[currentIdRef.current]
         if (cur.parentId) {
           setWrongMove(null)
           setSelection(null)
+          setPendingPromotion(null)
           setCurrentId(cur.parentId)
         }
       } else if (e.key === 'ArrowRight') {
@@ -256,6 +288,7 @@ export function PuzzleBoard({
         if (cur.children.length > 0) {
           setWrongMove(null)
           setSelection(null)
+          setPendingPromotion(null)
           setCurrentId(cur.children[0])
         }
       }
@@ -319,11 +352,22 @@ export function PuzzleBoard({
     ]
   }, [engineLines, engineSettings.showBestMoveArrow])
 
-  const displayTurn = useMemo(() => new Chess(displayFen).turn(), [displayFen])
+  const displayGame = useMemo(() => new Chess(displayFen), [displayFen])
+  const displayTurn = displayGame.turn()
+  // Su una posizione di matto Stockfish non ha mosse da cercare: non arriva
+  // alcuna riga di analisi (vedi evalToWhitePercent/formatScore), quindi la
+  // barra andrebbe in fallback sul default 50% ("patta") invece di mostrare
+  // il matto. Va rilevato qui con chess.js, non dedotto da un punteggio che
+  // semplicemente non arriva.
+  const isDisplayCheckmate = displayGame.isCheckmate()
   const topLine = engineLines[0]
-  const whitePercent = topLine
-    ? evalToWhitePercent(topLine.scoreCp, topLine.scoreMate, displayTurn)
-    : 50
+  const whitePercent = isDisplayCheckmate
+    ? displayTurn === 'w'
+      ? 0
+      : 100
+    : topLine
+      ? evalToWhitePercent(topLine.scoreCp, topLine.scoreMate, displayTurn)
+      : 50
 
   const effectiveSelection = isLive || analysisEnabled ? selection : null
 
@@ -369,6 +413,10 @@ export function PuzzleBoard({
     piece: { pieceType: string } | null
     square: string
   }) {
+    // Mentre si sceglie il pezzo di promozione la scacchiera e' bloccata:
+    // il click va al backdrop del selettore (che annulla), non qui.
+    if (pendingPromotion) return
+
     if (analysisEnabled) {
       if (selection) {
         if (selection.square === square) {
@@ -422,14 +470,29 @@ export function PuzzleBoard({
   // del puzzle, giocabile da qualunque punto della cronologia. Se il nodo
   // corrente ha gia' un figlio con quella mossa lo si riusa, altrimenti si
   // crea una nuova diramazione: nessuna variante precedente viene persa.
-  function attemptFreeMove(sourceSquare: string, targetSquare: string): boolean {
+  function attemptFreeMove(
+    sourceSquare: string,
+    targetSquare: string,
+    promotion?: PromotionPieceType,
+  ): boolean {
+    const game = new Chess(displayFen)
+    if (!promotion && needsPromotion(game, sourceSquare, targetSquare)) {
+      setSelection(null)
+      setPendingPromotion({
+        source: sourceSquare,
+        target: targetSquare,
+        color: game.turn(),
+        mode: 'free',
+      })
+      return true
+    }
+
     setSelection(null)
     setWrongMove(null)
     setOutcomeVisible(false)
-    const game = new Chess(displayFen)
     let move
     try {
-      move = game.move({ from: sourceSquare, to: targetSquare, promotion: 'q' })
+      move = game.move({ from: sourceSquare, to: targetSquare, promotion })
     } catch {
       return false
     }
@@ -475,17 +538,27 @@ export function PuzzleBoard({
     setFeedback('playing')
   }
 
-  function attemptMove(sourceSquare: string, targetSquare: string): boolean {
+  function attemptMove(
+    sourceSquare: string,
+    targetSquare: string,
+    promotion?: PromotionPieceType,
+  ): boolean {
     if (lockedRef.current || !isLive) return false
 
-    setSelection(null)
     const game = gameRef.current
+    if (!promotion && needsPromotion(game, sourceSquare, targetSquare)) {
+      setSelection(null)
+      setPendingPromotion({
+        source: sourceSquare,
+        target: targetSquare,
+        color: game.turn(),
+        mode: 'puzzle',
+      })
+      return true
+    }
+
+    setSelection(null)
     const expectedUci = puzzle.moves[solutionIndexRef.current]
-    const promotion =
-      expectedUci?.slice(0, 2) === sourceSquare &&
-      expectedUci.slice(2, 4) === targetSquare
-        ? expectedUci.slice(4, 5) || undefined
-        : 'q'
 
     let move
     try {
@@ -608,6 +681,7 @@ export function PuzzleBoard({
                 scoreCp={topLine?.scoreCp ?? null}
                 scoreMate={topLine?.scoreMate ?? null}
                 sideToMove={displayTurn}
+                isCheckmate={isDisplayCheckmate}
               />
             )}
           </div>
@@ -629,11 +703,12 @@ export function PuzzleBoard({
                 onSquareClick: handleSquareClick,
                 boardOrientation: orientation,
                 canDragPiece: ({ piece }) =>
-                  analysisEnabled
+                  !pendingPromotion &&
+                  (analysisEnabled
                     ? piece.pieceType[0] === displayTurn
                     : isLive &&
                       !lockedRef.current &&
-                      piece.pieceType[0] === gameRef.current.turn(),
+                      piece.pieceType[0] === gameRef.current.turn()),
                 animationDurationInMs: 200,
                 boardStyle: { borderRadius: '0.5rem', overflow: 'hidden' },
                 lightSquareStyle: { backgroundColor: theme.light },
@@ -678,6 +753,21 @@ export function PuzzleBoard({
                   </div>
                 )
               })()}
+            {pendingPromotion && (
+              <PromotionPicker
+                square={pendingPromotion.target}
+                color={pendingPromotion.color}
+                orientation={orientation}
+                pieces={pieces}
+                onSelect={(piece) => {
+                  const { source, target, mode } = pendingPromotion
+                  setPendingPromotion(null)
+                  if (mode === 'puzzle') attemptMove(source, target, piece)
+                  else attemptFreeMove(source, target, piece)
+                }}
+                onCancel={() => setPendingPromotion(null)}
+              />
+            )}
           </div>
 
           {/* Spacer vuoto speculare alla colonna della barra di valutazione
@@ -695,6 +785,7 @@ export function PuzzleBoard({
               scoreCp={topLine?.scoreCp ?? null}
               scoreMate={topLine?.scoreMate ?? null}
               sideToMove={displayTurn}
+              isCheckmate={isDisplayCheckmate}
             />
           </div>
         )}

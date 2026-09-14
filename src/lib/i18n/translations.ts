@@ -150,6 +150,8 @@ export interface Translations {
     prevMove: string
     nextMove: string
     nextPuzzle: string
+    choosePromotion: string
+    promotionPieces: { q: string; r: string; b: string; n: string }
   }
   analysisPanel: {
     title: string
@@ -196,6 +198,7 @@ export interface Translations {
     resetSession: string
     deleteActiveSession: string
     skipRest: string
+    addKnightPromotionPuzzle: string
   }
   profile: {
     openLabel: string
@@ -458,6 +461,8 @@ export const it: Translations = {
     prevMove: 'Mossa precedente',
     nextMove: 'Mossa successiva',
     nextPuzzle: 'Puzzle successivo →',
+    choosePromotion: 'Scegli il pezzo per la promozione',
+    promotionPieces: { q: 'Regina', r: 'Torre', b: 'Alfiere', n: 'Cavallo' },
   },
   analysisPanel: {
     title: 'Analisi motore',
@@ -501,6 +506,7 @@ export const it: Translations = {
     resetSession: 'Reset sessione (ELO incluso)',
     deleteActiveSession: 'Elimina sessione attiva',
     skipRest: 'Salta pausa',
+    addKnightPromotionPuzzle: 'Aggiungi puzzle promozione a cavallo',
   },
   profile: {
     openLabel: 'Profilo',
@@ -806,6 +812,8 @@ export const en: Translations = {
     prevMove: 'Previous move',
     nextMove: 'Next move',
     nextPuzzle: 'Next puzzle →',
+    choosePromotion: 'Choose promotion piece',
+    promotionPieces: { q: 'Queen', r: 'Rook', b: 'Bishop', n: 'Knight' },
   },
   analysisPanel: {
     title: 'Engine analysis',
@@ -849,6 +857,7 @@ export const en: Translations = {
     resetSession: 'Reset session (incl. ELO)',
     deleteActiveSession: 'Delete active session',
     skipRest: 'Skip rest',
+    addKnightPromotionPuzzle: 'Add knight promotion puzzle',
   },
   profile: {
     openLabel: 'Profile',
