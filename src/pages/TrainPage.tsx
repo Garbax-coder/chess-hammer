@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DevToolsPanel } from '@/components/dev-tools-panel'
+import { EditableSessionName } from '@/components/editable-session-name'
 import { PuzzleBoard } from '@/components/puzzle-board'
 import { PuzzleBoardSkeleton } from '@/components/puzzle-board-skeleton'
 import { SessionPuzzleList } from '@/components/session-puzzle-list'
@@ -194,7 +195,7 @@ export default function TrainPage() {
           ) : (
             <div>
               <h1 className="text-foreground text-lg font-semibold tracking-tight">
-                {t.train.title}
+                <EditableSessionName session={session} fallback={t.train.title} />
               </h1>
               <p className="text-muted-foreground text-sm">
                 {t.train.roundInfo(session.current_round, session.total_puzzles)}

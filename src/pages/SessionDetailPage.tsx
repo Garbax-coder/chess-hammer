@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
+import { EditableSessionName } from '@/components/editable-session-name'
 import { PuzzleBoard } from '@/components/puzzle-board'
 import { PuzzleBoardSkeleton } from '@/components/puzzle-board-skeleton'
 import { SessionPuzzleList } from '@/components/session-puzzle-list'
@@ -105,10 +106,12 @@ export default function SessionDetailPage() {
       <aside className="order-2 flex min-h-0 w-full flex-col gap-4 lg:sticky lg:top-14 lg:order-1 lg:max-h-[calc(100vh-117px)] lg:w-64 lg:shrink-0 lg:self-start">
         <div>
           <h1 className="text-foreground text-lg font-semibold tracking-tight">
-            {session.name ||
-              t.sessionDetail.title(
+            <EditableSessionName
+              session={session}
+              fallback={t.sessionDetail.title(
                 new Date(session.created_at).toLocaleDateString(t.meta.locale),
               )}
+            />
           </h1>
           <p className="text-muted-foreground text-sm">
             {t.sessionDetail.subtitle(

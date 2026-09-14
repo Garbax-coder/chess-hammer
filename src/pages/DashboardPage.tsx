@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { EditableSessionName } from '@/components/editable-session-name'
 import { EloHistoryChart } from '@/components/elo-history-chart'
 import { SessionPerformanceCard } from '@/components/session-performance-card'
 import { Button } from '@/components/ui/button'
@@ -44,7 +45,12 @@ export default function DashboardPage() {
       {isLoading ? null : session ? (
         <Card className="w-full max-w-md text-left">
           <CardHeader>
-            <CardTitle>{session.name || t.dashboard.currentSessionTitle}</CardTitle>
+            <CardTitle>
+              <EditableSessionName
+                session={session}
+                fallback={t.dashboard.currentSessionTitle}
+              />
+            </CardTitle>
             <CardDescription>
               {t.dashboard.currentSessionDescription(
                 session.current_round,

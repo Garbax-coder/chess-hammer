@@ -10,6 +10,8 @@ export interface Translations {
     email: string
     password: string
     or: string
+    rename: string
+    sessionNameLabel: string
   }
   language: {
     label: string
@@ -72,6 +74,8 @@ export interface Translations {
       legendFailed: string
       legendPending: string
       openSession: string
+      expandSession: string
+      collapseSession: string
     }
   }
   newSession: {
@@ -232,6 +236,8 @@ export const it: Translations = {
     email: 'Email',
     password: 'Password',
     or: 'oppure',
+    rename: 'Rinomina sessione',
+    sessionNameLabel: 'Nome sessione',
   },
   language: {
     label: 'Lingua',
@@ -297,6 +303,8 @@ export const it: Translations = {
       legendFailed: 'Fallito',
       legendPending: 'Da fare',
       openSession: 'Apri sessione',
+      expandSession: 'Espandi dettagli sessione',
+      collapseSession: 'Comprimi dettagli sessione',
     },
   },
   newSession: {
@@ -588,6 +596,8 @@ export const en: Translations = {
     email: 'Email',
     password: 'Password',
     or: 'or',
+    rename: 'Rename session',
+    sessionNameLabel: 'Session name',
   },
   language: {
     label: 'Language',
@@ -653,6 +663,8 @@ export const en: Translations = {
       legendFailed: 'Failed',
       legendPending: 'To do',
       openSession: 'Open session',
+      expandSession: 'Expand session details',
+      collapseSession: 'Collapse session details',
     },
   },
   newSession: {
