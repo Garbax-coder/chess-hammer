@@ -56,17 +56,17 @@ export default function SessionDetailPage() {
     setSearchParams({})
   }
 
-  async function handlePracticeComplete(
-    result: 'solved' | 'failed',
-    timeSeconds: number,
-  ) {
+  async function handlePracticeAttempt(result: 'solved' | 'failed', timeSeconds: number) {
     if (!selectedPuzzle) return
     await recordPracticeAttempt.mutateAsync({
       puzzleId: selectedPuzzle.puzzleId,
       result,
       timeSeconds,
     })
+  }
 
+  function handlePracticeAdvance() {
+    if (!selectedPuzzle) return
     const currentIndex = puzzles.findIndex(
       (p) => p.sessionPuzzleId === selectedPuzzle.sessionPuzzleId,
     )
@@ -124,7 +124,8 @@ export default function SessionDetailPage() {
               key={practicePuzzle.puzzle_id}
               puzzle={practicePuzzle}
               autoAdvance={autoAdvance}
-              onComplete={handlePracticeComplete}
+              onComplete={handlePracticeAttempt}
+              onAdvance={handlePracticeAdvance}
               isCompleting={recordPracticeAttempt.isPending}
               boardTheme={boardTheme}
               pieceSet={pieceSet}

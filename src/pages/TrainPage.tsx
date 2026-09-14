@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DevToolsPanel } from '@/components/dev-tools-panel'
 import { PuzzleBoard } from '@/components/puzzle-board'
@@ -16,7 +16,11 @@ import {
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useActiveSession } from '@/hooks/use-active-session'
-import { useNextPuzzle, useRecordAttempt } from '@/hooks/use-puzzle-session'
+import {
+  nextPuzzleQueryKey,
+  useNextPuzzle,
+  useRecordAttempt,
+} from '@/hooks/use-puzzle-session'
 import {
   usePuzzleById,
   useRecordPracticeAttempt,
@@ -27,6 +31,7 @@ import { useSoundEnabled } from '@/hooks/use-sound-enabled'
 import { deriveSessionProgress } from '@/lib/session-progress'
 import { useTranslations } from '@/lib/language-context'
 import { useUpdateAutoAdvance, useUserStats } from '@/hooks/use-user-stats'
+import type { NextPuzzleOutcome } from '@/lib/puzzle-engine'
 import type { SessionPuzzleResult } from '@/types/training'
 
 export default function TrainPage() {
@@ -57,6 +62,15 @@ export default function TrainPage() {
   const puzzleIds = useMemo(() => puzzles?.map((p) => p.puzzleId) ?? [], [puzzles])
   const { data: practiceAttemptsByPuzzle } = usePracticeAttempts(puzzleIds)
 
+  // Il risultato della mutation (il prossimo puzzle) viene tenuto qui
+  // finche' l'utente non e' davvero pronto ad avanzare (handleAdvance):
+  // applicarlo subito in cache farebbe cambiare la scacchiera sotto i suoi
+  // occhi mentre sta ancora rivedendo/analizzando il tentativo appena
+  // concluso (rilevante solo con avanzamento automatico spento — con
+  // l'automatico acceso i due momenti sono comunque separati dalla pausa
+  // di feedback, ma teniamo lo stesso schema in entrambi i casi).
+  const pendingOutcomeRef = useRef<Promise<NextPuzzleOutcome> | null>(null)
+
   if (loadingSession) return null
 
   if (!session) {
@@ -72,9 +86,11 @@ export default function TrainPage() {
 
   async function handleComplete(result: 'solved' | 'failed', timeSeconds: number) {
     if (outcome?.status !== 'next') return
-    // La mutation scrive gia' il prossimo puzzle nella cache di 'outcome'
-    // (vedi useRecordAttempt): non serve un refetch separato qui.
-    await recordAttempt.mutateAsync({
+    // Registra SUBITO, non al passaggio al prossimo puzzle: altrimenti un
+    // fallimento visto solo in modalita' di analisi, seguito da un reload
+    // prima di premere "Puzzle successivo", andrebbe perso e il puzzle
+    // ripartirebbe come se non fosse mai stato tentato.
+    pendingOutcomeRef.current = recordAttempt.mutateAsync({
       sessionPuzzleId: outcome.data.sessionPuzzleId,
       round: outcome.data.round,
       result,
@@ -83,24 +99,28 @@ export default function TrainPage() {
     })
   }
 
-  async function handlePracticeComplete(
-    result: 'solved' | 'failed',
-    timeSeconds: number,
-  ) {
+  async function handleAdvance() {
+    const pending = pendingOutcomeRef.current
+    if (!pending || !session) return
+    pendingOutcomeRef.current = null
+    const nextOutcome = await pending
+    queryClient.setQueryData(nextPuzzleQueryKey(session.id), nextOutcome)
+  }
+
+  async function handlePracticeAttempt(result: 'solved' | 'failed', timeSeconds: number) {
     if (!practiceSelection) return
     await recordPracticeAttempt.mutateAsync({
       puzzleId: practiceSelection.puzzleId,
       result,
       timeSeconds,
     })
+  }
 
-    // onComplete scatta solo quando e' il momento di passare oltre: in
-    // automatico se autoAdvance e' acceso, altrimenti solo per click
-    // esplicito sul bottone "Puzzle successivo" (mostrato apposta quando e'
-    // spento). In entrambi i casi l'intento e' lo stesso: andare al puzzle
-    // dopo in lista, non serve ricontrollare autoAdvance qui (altrimenti
-    // quel click, con l'automatico spento, uscirebbe dalla modalita'
-    // pratica invece di avanzare).
+  function handlePracticeAdvance() {
+    if (!practiceSelection) return
+    // A differenza della sessione ufficiale, qui non c'e' nessun esito da
+    // aspettare: il puzzle successivo si ricava subito dalla lista gia' in
+    // mano (puzzles), quindi avanzare non deve aspettare handlePracticeAttempt.
     if (puzzles) {
       const currentIndex = puzzles.findIndex(
         (p) => p.sessionPuzzleId === practiceSelection.sessionPuzzleId,
@@ -218,7 +238,8 @@ export default function TrainPage() {
               key={practicePuzzle.puzzle_id}
               puzzle={practicePuzzle}
               autoAdvance={autoAdvance}
-              onComplete={handlePracticeComplete}
+              onComplete={handlePracticeAttempt}
+              onAdvance={handlePracticeAdvance}
               isCompleting={recordPracticeAttempt.isPending}
               boardTheme={boardTheme}
               pieceSet={pieceSet}
@@ -295,6 +316,7 @@ export default function TrainPage() {
                 puzzle={outcome.data.puzzle}
                 autoAdvance={autoAdvance}
                 onComplete={handleComplete}
+                onAdvance={handleAdvance}
                 isCompleting={recordAttempt.isPending}
                 boardTheme={boardTheme}
                 pieceSet={pieceSet}

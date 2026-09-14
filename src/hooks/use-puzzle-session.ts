@@ -17,12 +17,12 @@ function outcomeRound(outcome: NextPuzzleOutcome): 1 | 2 | 3 | null {
   return null
 }
 
-// Niente current_round nella key: dopo un tentativo scriviamo l'esito in
-// cache direttamente (vedi useRecordAttempt), senza aspettare che
-// 'active-session' si aggiorni. Se la key includesse current_round, un
-// cambio di giro la farebbe puntare a una entry senza dati gia' pronti,
-// forzando un refetch evitabile.
-function nextPuzzleQueryKey(sessionId: string | undefined) {
+// Niente current_round nella key: quando l'utente e' pronto ad avanzare
+// (vedi TrainPage.handleAdvance) l'esito gia' pronto viene scritto qui
+// direttamente, senza aspettare che 'active-session' si aggiorni. Se la key
+// includesse current_round, un cambio di giro la farebbe puntare a una
+// entry senza dati gia' pronti, forzando un refetch evitabile.
+export function nextPuzzleQueryKey(sessionId: string | undefined) {
   return ['next-puzzle', sessionId]
 }
 
@@ -48,14 +48,14 @@ export function useNextPuzzle(session: TrainingSession | null | undefined) {
     },
     enabled: !!session && !!user,
     // Dopo il fetch iniziale, questa entry e' gestita a mano (vedi
-    // useRecordAttempt: scrive il risultato della RPC direttamente in
-    // cache). Senza staleTime un refetch automatico in background (rimessa
-    // a fuoco della finestra, remount, ecc.) puo' partire proprio mentre
-    // stiamo scrivendo l'esito appena arrivato dalla mutation e sovrascriverlo
-    // in corsa con una risposta calcolata da query separate (la vecchia
-    // catena multi-round-trip), riportando 'outcome' in uno stato
-    // incoerente. staleTime: Infinity disattiva questi refetch impliciti;
-    // l'unico modo per invalidare resta esplicito (es. i reset di sviluppo).
+    // TrainPage.handleAdvance: scrive il risultato gia' pronto della
+    // mutation direttamente in cache quando l'utente e' pronto ad
+    // avanzare). Senza staleTime un refetch automatico in background
+    // (rimessa a fuoco della finestra, remount, ecc.) potrebbe sovrascrivere
+    // quell'esito in corsa con una risposta ricalcolata da capo, riportando
+    // 'outcome' in uno stato incoerente. staleTime: Infinity disattiva
+    // questi refetch impliciti; l'unico modo per invalidare resta esplicito
+    // (es. i reset di sviluppo).
     staleTime: Infinity,
   })
 }
@@ -73,10 +73,14 @@ export function useRecordAttempt(session: TrainingSession | null | undefined) {
       puzzleRating: number
     }) => recordAttemptAndGetNextPuzzle({ sessionId: session!.id, ...params }),
     onSuccess: (outcome) => {
-      // La RPC ha gia' deciso il prossimo puzzle nella stessa chiamata che
-      // ha registrato il tentativo: si scrive subito in cache invece di
-      // invalidare 'next-puzzle' e rifare da capo l'intera catena di query.
-      queryClient.setQueryData(nextPuzzleQueryKey(session?.id), outcome)
+      // Il prossimo puzzle NON va scritto subito in cache 'next-puzzle':
+      // questa mutation ora parte appena il puzzle finisce (vedi
+      // TrainPage.handleComplete), non piu' al click su "Puzzle
+      // successivo", quindi applicarlo qui farebbe cambiare la scacchiera
+      // sotto l'utente mentre sta ancora rivedendo/analizzando il
+      // tentativo appena concluso. E' TrainPage a scrivere il risultato in
+      // cache (handleAdvance), solo quando l'utente e' davvero pronto ad
+      // andare avanti.
 
       // 'active-session' cambia solo quando cambia giro o la sessione si
       // completa (raro: una volta ogni round, non ad ogni puzzle) — negli
