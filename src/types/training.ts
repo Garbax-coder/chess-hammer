@@ -22,6 +22,9 @@ export interface TrainingSession {
    *  Null/vuoto = nessuna restrizione (sessioni create prima di questa
    *  colonna, o utente che ha lasciato tutti i temi selezionati). */
   puzzle_themes: string[] | null
+  /** Nome scelto dall'utente alla creazione, opzionale (null = nessun nome:
+   *  l'interfaccia mostra un titolo generico in sua assenza). */
+  name: string | null
 }
 
 export interface NewTrainingSessionInput {
@@ -31,6 +34,7 @@ export interface NewTrainingSessionInput {
   daily_target_round3: number
   rest_days: number
   puzzle_themes: string[]
+  name: string
 }
 
 export const DEFAULT_SESSION_CONFIG: NewTrainingSessionInput = {
@@ -45,6 +49,7 @@ export const DEFAULT_SESSION_CONFIG: NewTrainingSessionInput = {
   // Tutti i temi selezionati di default: l'utente restringe solo se vuole
   // allenarsi su motivi tattici specifici.
   puzzle_themes: [...ALL_PUZZLE_THEME_IDS],
+  name: '',
 }
 
 export interface LichessPuzzle {

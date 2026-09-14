@@ -28,9 +28,12 @@ export default function SessionsHistoryPage() {
               <CardContent className="flex items-center justify-between py-4">
                 <div>
                   <p className="text-foreground text-sm font-medium">
-                    {t.sessionsHistory.puzzlesRound(s.total_puzzles, s.current_round)}
+                    {s.name ||
+                      t.sessionsHistory.puzzlesRound(s.total_puzzles, s.current_round)}
                   </p>
                   <p className="text-muted-foreground text-xs">
+                    {s.name &&
+                      `${t.sessionsHistory.puzzlesRound(s.total_puzzles, s.current_round)} · `}
                     {t.sessionsHistory.createdOn(
                       new Date(s.created_at).toLocaleDateString(t.meta.locale),
                     )}

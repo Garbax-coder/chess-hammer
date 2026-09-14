@@ -35,6 +35,10 @@ export default function NewSessionPage() {
     setForm((prev) => ({ ...prev, [field]: Number.isNaN(parsed) ? 0 : parsed }))
   }
 
+  function updateName(value: string) {
+    setForm((prev) => ({ ...prev, name: value }))
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const atLeastOne = [
@@ -80,6 +84,18 @@ export default function NewSessionPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="session_name">{t.newSession.sessionName}</Label>
+                <Input
+                  id="session_name"
+                  type="text"
+                  maxLength={80}
+                  placeholder={t.newSession.sessionNamePlaceholder}
+                  value={form.name}
+                  onChange={(e) => updateName(e.target.value)}
+                />
+              </div>
+
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="total_puzzles">{t.newSession.totalPuzzles}</Label>
                 <Input

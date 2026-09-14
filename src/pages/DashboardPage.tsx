@@ -44,7 +44,7 @@ export default function DashboardPage() {
       {isLoading ? null : session ? (
         <Card className="w-full max-w-md text-left">
           <CardHeader>
-            <CardTitle>{t.dashboard.currentSessionTitle}</CardTitle>
+            <CardTitle>{session.name || t.dashboard.currentSessionTitle}</CardTitle>
             <CardDescription>
               {t.dashboard.currentSessionDescription(
                 session.current_round,

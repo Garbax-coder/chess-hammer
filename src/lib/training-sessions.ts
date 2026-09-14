@@ -19,9 +19,10 @@ export async function createTrainingSession(
   userId: string,
   input: NewTrainingSessionInput,
 ): Promise<TrainingSession> {
+  const name = input.name.trim()
   const { data, error } = await supabase
     .from('training_sessions')
-    .insert({ user_id: userId, ...input })
+    .insert({ user_id: userId, ...input, name: name === '' ? null : name })
     .select('*')
     .single()
 

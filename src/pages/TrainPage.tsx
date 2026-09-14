@@ -28,7 +28,11 @@ import {
 } from '@/hooks/use-practice'
 import { useSessionPuzzles } from '@/hooks/use-session-history'
 import { useSoundEnabled } from '@/hooks/use-sound-enabled'
-import { deriveSessionProgress } from '@/lib/session-progress'
+import {
+  deriveSessionProgress,
+  isFailedPuzzle,
+  type FailedPuzzleScope,
+} from '@/lib/session-progress'
 import { useTranslations } from '@/lib/language-context'
 import { useUpdateAutoAdvance, useUserStats } from '@/hooks/use-user-stats'
 import type { NextPuzzleOutcome } from '@/lib/puzzle-engine'
@@ -58,6 +62,14 @@ export default function TrainPage() {
     puzzleId: string
   } | null>(null)
   const { data: practicePuzzle } = usePuzzleById(practiceSelection?.puzzleId)
+
+  // Filtro di avanzamento per la pratica libera: attivabile solo con
+  // l'avanzamento automatico acceso (altrimenti il sotto-switch resta
+  // nascosto, vedi sotto), quindi qui possono restare valorizzati anche
+  // quando non visibili/applicati — handlePracticeAdvance li ignora se
+  // autoAdvance e' spento.
+  const [onlyFailedPractice, setOnlyFailedPractice] = useState(false)
+  const [failedScope, setFailedScope] = useState<FailedPuzzleScope>('all')
 
   const puzzleIds = useMemo(() => puzzles?.map((p) => p.puzzleId) ?? [], [puzzles])
   const { data: practiceAttemptsByPuzzle } = usePracticeAttempts(puzzleIds)
@@ -122,10 +134,18 @@ export default function TrainPage() {
     // aspettare: il puzzle successivo si ricava subito dalla lista gia' in
     // mano (puzzles), quindi avanzare non deve aspettare handlePracticeAttempt.
     if (puzzles) {
-      const currentIndex = puzzles.findIndex(
+      // Il sotto-switch "solo puzzle falliti" e' visibile solo con
+      // l'avanzamento automatico acceso: se e' spento lo si ignora anche
+      // se e' rimasto attivo da prima, cosi' il comportamento segue
+      // esattamente cio' che l'utente vede in interfaccia.
+      const pool =
+        autoAdvance && onlyFailedPractice
+          ? puzzles.filter((p) => isFailedPuzzle(p, failedScope))
+          : puzzles
+      const currentIndex = pool.findIndex(
         (p) => p.sessionPuzzleId === practiceSelection.sessionPuzzleId,
       )
-      const next = currentIndex >= 0 ? puzzles[currentIndex + 1] : undefined
+      const next = currentIndex >= 0 ? pool[currentIndex + 1] : pool[0]
       if (next) {
         setPracticeSelection({
           sessionPuzzleId: next.sessionPuzzleId,
@@ -211,6 +231,50 @@ export default function TrainPage() {
               {t.train.soundEnabled}
             </Label>
           </div>
+
+          {/* Ha senso solo in pratica libera, e solo se l'avanzamento e'
+              automatico: con l'automatico spento non si "avanza" mai da
+              soli, e' sempre l'utente a scegliere il prossimo puzzle dalla
+              lista. */}
+          {practiceSelection && autoAdvance && (
+            <div className="flex flex-col gap-2 pl-1">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="only-failed-practice"
+                  checked={onlyFailedPractice}
+                  onCheckedChange={setOnlyFailedPractice}
+                />
+                <Label
+                  htmlFor="only-failed-practice"
+                  className="text-muted-foreground text-sm"
+                >
+                  {t.train.onlyFailedPuzzles}
+                </Label>
+              </div>
+
+              {onlyFailedPractice && (
+                <div className="flex gap-1 pl-9">
+                  {(['all', 'lastRound'] as const).map((scope) => (
+                    <button
+                      key={scope}
+                      type="button"
+                      onClick={() => setFailedScope(scope)}
+                      aria-pressed={failedScope === scope}
+                      className={`rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+                        failedScope === scope
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
+                      {scope === 'all'
+                        ? t.train.failedScopeAll
+                        : t.train.failedScopeLastRound}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {practiceSelection && (
