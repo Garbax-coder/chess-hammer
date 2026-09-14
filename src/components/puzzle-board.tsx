@@ -116,7 +116,18 @@ function needsPromotion(game: Chess, source: string, target: string): boolean {
 interface PuzzleBoardProps {
   puzzle: LichessPuzzle
   autoAdvance: boolean
+  // Chiamata SUBITO quando il puzzle finisce (risolto o sbagliato), non al
+  // passaggio al successivo: deve registrare il tentativo appena accade,
+  // altrimenti un fallimento visto solo in modalita' di analisi (avanzamento
+  // automatico spento) andrebbe perso con un reload della pagina prima di
+  // premere "Puzzle successivo", e il puzzle ripartirebbe da capo come se
+  // non fosse mai stato tentato.
   onComplete: (result: 'solved' | 'failed', timeSeconds: number) => void
+  // Chiamata quando e' il momento di passare al puzzle successivo (dopo la
+  // pausa di feedback se l'avanzamento e' automatico, al click sul bottone
+  // altrimenti): a differenza di onComplete non registra nulla, dice solo
+  // al chiamante di mostrare il puzzle che ha gia' pronto.
+  onAdvance: () => void
   // True mentre il tentativo appena concluso e' in registrazione (chiamata
   // di rete in corso): disabilita il bottone "Puzzle successivo" e mostra
   // uno spinner, cosi' un click ripetuto o una rete lenta non passano
@@ -130,6 +141,7 @@ export function PuzzleBoard({
   puzzle,
   autoAdvance,
   onComplete,
+  onAdvance,
   isCompleting = false,
   boardTheme = DEFAULT_BOARD_THEME,
   pieceSet = DEFAULT_PIECE_SET,
@@ -520,8 +532,11 @@ export function PuzzleBoard({
     setOutcomeVisible(true)
     const timeSeconds = Math.round((Date.now() - startedAtRef.current) / 1000)
     setElapsed(timeSeconds)
+    // Registra subito, non piu' al passaggio al prossimo puzzle: vedi il
+    // commento su onComplete nella prop interface.
+    onComplete(result, timeSeconds)
     if (autoAdvanceRef.current) {
-      setTimeout(() => onComplete(result, timeSeconds), FEEDBACK_HOLD_MS)
+      setTimeout(onAdvance, FEEDBACK_HOLD_MS)
     } else {
       setPendingCompletion({ result, timeSeconds })
     }
@@ -832,9 +847,7 @@ export function PuzzleBoard({
             className="w-full lg:hidden"
             style={{ width: BOARD_SIZE }}
             loading={isCompleting}
-            onClick={() =>
-              onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)
-            }
+            onClick={onAdvance}
           >
             {t.puzzleBoard.nextPuzzle}
           </Button>
@@ -864,9 +877,7 @@ export function PuzzleBoard({
               type="button"
               className="hidden lg:inline-flex"
               loading={isCompleting}
-              onClick={() =>
-                onComplete(pendingCompletion.result, pendingCompletion.timeSeconds)
-              }
+              onClick={onAdvance}
             >
               {t.puzzleBoard.nextPuzzle}
             </Button>
