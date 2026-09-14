@@ -5,6 +5,7 @@ interface EvalBarProps {
   scoreCp: number | null
   scoreMate: number | null
   sideToMove: 'w' | 'b'
+  isCheckmate?: boolean
   orientation?: 'horizontal' | 'vertical'
 }
 
@@ -13,9 +14,10 @@ export function EvalBar({
   scoreCp,
   scoreMate,
   sideToMove,
+  isCheckmate = false,
   orientation = 'horizontal',
 }: EvalBarProps) {
-  const label = formatScore(scoreCp, scoreMate, sideToMove)
+  const label = formatScore(scoreCp, scoreMate, sideToMove, isCheckmate)
 
   if (orientation === 'vertical') {
     return (

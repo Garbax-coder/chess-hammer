@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useActiveSession } from '@/hooks/use-active-session'
 import { useAuth } from '@/lib/auth-context'
 import {
+  addKnightPromotionDebugPuzzle,
   deleteActiveSession,
   resetSession,
   resetTodayQuota,
@@ -24,7 +25,9 @@ export function DevToolsPanel() {
   const { data: session } = useActiveSession()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const [busy, setBusy] = useState<'quota' | 'session' | 'delete' | 'rest' | null>(null)
+  const [busy, setBusy] = useState<
+    'quota' | 'session' | 'delete' | 'rest' | 'promotion' | null
+  >(null)
 
   if (!session || !user) return null
 
@@ -63,6 +66,16 @@ export function DevToolsPanel() {
     setBusy('rest')
     try {
       await skipRest(session!.id)
+      await queryClient.invalidateQueries()
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function handleAddKnightPromotionPuzzle() {
+    setBusy('promotion')
+    try {
+      await addKnightPromotionDebugPuzzle(session!.id)
       await queryClient.invalidateQueries()
     } finally {
       setBusy(null)
@@ -110,6 +123,17 @@ export function DevToolsPanel() {
           onClick={handleSkipRest}
         >
           {busy === 'rest' ? t.devTools.resetting : t.devTools.skipRest}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={busy !== null}
+          onClick={handleAddKnightPromotionPuzzle}
+        >
+          {busy === 'promotion'
+            ? t.devTools.resetting
+            : t.devTools.addKnightPromotionPuzzle}
         </Button>
       </CardContent>
     </Card>

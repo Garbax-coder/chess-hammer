@@ -43,12 +43,20 @@ export function pvToSan(fen: string, pvUci: string[], maxPly = 8): string {
  * Formatta il punteggio motore (relativo al lato da muovere nella FEN, per
  * convenzione UCI) in una stringa dal punto di vista del Bianco, es. "+1.4"
  * o "M3" / "-M2".
+ *
+ * isCheckmate va passato quando la posizione visualizzata e' gia' scacco
+ * matto: a quel punto Stockfish non ha mosse da cercare e non restituisce
+ * alcuna riga (ne' scoreCp ne' scoreMate, si veda evalToWhitePercent per lo
+ * stesso motivo), quindi il matto va rilevato a parte con chess.js invece
+ * di dedurlo da un punteggio che semplicemente non arriva mai.
  */
 export function formatScore(
   scoreCp: number | null,
   scoreMate: number | null,
   sideToMove: 'w' | 'b',
+  isCheckmate = false,
 ): string {
+  if (isCheckmate) return '#'
   const sign = sideToMove === 'w' ? 1 : -1
   if (scoreMate !== null) {
     const mate = scoreMate * sign
@@ -63,12 +71,18 @@ export function formatScore(
  * Converte il punteggio motore (relativo al lato da muovere) nella
  * percentuale di "vantaggio" del Bianco da 0 a 100, per una barra di
  * valutazione. Usa una sigmoide sul valore in centipedoni.
+ *
+ * isCheckmate: vedi formatScore. Il lato a muovere (sideToMove) e' quello
+ * sotto scacco matto, quindi ha perso: 0% se e' il Bianco, 100% se e' il
+ * Nero.
  */
 export function evalToWhitePercent(
   scoreCp: number | null,
   scoreMate: number | null,
   sideToMove: 'w' | 'b',
+  isCheckmate = false,
 ): number {
+  if (isCheckmate) return sideToMove === 'w' ? 0 : 100
   const sign = sideToMove === 'w' ? 1 : -1
   if (scoreMate !== null) {
     const mate = scoreMate * sign
