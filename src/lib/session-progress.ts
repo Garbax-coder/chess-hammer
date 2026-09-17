@@ -6,7 +6,11 @@ import {
   fetchSessionPuzzles,
   startOfTodayIso,
 } from '@/lib/puzzle-engine'
-import type { SessionProgress, SessionPuzzleResult, TrainingSession } from '@/types/training'
+import type {
+  SessionProgress,
+  SessionPuzzleResult,
+  TrainingSession,
+} from '@/types/training'
 
 export async function getSessionProgress(
   session: TrainingSession,
@@ -51,4 +55,23 @@ export function deriveSessionProgress(
     dailyTarget: dailyTargetForRound(session, round),
     attemptedToday: roundAttempts.filter((a) => a.attempted_at >= startOfToday).length,
   }
+}
+
+export type FailedPuzzleScope = 'all' | 'lastRound'
+
+// Per la modalita' pratica "solo puzzle falliti": 'all' guarda tutti i
+// tentativi ufficiali del puzzle (in qualunque giro), 'lastRound' solo
+// l'ultimo giro effettivamente tentato (il piu' alto tra 1/2/3 con un
+// tentativo registrato) — gli attempts qui sono sempre quelli ufficiali
+// (puzzle_attempts), la pratica libera non li tocca mai, quindi l'insieme
+// non cambia mentre ci si esercita.
+export function isFailedPuzzle(
+  puzzle: SessionPuzzleResult,
+  scope: FailedPuzzleScope,
+): boolean {
+  if (scope === 'all') {
+    return Object.values(puzzle.attempts).some((a) => a?.result === 'failed')
+  }
+  const lastRound = ([3, 2, 1] as const).find((r) => puzzle.attempts[r])
+  return lastRound !== undefined && puzzle.attempts[lastRound]?.result === 'failed'
 }

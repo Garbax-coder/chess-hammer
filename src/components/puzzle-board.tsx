@@ -81,6 +81,12 @@ function playSoundForMove(move: { san: string; captured?: string }) {
   playMoveSound({ capture: !!move.captured, check, checkmate })
 }
 
+function formatElapsed(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
+}
+
 interface PendingCompletion {
   result: 'solved' | 'failed'
   timeSeconds: number
@@ -677,7 +683,7 @@ export function PuzzleBoard({
         >
           <span>{t.puzzleBoard.rating(puzzle.rating)}</span>
           <span>{statusText}</span>
-          <span>{elapsed}s</span>
+          <span>{formatElapsed(elapsed)}</span>
         </div>
 
         <div className="flex items-stretch gap-2" style={{ width: BOARD_SIZE }}>

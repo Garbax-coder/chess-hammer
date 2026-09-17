@@ -19,9 +19,10 @@ export async function createTrainingSession(
   userId: string,
   input: NewTrainingSessionInput,
 ): Promise<TrainingSession> {
+  const name = input.name.trim()
   const { data, error } = await supabase
     .from('training_sessions')
-    .insert({ user_id: userId, ...input })
+    .insert({ user_id: userId, ...input, name: name === '' ? null : name })
     .select('*')
     .single()
 
@@ -31,4 +32,17 @@ export async function createTrainingSession(
 
 export function daysForRound(totalPuzzles: number, dailyTarget: number): number {
   return Math.ceil(totalPuzzles / dailyTarget)
+}
+
+export async function renameTrainingSession(
+  sessionId: string,
+  name: string,
+): Promise<void> {
+  const trimmed = name.trim()
+  const { error } = await supabase
+    .from('training_sessions')
+    .update({ name: trimmed === '' ? null : trimmed })
+    .eq('id', sessionId)
+
+  if (error) throw error
 }

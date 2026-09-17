@@ -10,6 +10,8 @@ export interface Translations {
     email: string
     password: string
     or: string
+    rename: string
+    sessionNameLabel: string
   }
   language: {
     label: string
@@ -72,11 +74,15 @@ export interface Translations {
       legendFailed: string
       legendPending: string
       openSession: string
+      expandSession: string
+      collapseSession: string
     }
   }
   newSession: {
     title: string
     subtitle: string
+    sessionName: string
+    sessionNamePlaceholder: string
     totalPuzzles: string
     roundLabel: (round: number) => string
     daysEstimate: (days: number | string) => string
@@ -127,6 +133,9 @@ export interface Translations {
     todayPuzzle: (current: number, target: number) => string
     autoAdvance: string
     soundEnabled: string
+    onlyFailedPuzzles: string
+    failedScopeAll: string
+    failedScopeLastRound: string
     backToList: string
     quotaTitle: string
     quotaDescription: (round: number) => string
@@ -227,6 +236,8 @@ export const it: Translations = {
     email: 'Email',
     password: 'Password',
     or: 'oppure',
+    rename: 'Rinomina sessione',
+    sessionNameLabel: 'Nome sessione',
   },
   language: {
     label: 'Lingua',
@@ -292,12 +303,16 @@ export const it: Translations = {
       legendFailed: 'Fallito',
       legendPending: 'Da fare',
       openSession: 'Apri sessione',
+      expandSession: 'Espandi dettagli sessione',
+      collapseSession: 'Comprimi dettagli sessione',
     },
   },
   newSession: {
     title: 'Nuova sessione',
     subtitle:
       'Configura il tuo allenamento Woodpecker: stesso set di puzzle ripetuto per 3 giri, sempre più veloce.',
+    sessionName: 'Nome sessione (opzionale)',
+    sessionNamePlaceholder: 'es. Ripasso forchette',
     totalPuzzles: 'Totale puzzle nella sessione',
     roundLabel: (round) => `${round}° giro — puzzle/giorno`,
     daysEstimate: (days) => `~${days} giorni`,
@@ -435,6 +450,9 @@ export const it: Translations = {
     todayPuzzle: (current, target) => `Puzzle di oggi: ${current}/${target}`,
     autoAdvance: 'Avanzamento automatico',
     soundEnabled: 'Suoni',
+    onlyFailedPuzzles: 'Solo puzzle falliti',
+    failedScopeAll: 'Tutti i falliti',
+    failedScopeLastRound: 'Falliti nell’ultimo giro',
     backToList: 'Torna alla lista',
     quotaTitle: 'Quota di oggi completata',
     quotaDescription: (round) =>
@@ -578,6 +596,8 @@ export const en: Translations = {
     email: 'Email',
     password: 'Password',
     or: 'or',
+    rename: 'Rename session',
+    sessionNameLabel: 'Session name',
   },
   language: {
     label: 'Language',
@@ -643,12 +663,16 @@ export const en: Translations = {
       legendFailed: 'Failed',
       legendPending: 'To do',
       openSession: 'Open session',
+      expandSession: 'Expand session details',
+      collapseSession: 'Collapse session details',
     },
   },
   newSession: {
     title: 'New session',
     subtitle:
       'Set up your Woodpecker training: the same puzzle set repeated over 3 rounds, faster each time.',
+    sessionName: 'Session name (optional)',
+    sessionNamePlaceholder: 'e.g. Fork practice',
     totalPuzzles: 'Total puzzles in the session',
     roundLabel: (round) => `Round ${round} — puzzles/day`,
     daysEstimate: (days) => `~${days} days`,
@@ -786,6 +810,9 @@ export const en: Translations = {
     todayPuzzle: (current, target) => `Today's puzzle: ${current}/${target}`,
     autoAdvance: 'Auto-advance',
     soundEnabled: 'Sounds',
+    onlyFailedPuzzles: 'Only failed puzzles',
+    failedScopeAll: 'All failed',
+    failedScopeLastRound: 'Failed in the last run',
     backToList: 'Back to list',
     quotaTitle: "Today's quota completed",
     quotaDescription: (round) =>

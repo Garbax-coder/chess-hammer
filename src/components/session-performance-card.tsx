@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { EditableSessionName } from '@/components/editable-session-name'
 import { SessionPerformanceChart } from '@/components/session-performance-chart'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,31 +32,45 @@ function SessionRow({
   return (
     <div className="border-border/60 overflow-hidden rounded-lg border">
       <div className="flex items-center justify-between gap-2 px-3 py-2.5">
-        <button
-          type="button"
-          onClick={() => setExpanded((e) => !e)}
-          aria-expanded={expanded}
-          className="hover:bg-muted/50 -m-1 flex min-w-0 flex-1 items-center gap-2 rounded-md p-1 text-left transition-colors"
-        >
-          {expanded ? (
-            <ChevronDown className="text-muted-foreground size-4 shrink-0" />
-          ) : (
-            <ChevronRight className="text-muted-foreground size-4 shrink-0" />
-          )}
-          <div className="min-w-0">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            aria-expanded={expanded}
+            aria-label={
+              expanded
+                ? t.dashboard.puzzlePerformance.collapseSession
+                : t.dashboard.puzzlePerformance.expandSession
+            }
+            className="hover:bg-muted/50 -m-1 shrink-0 rounded-md p-1 transition-colors"
+          >
+            {expanded ? (
+              <ChevronDown className="text-muted-foreground size-4" />
+            ) : (
+              <ChevronRight className="text-muted-foreground size-4" />
+            )}
+          </button>
+          <div className="min-w-0 flex-1">
             <p className="text-foreground truncate text-sm font-medium">
-              {t.sessionsHistory.puzzlesRound(
-                session.total_puzzles,
-                session.current_round,
-              )}
+              <EditableSessionName
+                session={session}
+                fallback={t.sessionsHistory.puzzlesRound(
+                  session.total_puzzles,
+                  session.current_round,
+                )}
+              />
             </p>
-            <p className="text-muted-foreground text-xs">
+            <button
+              type="button"
+              onClick={() => setExpanded((e) => !e)}
+              className="text-muted-foreground hover:text-foreground text-xs transition-colors"
+            >
               {t.sessionsHistory.createdOn(
                 new Date(session.created_at).toLocaleDateString(t.meta.locale),
               )}
-            </p>
+            </button>
           </div>
-        </button>
+        </div>
         <div className="flex shrink-0 items-center gap-2">
           <Badge variant={sessionStatusVariant[session.status]}>
             {t.sessionStatus[session.status]}
