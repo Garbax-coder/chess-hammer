@@ -33,9 +33,39 @@ const BEST_MOVE_ARROW_COLOR = 'rgba(37, 99, 235, 0.8)'
 // calc(100vw - 2rem) invece di una frazione fissa (es. 90vw): la scacchiera
 // deve occupare tutto lo spazio orizzontale disponibile dentro il padding
 // della pagina (px-4 = 1rem per lato), non lasciare margine extra su mobile.
+// calc(100vh - 117px) riusa lo stesso ingombro fisso di header+padding gia'
+// usato per l'altezza massima della sidebar in TrainPage/SessionDetailPage.
+// Usata SOLO su mobile (sotto lg:): la' la scacchiera e' sola sulla riga
+// (niente sidebar/colonna analisi accanto), quindi un calcolo CSS statico
+// basta. A lg: invece il vero componente PuzzleBoard misura lo spazio
+// realmente disponibile via ResizeObserver (vedi piu' sotto): un calc()
+// dovrebbe conoscere ESATTAMENTE quanto spazio occupano sidebar e colonna
+// di analisi per non sforare in larghezza ne' lasciare spazio vuoto in
+// altezza, ed e' troppo fragile da mantenere a mano (gia' successo due
+// volte in questo file). BOARD_SIZE resta pero' anche il valore
+// approssimativo usato dallo skeleton di caricamento a lg: (vedi
+// PuzzleBoardSkeleton), dove una lieve imprecisione per una frazione di
+// secondo non e' un problema.
 // Esportata per riuso nello skeleton di caricamento (stessa dimensione,
 // niente "scatto" quando il puzzle vero arriva).
-export const BOARD_SIZE = 'min(calc(100vw - 2rem), 78vh, 720px)'
+export const BOARD_SIZE = 'min(calc(100vw - 2rem), calc(100vh - 117px))'
+
+// A lg: la scacchiera condivide la riga con la sidebar dei puzzle (w-64 =
+// 256px) e la colonna di analisi (w-72 = 288px), separate da gap (gap-3 =
+// 12px, gap-4 = 16px) e col padding orizzontale della pagina (px-4 = 32px
+// totali): 604px da sottrarre a 100vw. Verificata dal vivo (vedi sotto):
+// va usata come larghezza della RIGA (spacer + quadrato + spacer), non del
+// quadrato stesso - il quadrato la ottiene sottraendo poi le sue colonnine
+// (2 x w-5 = 40px + 2 x gap-2 = 16px = 56px, vedi piu' sotto nel JSX). Per
+// questo qui si sottrae 604 e non 660 (604 + 56 = 660): la versione con
+// 660 qui SOMMATA alla sottrazione di 56px piu' sotto toglieva quei 56px
+// DUE volte, riducendo la scacchiera di 56px in piu' del dovuto ogni volta
+// che vinceva il vincolo di altezza (confermato misurando dal vivo: a
+// 1920x1080 dava un quadrato di 907px invece dei 963px davvero
+// disponibili, esattamente 56px in meno). Stesso discorso per calc(100vh -
+// 61px): 61 = 117 - 56, cosi' che sottraendo poi i 56px delle colonnine si
+// torni esattamente a 117px di ingombro verticale, non 173.
+export const BOARD_SIZE_LG = 'min(calc(100vw - 604px), calc(100vh - 61px))'
 
 type Feedback = 'intro' | 'playing' | 'correct' | 'wrong' | 'solved'
 
@@ -674,19 +704,73 @@ export function PuzzleBoard({
             ? t.puzzleBoard.wrongMove
             : t.puzzleBoard.moveWith(turnLabel)
 
+  // Contenuto riusato sia sopra la scacchiera su mobile (dove non c'e'
+  // spazio per una colonna a destra) sia nella colonna di analisi a destra
+  // a lg: (vedi il commento su BOARD_SIZE): stesso markup, due punti di
+  // aggancio diversi, cosi' le due versioni non possono disallinearsi.
+  const statusRow = (
+    <>
+      <span>{t.puzzleBoard.rating(puzzle.rating)}</span>
+      <span>{statusText}</span>
+      <span>{formatElapsed(elapsed)}</span>
+    </>
+  )
+
+  const moveNavButtons = (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-sm"
+        disabled={effectiveCurrentId === ROOT_NODE_ID}
+        onClick={() => {
+          const parentId = effectiveNodes[effectiveCurrentId].parentId
+          if (parentId) navigateTo(parentId)
+        }}
+        aria-label={t.puzzleBoard.prevMove}
+      >
+        <ChevronLeft className="size-4" />
+      </Button>
+      <span className="text-muted-foreground w-16 text-center text-xs">{currentPly}</span>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-sm"
+        disabled={isLive}
+        onClick={() => {
+          const childId = effectiveNodes[effectiveCurrentId].children[0]
+          if (childId) navigateTo(childId)
+        }}
+        aria-label={t.puzzleBoard.nextMove}
+      >
+        <ChevronRight className="size-4" />
+      </Button>
+    </>
+  )
+
   return (
-    <div className="flex w-full flex-col items-center gap-4 lg:flex-row lg:items-start lg:justify-center">
+    <div
+      style={{ '--board-size': BOARD_SIZE, '--board-size-lg': BOARD_SIZE_LG } as CSSProperties}
+      className="flex w-full flex-col items-center gap-4 lg:flex-row lg:items-start lg:justify-center"
+    >
       <div className="flex flex-col items-center gap-4">
         <div
           style={{ width: BOARD_SIZE }}
-          className="text-muted-foreground flex items-center justify-between text-xs"
+          className="text-muted-foreground flex items-center justify-between text-xs lg:hidden"
         >
-          <span>{t.puzzleBoard.rating(puzzle.rating)}</span>
-          <span>{statusText}</span>
-          <span>{formatElapsed(elapsed)}</span>
+          {statusRow}
         </div>
 
-        <div className="flex items-stretch gap-2" style={{ width: BOARD_SIZE }}>
+        {/* Larghezza guidata da BOARD_SIZE (mobile) / BOARD_SIZE_LG
+            (desktop, tiene conto dello spazio occupato da sidebar e colonna
+            di analisi): l'altezza della scacchiera segue di conseguenza via
+            aspect-ratio sul quadrato qui sotto. Quando vince il vincolo di
+            larghezza (schermo largo ma non altissimo) puo' restare un
+            margine sotto la scacchiera, geometricamente inevitabile con un
+            quadrato affiancato da colonne di larghezza fissa: non c'e'
+            altezza in piu' da guadagnare senza prima liberare larghezza
+            (sidebar/colonna di analisi piu' strette). */}
+        <div className="flex w-[var(--board-size)] items-stretch gap-2 lg:w-[var(--board-size-lg)]">
           {/* Colonna riservata SEMPRE (anche vuota) cosi' la comparsa della
               barra di valutazione a fine puzzle non fa "scattare" la
               scacchiera (ne' in larghezza ne' in altezza, dato che non sta
@@ -811,37 +895,7 @@ export function PuzzleBoard({
           </div>
         )}
 
-        <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            disabled={effectiveCurrentId === ROOT_NODE_ID}
-            onClick={() => {
-              const parentId = effectiveNodes[effectiveCurrentId].parentId
-              if (parentId) navigateTo(parentId)
-            }}
-            aria-label={t.puzzleBoard.prevMove}
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <span className="text-muted-foreground w-16 text-center text-xs">
-            {currentPly}
-          </span>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            disabled={isLive}
-            onClick={() => {
-              const childId = effectiveNodes[effectiveCurrentId].children[0]
-              if (childId) navigateTo(childId)
-            }}
-            aria-label={t.puzzleBoard.nextMove}
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-        </div>
+        <div className="flex items-center gap-3 lg:hidden">{moveNavButtons}</div>
 
         {/* Su mobile il bottone "puzzle successivo" si sposta qui, tra le
             frecce di navigazione e la card di analisi motore (su desktop
@@ -862,8 +916,17 @@ export function PuzzleBoard({
 
       {/* Questa colonna riserva SEMPRE lo spazio (anche vuota) cosi' la
           scacchiera a sinistra non si sposta quando il pannello di analisi
-          appare/scompare al termine del puzzle. */}
-      <div className="w-full lg:w-72 lg:shrink-0">
+          appare/scompare al termine del puzzle. Da lg: in su ospita anche
+          stato/timer e le frecce di navigazione mossa, spostati qui dalla
+          zona sopra/sotto la scacchiera (vedi commento su BOARD_SIZE) cosi'
+          quest'ultima puo' occupare tutta l'altezza disponibile. */}
+      <div className="flex w-full flex-col gap-4 lg:w-72 lg:shrink-0">
+        <div className="text-muted-foreground hidden w-full items-center justify-between text-xs lg:flex">
+          {statusRow}
+        </div>
+
+        <div className="hidden items-center gap-3 lg:flex">{moveNavButtons}</div>
+
         {pendingCompletion && (
           <div className="flex w-full flex-col gap-4">
             <AnalysisPanel
