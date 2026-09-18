@@ -308,14 +308,23 @@ export function SessionPuzzleList({
   // Chi arriva da fuori (es. click su un quadratino della heatmap in
   // dashboard) puo' selezionare un puzzle a meta' di una lista lunga anche
   // 200 righe: la porta in vista automaticamente invece di lasciare
-  // l'utente a scorrere alla cieca per trovarla.
+  // l'utente a scorrere alla cieca per trovarla. Va fatto pero' UNA SOLA
+  // VOLTA per visita della pagina (il ref sotto), non ad ogni cambio di
+  // activeSessionPuzzleId: altrimenti anche il normale avanzamento da un
+  // puzzle al successivo durante l'allenamento ritriggerava lo scroll,
+  // e su mobile (dove la lista non ha un proprio riquadro scrollabile ma e'
+  // parte del flusso normale della pagina) questo faceva scorrere l'INTERA
+  // pagina lontano dalla scacchiera ad ogni "Puzzle successivo".
+  const hasAutoScrolledRef = useRef(false)
   useEffect(() => {
-    if (!activeSessionPuzzleId || !listRef.current) return
+    if (!activeSessionPuzzleId || !listRef.current || hasAutoScrolledRef.current) return
     const row = listRef.current.querySelector<HTMLElement>(
       `[data-session-puzzle-id="${activeSessionPuzzleId}"]`,
     )
-    row?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-  }, [activeSessionPuzzleId])
+    if (!row) return
+    row.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    hasAutoScrolledRef.current = true
+  }, [activeSessionPuzzleId, puzzles])
 
   return (
     <Card className="min-h-0 w-full flex-1 lg:w-64">

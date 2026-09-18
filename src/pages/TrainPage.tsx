@@ -82,7 +82,16 @@ export default function TrainPage() {
   // concluso (rilevante solo con avanzamento automatico spento — con
   // l'automatico acceso i due momenti sono comunque separati dalla pausa
   // di feedback, ma teniamo lo stesso schema in entrambi i casi).
-  const pendingOutcomeRef = useRef<Promise<NextPuzzleOutcome> | null>(null)
+  // Si tengono anche i parametri originali (non solo la promise): se la
+  // mutation fallisce (es. rete instabile su mobile), handleAdvance deve
+  // poter ritentare la STESSA chiamata invece di restare bloccato per
+  // sempre — senza i parametri potrebbe solo ri-attendere una promise gia'
+  // rigettata, che rifiuta di nuovo all'istante senza mai ritentare
+  // davvero la richiesta di rete.
+  const pendingOutcomeRef = useRef<{
+    promise: Promise<NextPuzzleOutcome>
+    params: Parameters<typeof recordAttempt.mutateAsync>[0]
+  } | null>(null)
 
   if (loadingSession) return null
 
@@ -103,21 +112,35 @@ export default function TrainPage() {
     // fallimento visto solo in modalita' di analisi, seguito da un reload
     // prima di premere "Puzzle successivo", andrebbe perso e il puzzle
     // ripartirebbe come se non fosse mai stato tentato.
-    pendingOutcomeRef.current = recordAttempt.mutateAsync({
+    const params = {
       sessionPuzzleId: outcome.data.sessionPuzzleId,
       round: outcome.data.round,
       result,
       timeSeconds,
       puzzleRating: outcome.data.puzzle.rating,
-    })
+    }
+    pendingOutcomeRef.current = { promise: recordAttempt.mutateAsync(params), params }
   }
 
   async function handleAdvance() {
     const pending = pendingOutcomeRef.current
     if (!pending || !session) return
-    pendingOutcomeRef.current = null
-    const nextOutcome = await pending
-    queryClient.setQueryData(nextPuzzleQueryKey(session.id), nextOutcome)
+    try {
+      const nextOutcome = await pending.promise
+      pendingOutcomeRef.current = null
+      queryClient.setQueryData(nextPuzzleQueryKey(session.id), nextOutcome)
+    } catch (error) {
+      // Se la registrazione e' fallita (es. rete instabile), il bottone
+      // non deve restare bloccato per sempre in attesa di una promise gia'
+      // rigettata: si riparte da capo con gli stessi parametri, cosi' un
+      // secondo click puo' davvero ritentare la richiesta invece di
+      // limitarsi a ri-osservare lo stesso fallimento.
+      console.error('Registrazione tentativo fallita, verra\' ritentata', error)
+      pendingOutcomeRef.current = {
+        promise: recordAttempt.mutateAsync(pending.params),
+        params: pending.params,
+      }
+    }
   }
 
   async function handlePracticeAttempt(result: 'solved' | 'failed', timeSeconds: number) {
