@@ -1,16 +1,9 @@
 import { LogOut, User as UserIcon } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { DataExportPanel } from '@/components/data-export-panel'
+import { DeleteAccountDialog } from '@/components/delete-account-dialog'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { BOARD_THEMES, DEFAULT_BOARD_THEME } from '@/lib/board-themes'
-import { DEFAULT_PIECE_SET, PIECE_SETS } from '@/lib/piece-sets'
 import {
   useUpdateBoardTheme,
   useUpdatePieceSet,
@@ -18,8 +11,10 @@ import {
 } from '@/hooks/use-user-stats'
 import { signOut } from '@/lib/auth'
 import { useAuth } from '@/lib/auth-context'
+import { BOARD_THEMES, DEFAULT_BOARD_THEME } from '@/lib/board-themes'
 import type { Language } from '@/lib/i18n/translations'
 import { useLanguage } from '@/lib/language-context'
+import { DEFAULT_PIECE_SET, PIECE_SETS } from '@/lib/piece-sets'
 
 const LANGUAGE_FLAGS: Record<Language, string> = {
   it: '🇮🇹',
@@ -28,7 +23,7 @@ const LANGUAGE_FLAGS: Record<Language, string> = {
 
 const LANGUAGES: Language[] = ['it', 'en']
 
-export function ProfileDialog() {
+export default function ProfilePage() {
   const { user } = useAuth()
   const { language, setLanguage, t } = useLanguage()
   const { data: stats } = useUserStats()
@@ -49,44 +44,31 @@ export function ProfileDialog() {
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label={t.profile.openLabel}>
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="size-6 rounded-full object-cover" />
-          ) : (
-            <UserIcon className="size-4" />
-          )}
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t.profile.title}</DialogTitle>
-        </DialogHeader>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8">
+      <h1 className="text-foreground text-lg font-semibold tracking-tight">
+        {t.profile.title}
+      </h1>
 
-        <div className="flex min-w-0 items-center gap-3">
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt=""
-              className="size-12 shrink-0 rounded-full object-cover"
-            />
-          ) : (
-            <div className="bg-muted flex size-12 shrink-0 items-center justify-center rounded-full">
-              <UserIcon className="text-muted-foreground size-6" />
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="text-foreground truncate text-sm font-medium">{user?.email}</p>
-            {stats && (
-              <p className="text-muted-foreground text-xs">
-                {t.profile.elo(stats.current_elo)}
-              </p>
-            )}
+      <div className="flex min-w-0 items-center gap-3">
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="" className="size-12 shrink-0 rounded-full object-cover" />
+        ) : (
+          <div className="bg-muted flex size-12 shrink-0 items-center justify-center rounded-full">
+            <UserIcon className="text-muted-foreground size-6" />
           </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-foreground truncate text-sm font-medium">{user?.email}</p>
+          {stats && (
+            <p className="text-muted-foreground text-xs">{t.profile.elo(stats.current_elo)}</p>
+          )}
         </div>
+      </div>
 
-        <Separator />
+      <Separator />
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-foreground text-base font-medium">{t.profile.appearanceTitle}</h2>
 
         <div className="flex items-center justify-between gap-2">
           <span className="text-muted-foreground text-sm">{t.language.label}</span>
@@ -99,9 +81,7 @@ export function ProfileDialog() {
                 aria-label={t.language[lang]}
                 aria-pressed={language === lang}
                 className={`flex size-8 items-center justify-center rounded-md text-lg transition-colors ${
-                  language === lang
-                    ? 'bg-primary/10 ring-primary ring-2'
-                    : 'hover:bg-muted'
+                  language === lang ? 'bg-primary/10 ring-primary ring-2' : 'hover:bg-muted'
                 }`}
               >
                 {LANGUAGE_FLAGS[lang]}
@@ -109,8 +89,6 @@ export function ProfileDialog() {
             ))}
           </div>
         </div>
-
-        <Separator />
 
         <div className="flex flex-col gap-2">
           <span className="text-muted-foreground text-sm">{t.appearance.boardTheme}</span>
@@ -156,14 +134,45 @@ export function ProfileDialog() {
             ))}
           </div>
         </div>
+      </section>
 
-        <Separator />
+      <Separator />
 
-        <Button variant="outline" size="sm" className="w-full" onClick={handleSignOut}>
-          <LogOut className="size-4" />
-          {t.nav.signOut}
-        </Button>
-      </DialogContent>
-    </Dialog>
+      <section className="flex flex-col gap-2">
+        <h2 className="text-foreground text-base font-medium">{t.profile.legalTitle}</h2>
+        <div className="flex flex-col gap-1 text-sm">
+          <Link to="/terms" className="text-primary w-fit underline-offset-4 hover:underline">
+            {t.profile.termsLink}
+          </Link>
+          <Link to="/privacy" className="text-primary w-fit underline-offset-4 hover:underline">
+            {t.profile.privacyLink}
+          </Link>
+        </div>
+      </section>
+
+      <Separator />
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-foreground text-base font-medium">{t.profile.exportTitle}</h2>
+        <DataExportPanel />
+      </section>
+
+      <Separator />
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-destructive text-base font-medium">{t.profile.dangerTitle}</h2>
+        <p className="text-muted-foreground text-sm">{t.profile.deleteAccountDescription}</p>
+        <div>
+          <DeleteAccountDialog />
+        </div>
+      </section>
+
+      <Separator />
+
+      <Button variant="outline" size="sm" className="w-full sm:w-fit" onClick={handleSignOut}>
+        <LogOut className="size-4" />
+        {t.nav.signOut}
+      </Button>
+    </main>
   )
 }

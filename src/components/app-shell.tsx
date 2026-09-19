@@ -1,14 +1,19 @@
-import { Moon, Sun } from 'lucide-react'
+import { Moon, Sun, User as UserIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { ProfileDialog } from '@/components/profile-dialog'
 import { useTheme } from '@/hooks/use-theme'
+import { useAuth } from '@/lib/auth-context'
 import { useLanguage } from '@/lib/language-context'
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { theme, toggleTheme } = useTheme()
   const { t } = useLanguage()
+  const { user } = useAuth()
+
+  const avatarUrl =
+    (user?.user_metadata?.avatar_url as string | undefined) ??
+    (user?.user_metadata?.picture as string | undefined)
 
   return (
     <div className="bg-background flex min-h-svh flex-col">
@@ -23,6 +28,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <nav className="flex items-center gap-1">
             <Button asChild variant="ghost" size="sm">
               <Link to="/dashboard">{t.nav.dashboard}</Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/train">{t.nav.train}</Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
               <Link to="/sessions">{t.nav.history}</Link>
@@ -42,7 +50,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Moon className="size-4" />
               )}
             </Button>
-            <ProfileDialog />
+            <Button asChild variant="ghost" size="icon-sm">
+              <Link to="/profile" aria-label={t.profile.openLabel}>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="size-6 rounded-full object-cover" />
+                ) : (
+                  <UserIcon className="size-4" />
+                )}
+              </Link>
+            </Button>
           </nav>
         </div>
       </header>

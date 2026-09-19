@@ -25,6 +25,7 @@ export interface Translations {
   }
   nav: {
     dashboard: string
+    train: string
     history: string
     faq: string
     toggleTheme: string
@@ -213,6 +214,37 @@ export interface Translations {
     openLabel: string
     title: string
     elo: (elo: number) => string
+    appearanceTitle: string
+    legalTitle: string
+    termsLink: string
+    privacyLink: string
+    exportTitle: string
+    exportDescription: string
+    exportRange: { week: string; month: string; year: string; all: string }
+    exportJson: string
+    exportExcel: string
+    exporting: string
+    exportError: string
+    dangerTitle: string
+    deleteAccount: string
+    deleteAccountDescription: string
+    deleteDialogTitle: string
+    deleteDialogWarning: string
+    deleteConfirmLabel: (email: string) => string
+    deleteConfirmButton: string
+    deleting: string
+    deleteError: string
+    cancel: string
+  }
+  terms: {
+    title: string
+    placeholder: string
+    backToProfile: string
+  }
+  privacy: {
+    title: string
+    placeholder: string
+    backToProfile: string
   }
   appearance: {
     boardTheme: string
@@ -252,6 +284,7 @@ export const it: Translations = {
   },
   nav: {
     dashboard: 'Dashboard',
+    train: 'Allenamento',
     history: 'Storico',
     faq: 'FAQ',
     toggleTheme: 'Cambia tema',
@@ -530,6 +563,45 @@ export const it: Translations = {
     openLabel: 'Profilo',
     title: 'Profilo',
     elo: (elo) => `ELO ${elo}`,
+    appearanceTitle: 'Aspetto',
+    legalTitle: 'Informazioni legali',
+    termsLink: 'Termini e Condizioni',
+    privacyLink: 'Privacy Policy',
+    exportTitle: 'Scarica i tuoi dati',
+    exportDescription:
+      'Ottieni una copia dei dati che abbiamo su di te: statistiche, sessioni e tentativi. Il periodo filtra i tentativi (puzzle e pratica libera); statistiche e sessioni sono sempre incluse per intero.',
+    exportRange: {
+      week: 'Ultima settimana',
+      month: 'Ultimo mese',
+      year: 'Ultimo anno',
+      all: 'Tutti',
+    },
+    exportJson: 'Scarica JSON',
+    exportExcel: 'Scarica Excel',
+    exporting: 'Preparazione…',
+    exportError: 'Impossibile scaricare i dati. Riprova.',
+    dangerTitle: 'Zona pericolosa',
+    deleteAccount: 'Elimina account',
+    deleteAccountDescription:
+      'Elimina definitivamente il tuo account e tutti i dati associati. Non si può annullare.',
+    deleteDialogTitle: 'Eliminare l’account?',
+    deleteDialogWarning:
+      'Questa azione è irreversibile: verranno cancellati per sempre il tuo account, le tue sessioni, i tentativi e le statistiche.',
+    deleteConfirmLabel: (email) => `Digita ${email} per confermare`,
+    deleteConfirmButton: 'Elimina definitivamente',
+    deleting: 'Eliminazione…',
+    deleteError: 'Impossibile eliminare l’account. Riprova.',
+    cancel: 'Annulla',
+  },
+  terms: {
+    title: 'Termini e Condizioni',
+    placeholder: 'Il testo dei Termini e Condizioni sarà disponibile a breve.',
+    backToProfile: 'Torna al profilo',
+  },
+  privacy: {
+    title: 'Privacy Policy',
+    placeholder: 'Il testo della Privacy Policy sarà disponibile a breve.',
+    backToProfile: 'Torna al profilo',
   },
   appearance: {
     boardTheme: 'Stile scacchiera',
@@ -612,6 +684,7 @@ export const en: Translations = {
   },
   nav: {
     dashboard: 'Dashboard',
+    train: 'Training',
     history: 'History',
     faq: 'FAQ',
     toggleTheme: 'Toggle theme',
@@ -890,6 +963,45 @@ export const en: Translations = {
     openLabel: 'Profile',
     title: 'Profile',
     elo: (elo) => `ELO ${elo}`,
+    appearanceTitle: 'Appearance',
+    legalTitle: 'Legal',
+    termsLink: 'Terms and Conditions',
+    privacyLink: 'Privacy Policy',
+    exportTitle: 'Download your data',
+    exportDescription:
+      'Get a copy of the data we hold about you: stats, sessions and attempts. The period filters attempts (puzzles and free practice); stats and sessions are always included in full.',
+    exportRange: {
+      week: 'Last week',
+      month: 'Last month',
+      year: 'Last year',
+      all: 'All time',
+    },
+    exportJson: 'Download JSON',
+    exportExcel: 'Download Excel',
+    exporting: 'Preparing…',
+    exportError: 'Could not download your data. Please try again.',
+    dangerTitle: 'Danger zone',
+    deleteAccount: 'Delete account',
+    deleteAccountDescription:
+      'Permanently delete your account and all associated data. This cannot be undone.',
+    deleteDialogTitle: 'Delete your account?',
+    deleteDialogWarning:
+      'This is irreversible: your account, sessions, attempts and stats will be permanently deleted.',
+    deleteConfirmLabel: (email) => `Type ${email} to confirm`,
+    deleteConfirmButton: 'Delete permanently',
+    deleting: 'Deleting…',
+    deleteError: 'Could not delete your account. Please try again.',
+    cancel: 'Cancel',
+  },
+  terms: {
+    title: 'Terms and Conditions',
+    placeholder: 'The Terms and Conditions text will be available soon.',
+    backToProfile: 'Back to profile',
+  },
+  privacy: {
+    title: 'Privacy Policy',
+    placeholder: 'The Privacy Policy text will be available soon.',
+    backToProfile: 'Back to profile',
   },
   appearance: {
     boardTheme: 'Board style',

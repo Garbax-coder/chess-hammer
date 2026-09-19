@@ -5,9 +5,12 @@ import FaqPage from '@/pages/FaqPage'
 import HomePage from '@/pages/HomePage'
 import LoginPage from '@/pages/LoginPage'
 import NewSessionPage from '@/pages/NewSessionPage'
+import PrivacyPage from '@/pages/PrivacyPage'
+import ProfilePage from '@/pages/ProfilePage'
 import SessionDetailPage from '@/pages/SessionDetailPage'
 import SessionsHistoryPage from '@/pages/SessionsHistoryPage'
 import SignupPage from '@/pages/SignupPage'
+import TermsPage from '@/pages/TermsPage'
 import TrainPage from '@/pages/TrainPage'
 
 function App() {
@@ -64,6 +67,16 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
     </Routes>
   )
 }

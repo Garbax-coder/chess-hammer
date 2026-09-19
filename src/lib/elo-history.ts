@@ -13,7 +13,7 @@ const RANGE_DAYS: Record<Exclude<EloRange, 'all'>, number> = {
   year: 365,
 }
 
-function sinceIsoFor(range: EloRange): string | null {
+export function sinceIsoFor(range: EloRange): string | null {
   if (range === 'all') return null
   const d = new Date()
   d.setDate(d.getDate() - RANGE_DAYS[range])
