@@ -7,8 +7,6 @@ export const oauthProviders: { id: OAuthProvider; label: string }[] = [
   // { id: 'facebook', label: 'Facebook' }, // in arrivo
 ]
 
-export const MIN_PASSWORD_LENGTH = 6
-
 export function signInWithEmail(email: string, password: string) {
   return supabase.auth.signInWithPassword({ email, password })
 }

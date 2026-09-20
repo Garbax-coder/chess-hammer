@@ -46,6 +46,12 @@ export interface Translations {
     sent: string
     backToLogin: string
   }
+  passwordPolicy: {
+    hint: (min: number) => string
+    tooShort: string
+    sameAsEmail: string
+    breached: string
+  }
   resetPassword: {
     title: string
     subtitle: string
@@ -335,6 +341,14 @@ export const it: Translations = {
     submit: 'Invia il link',
     sent: 'Se esiste un account con questo indirizzo, riceverai a breve un’email con il link per reimpostare la password. Controlla anche la cartella spam.',
     backToLogin: 'Torna al login',
+  },
+  passwordPolicy: {
+    hint: (min) =>
+      `Almeno ${min} caratteri. Non può essere una password già comparsa in violazioni di dati.`,
+    tooShort: 'La password è troppo corta.',
+    sameAsEmail: 'La password non può coincidere con la tua email.',
+    breached:
+      'Questa password è comparsa in violazioni di dati pubbliche e non è sicura. Scegline un’altra.',
   },
   resetPassword: {
     title: 'Nuova password',
@@ -767,6 +781,14 @@ export const en: Translations = {
     submit: 'Send the link',
     sent: 'If an account exists for this address, you’ll get an email shortly with a link to reset your password. Check your spam folder too.',
     backToLogin: 'Back to login',
+  },
+  passwordPolicy: {
+    hint: (min) =>
+      `At least ${min} characters. It can’t be a password that has appeared in data breaches.`,
+    tooShort: 'The password is too short.',
+    sameAsEmail: 'The password can’t be the same as your email.',
+    breached:
+      'This password has appeared in public data breaches and isn’t safe. Choose another one.',
   },
   resetPassword: {
     title: 'New password',
