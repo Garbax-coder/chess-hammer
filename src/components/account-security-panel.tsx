@@ -2,9 +2,10 @@ import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { changeEmail, changePassword, MIN_PASSWORD_LENGTH } from '@/lib/auth'
+import { changeEmail, changePassword } from '@/lib/auth'
 import { useAuth } from '@/lib/auth-context'
 import { useTranslations } from '@/lib/language-context'
+import { findPasswordProblem, MIN_PASSWORD_LENGTH } from '@/lib/password-policy'
 
 function ChangeEmailForm({ currentEmail }: { currentEmail: string }) {
   const t = useTranslations()
@@ -35,7 +36,9 @@ function ChangeEmailForm({ currentEmail }: { currentEmail: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex max-w-sm flex-col gap-3">
-      <h3 className="text-foreground text-sm font-medium">{t.profile.changeEmailTitle}</h3>
+      <h3 className="text-foreground text-sm font-medium">
+        {t.profile.changeEmailTitle}
+      </h3>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="new-email">{t.profile.newEmail}</Label>
         <Input
@@ -76,10 +79,20 @@ function ChangePasswordForm({ email }: { email: string }) {
       return
     }
     setSubmitting(true)
+    const problem = await findPasswordProblem(password, email)
+    if (problem) {
+      setSubmitting(false)
+      setError(t.passwordPolicy[problem])
+      return
+    }
     const result = await changePassword(email, current, password)
     setSubmitting(false)
     if (!result.ok) {
-      setError(result.reason === 'wrong-current' ? t.profile.wrongCurrentPassword : result.message)
+      setError(
+        result.reason === 'wrong-current'
+          ? t.profile.wrongCurrentPassword
+          : result.message,
+      )
       return
     }
     setDone(true)
@@ -90,7 +103,9 @@ function ChangePasswordForm({ email }: { email: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex max-w-sm flex-col gap-3">
-      <h3 className="text-foreground text-sm font-medium">{t.profile.changePasswordTitle}</h3>
+      <h3 className="text-foreground text-sm font-medium">
+        {t.profile.changePasswordTitle}
+      </h3>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="current-password">{t.profile.currentPassword}</Label>
         <Input
@@ -113,6 +128,9 @@ function ChangePasswordForm({ email }: { email: string }) {
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="new-password"
         />
+        <p className="text-muted-foreground text-xs">
+          {t.passwordPolicy.hint(MIN_PASSWORD_LENGTH)}
+        </p>
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="profile-confirm-password">{t.profile.confirmPassword}</Label>

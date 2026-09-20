@@ -10,9 +10,10 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { MIN_PASSWORD_LENGTH, updatePassword } from '@/lib/auth'
+import { updatePassword } from '@/lib/auth'
 import { useAuth } from '@/lib/auth-context'
 import { useTranslations } from '@/lib/language-context'
+import { findPasswordProblem, MIN_PASSWORD_LENGTH } from '@/lib/password-policy'
 
 // Il link nell'email porta qui con una sessione di recupero: supabase-js la
 // legge dall'URL all'avvio. Senza sessione il link e' scaduto o gia' usato.
@@ -33,6 +34,12 @@ export default function ResetPasswordPage() {
       return
     }
     setSubmitting(true)
+    const problem = await findPasswordProblem(password, session?.user.email)
+    if (problem) {
+      setSubmitting(false)
+      setError(t.passwordPolicy[problem])
+      return
+    }
     const { error } = await updatePassword(password)
     setSubmitting(false)
     if (error) {
@@ -67,9 +74,14 @@ export default function ResetPasswordPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="new-password"
                 />
+                <p className="text-muted-foreground text-xs">
+                  {t.passwordPolicy.hint(MIN_PASSWORD_LENGTH)}
+                </p>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="confirm-password">{t.resetPassword.confirmPassword}</Label>
+                <Label htmlFor="confirm-password">
+                  {t.resetPassword.confirmPassword}
+                </Label>
                 <Input
                   id="confirm-password"
                   type="password"

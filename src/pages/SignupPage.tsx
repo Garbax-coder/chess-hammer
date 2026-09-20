@@ -12,8 +12,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { MIN_PASSWORD_LENGTH, signUpWithEmail } from '@/lib/auth'
+import { signUpWithEmail } from '@/lib/auth'
 import { useTranslations } from '@/lib/language-context'
+import { findPasswordProblem, MIN_PASSWORD_LENGTH } from '@/lib/password-policy'
 
 export default function SignupPage() {
   const t = useTranslations()
@@ -27,6 +28,12 @@ export default function SignupPage() {
     e.preventDefault()
     setError(null)
     setSubmitting(true)
+    const problem = await findPasswordProblem(password, email)
+    if (problem) {
+      setSubmitting(false)
+      setError(t.passwordPolicy[problem])
+      return
+    }
     const { error } = await signUpWithEmail(email, password)
     setSubmitting(false)
     if (error) {
@@ -79,6 +86,9 @@ export default function SignupPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="new-password"
                   />
+                  <p className="text-muted-foreground text-xs">
+                    {t.passwordPolicy.hint(MIN_PASSWORD_LENGTH)}
+                  </p>
                 </div>
 
                 {error && <p className="text-destructive text-sm">{error}</p>}
