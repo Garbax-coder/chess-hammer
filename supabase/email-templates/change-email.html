@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Chess Hammer</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Conferma il nuovo indirizzo email / Confirm your new email address</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;">
+    <tr><td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+        <tr><td style="padding:0 0 16px;font-size:18px;font-weight:700;color:#111827;">&#9822; Chess Hammer</td></tr>
+        <tr><td style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:32px;">
+          <p lang="it" style="margin:0 0 16px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">Italiano</p>
+            <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#111827;">Conferma il nuovo indirizzo email</h1>
+            <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">Hai chiesto di cambiare l&rsquo;indirizzo email del tuo account Chess Hammer da <strong>{{ .Email }}</strong> a <strong>{{ .NewEmail }}</strong>. Conferma per completare la modifica.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;"><tr><td style="border-radius:8px;background:#111827;">
+              <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">Conferma modifica</a>
+            </td></tr></table>
+            <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#6b7280;">Se il pulsante non funziona, copia e incolla questo link nel browser:</p>
+            <p style="margin:0 0 16px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#2563eb;">{{ .ConfirmationURL }}</a></p>
+            <p style="margin:0;font-size:13px;line-height:1.5;color:#6b7280;">Se non hai richiesto tu questa modifica, ignora questa email e considera di cambiare la password.</p>
+          <hr style="border:0;border-top:1px solid #e5e7eb;margin:32px 0;">
+          <p lang="en" style="margin:0 0 16px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">English</p>
+            <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#111827;">Confirm your new email address</h1>
+            <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">You asked to change the email address of your Chess Hammer account from <strong>{{ .Email }}</strong> to <strong>{{ .NewEmail }}</strong>. Confirm to complete the change.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;"><tr><td style="border-radius:8px;background:#111827;">
+              <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">Confirm change</a>
+            </td></tr></table>
+            <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#6b7280;">If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="margin:0 0 16px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#2563eb;">{{ .ConfirmationURL }}</a></p>
+            <p style="margin:0;font-size:13px;line-height:1.5;color:#6b7280;">If you didn't request this change, ignore this email and consider changing your password.</p>
+        </td></tr>
+        <tr><td style="padding:16px 0 0;font-size:12px;line-height:1.5;color:#9ca3af;">Chess Hammer &middot; chesshammer.com</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
