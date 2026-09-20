@@ -37,6 +37,24 @@ export interface Translations {
     submit: string
     noAccount: string
     signup: string
+    forgotPassword: string
+  }
+  forgotPassword: {
+    title: string
+    subtitle: string
+    submit: string
+    sent: string
+    backToLogin: string
+  }
+  resetPassword: {
+    title: string
+    subtitle: string
+    newPassword: string
+    confirmPassword: string
+    submit: string
+    mismatch: string
+    invalidLink: string
+    requestNew: string
   }
   signup: {
     title: string
@@ -235,6 +253,19 @@ export interface Translations {
     deleting: string
     deleteError: string
     cancel: string
+    accountTitle: string
+    changeEmailTitle: string
+    newEmail: string
+    changeEmailSubmit: string
+    changeEmailSent: (email: string) => string
+    sameEmail: string
+    changePasswordTitle: string
+    currentPassword: string
+    newPassword: string
+    confirmPassword: string
+    changePasswordSubmit: string
+    passwordChanged: string
+    wrongCurrentPassword: string
   }
   terms: {
     title: string
@@ -296,6 +327,24 @@ export const it: Translations = {
     submit: 'Accedi',
     noAccount: 'Non hai un account?',
     signup: 'Registrati',
+    forgotPassword: 'Password dimenticata?',
+  },
+  forgotPassword: {
+    title: 'Recupera la password',
+    subtitle: 'Inserisci la tua email: ti mandiamo un link per sceglierne una nuova.',
+    submit: 'Invia il link',
+    sent: 'Se esiste un account con questo indirizzo, riceverai a breve un’email con il link per reimpostare la password. Controlla anche la cartella spam.',
+    backToLogin: 'Torna al login',
+  },
+  resetPassword: {
+    title: 'Nuova password',
+    subtitle: 'Scegli la nuova password per il tuo account.',
+    newPassword: 'Nuova password',
+    confirmPassword: 'Conferma la password',
+    submit: 'Salva la password',
+    mismatch: 'Le due password non coincidono.',
+    invalidLink: 'Il link non è valido o è scaduto. Richiedine uno nuovo.',
+    requestNew: 'Richiedi un nuovo link',
   },
   signup: {
     title: 'Crea account',
@@ -592,6 +641,20 @@ export const it: Translations = {
     deleting: 'Eliminazione…',
     deleteError: 'Impossibile eliminare l’account. Riprova.',
     cancel: 'Annulla',
+    accountTitle: 'Accesso e sicurezza',
+    changeEmailTitle: 'Cambia email',
+    newEmail: 'Nuova email',
+    changeEmailSubmit: 'Cambia email',
+    changeEmailSent: (email) =>
+      `Ti abbiamo mandato un link di conferma a ${email}. La modifica si attiva dopo la conferma (se richiesto, anche dal vecchio indirizzo).`,
+    sameEmail: 'Questa è già la tua email.',
+    changePasswordTitle: 'Cambia password',
+    currentPassword: 'Password attuale',
+    newPassword: 'Nuova password',
+    confirmPassword: 'Conferma la nuova password',
+    changePasswordSubmit: 'Salva la nuova password',
+    passwordChanged: 'Password aggiornata. Gli altri dispositivi sono stati disconnessi.',
+    wrongCurrentPassword: 'La password attuale non è corretta.',
   },
   terms: {
     title: 'Termini e Condizioni',
@@ -696,6 +759,24 @@ export const en: Translations = {
     submit: 'Log in',
     noAccount: "Don't have an account?",
     signup: 'Sign up',
+    forgotPassword: 'Forgot your password?',
+  },
+  forgotPassword: {
+    title: 'Reset your password',
+    subtitle: 'Enter your email and we’ll send you a link to choose a new one.',
+    submit: 'Send the link',
+    sent: 'If an account exists for this address, you’ll get an email shortly with a link to reset your password. Check your spam folder too.',
+    backToLogin: 'Back to login',
+  },
+  resetPassword: {
+    title: 'New password',
+    subtitle: 'Choose a new password for your account.',
+    newPassword: 'New password',
+    confirmPassword: 'Confirm password',
+    submit: 'Save password',
+    mismatch: 'The two passwords don’t match.',
+    invalidLink: 'This link is invalid or has expired. Request a new one.',
+    requestNew: 'Request a new link',
   },
   signup: {
     title: 'Create account',
@@ -992,6 +1073,20 @@ export const en: Translations = {
     deleting: 'Deleting…',
     deleteError: 'Could not delete your account. Please try again.',
     cancel: 'Cancel',
+    accountTitle: 'Sign-in and security',
+    changeEmailTitle: 'Change email',
+    newEmail: 'New email',
+    changeEmailSubmit: 'Change email',
+    changeEmailSent: (email) =>
+      `We sent a confirmation link to ${email}. The change takes effect once you confirm it (if required, from your old address too).`,
+    sameEmail: 'This is already your email.',
+    changePasswordTitle: 'Change password',
+    currentPassword: 'Current password',
+    newPassword: 'New password',
+    confirmPassword: 'Confirm new password',
+    changePasswordSubmit: 'Save new password',
+    passwordChanged: 'Password updated. Your other devices were signed out.',
+    wrongCurrentPassword: 'The current password is incorrect.',
   },
   terms: {
     title: 'Terms and Conditions',

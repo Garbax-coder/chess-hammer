@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { signUpWithEmail } from '@/lib/auth'
+import { MIN_PASSWORD_LENGTH, signUpWithEmail } from '@/lib/auth'
 import { useTranslations } from '@/lib/language-context'
 
 export default function SignupPage() {
@@ -74,7 +74,7 @@ export default function SignupPage() {
                     id="password"
                     type="password"
                     required
-                    minLength={6}
+                    minLength={MIN_PASSWORD_LENGTH}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="new-password"

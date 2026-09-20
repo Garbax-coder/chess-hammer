@@ -20,5 +20,12 @@ Variabili usate: `{{ .ConfirmationURL }}`, `{{ .Email }}`, `{{ .NewEmail }}`.
 Con Resend tieni **spento** il click tracking del dominio: riscriverebbe i link di
 conferma e li romperebbe.
 
-Il template "Reset password" serve solo quando l'app avrà il flusso di recupero password
-(link "Password dimenticata?" e pagina di reimpostazione): oggi non esiste.
+## Impostazioni collegate (Authentication → URL Configuration)
+
+Il link nelle email di recupero password ed email-change porta a `/reset-password` e
+`/profile` del sito. Supabase lo permette solo se l'indirizzo è nei **Redirect URLs**:
+
+- `https://chesshammer.com/**`
+- `http://localhost:5173/**` (sviluppo)
+
+Senza, il link atterra sul Site URL (la home) e la pagina di reimpostazione non si apre.

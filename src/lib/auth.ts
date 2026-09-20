@@ -7,6 +7,8 @@ export const oauthProviders: { id: OAuthProvider; label: string }[] = [
   // { id: 'facebook', label: 'Facebook' }, // in arrivo
 ]
 
+export const MIN_PASSWORD_LENGTH = 6
+
 export function signInWithEmail(email: string, password: string) {
   return supabase.auth.signInWithPassword({ email, password })
 }
@@ -35,4 +37,54 @@ export async function deleteOwnAccount() {
   const { error } = await supabase.rpc('delete_own_account')
   if (error) throw error
   await supabase.auth.signOut()
+}
+
+// redirectTo deve essere tra i Redirect URLs consentiti in Supabase
+// (Authentication -> URL Configuration), altrimenti il link porta al Site URL.
+export function requestPasswordReset(email: string) {
+  return supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  })
+}
+
+// Dopo un cambio password si chiudono le sessioni degli altri dispositivi:
+// chi avesse la vecchia password (o un dispositivo rubato) resta fuori.
+// Best-effort: la password e' gia' cambiata, un errore qui non la annulla.
+export async function updatePassword(password: string) {
+  const result = await supabase.auth.updateUser({ password })
+  if (!result.error) {
+    await supabase.auth.signOut({ scope: 'others' }).catch(() => {})
+  }
+  return result
+}
+
+export type ChangePasswordResult =
+  | { ok: true }
+  | { ok: false; reason: 'wrong-current' | 'other'; message: string }
+
+// updateUser da solo non chiede la password attuale: la si verifica prima con
+// un login, cosi' una sessione lasciata aperta non basta per cambiarla.
+export async function changePassword(
+  email: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<ChangePasswordResult> {
+  const verify = await supabase.auth.signInWithPassword({ email, password: currentPassword })
+  if (verify.error) {
+    return {
+      ok: false,
+      reason: verify.error.code === 'invalid_credentials' ? 'wrong-current' : 'other',
+      message: verify.error.message,
+    }
+  }
+  const { error } = await updatePassword(newPassword)
+  if (error) return { ok: false, reason: 'other', message: error.message }
+  return { ok: true }
+}
+
+export function changeEmail(newEmail: string) {
+  return supabase.auth.updateUser(
+    { email: newEmail },
+    { emailRedirectTo: `${window.location.origin}/profile` },
+  )
 }

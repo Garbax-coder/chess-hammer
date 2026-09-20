@@ -1,5 +1,6 @@
 import { LogOut, User as UserIcon } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import { AccountSecurityPanel } from '@/components/account-security-panel'
 import { DataExportPanel } from '@/components/data-export-panel'
 import { DeleteAccountDialog } from '@/components/delete-account-dialog'
 import { Button } from '@/components/ui/button'
@@ -134,6 +135,13 @@ export default function ProfilePage() {
             ))}
           </div>
         </div>
+      </section>
+
+      <Separator />
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-foreground text-base font-medium">{t.profile.accountTitle}</h2>
+        <AccountSecurityPanel />
       </section>
 
       <Separator />
