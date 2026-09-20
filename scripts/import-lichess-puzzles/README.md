@@ -31,6 +31,14 @@ psql "$SUPABASE_DB_URL" -f ../../supabase/migrations/0001_lichess_puzzles.sql
 psql "$SUPABASE_DB_URL" -c "\copy lichess_puzzles (puzzle_id, fen, moves, rating, rating_deviation, popularity, nb_plays, themes, game_url, opening_tags) FROM 'sampled_puzzles.csv' WITH (FORMAT csv, HEADER true)"
 ```
 
+```bash
+# 6. Ricostruisci le tabelle di supporto alla scelta casuale del puzzle
+#    (ordine per rating: vedi supabase/migrations/0019_fast_puzzle_pick.sql).
+#    Da rifare dopo OGNI import: senza, i puzzle nuovi non vengono mai scelti
+#    e quelli rimossi possono ancora comparire tra le posizioni.
+psql "$SUPABASE_DB_URL" -c "select rebuild_lichess_puzzle_order()"
+```
+
 `psql` non è incluso in macOS: `brew install libpq` e aggiungi
 `/opt/homebrew/opt/libpq/bin` al PATH.
 
