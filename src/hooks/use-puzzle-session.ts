@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
+import { syncSessionPuzzles } from '@/lib/session-puzzles-cache'
 import {
   getNextPuzzle,
   getUserElo,
@@ -37,13 +38,13 @@ export function useNextPuzzle(session: TrainingSession | null | undefined) {
       const outcome = await getNextPuzzle(session!, elo)
       // getNextPuzzle puo', come effetto collaterale, inserire un nuovo
       // session_puzzle (nuova pesca al giro 1) o avanzare di giro: senza
-      // invalidare, la sidebar (useSessionPuzzles, cache separata) resta
-      // ferma alla lista di prima finche' non arriva il prossimo tentativo
-      // registrato (vedi useRecordAttempt piu' sotto, che invalida
-      // esplicitamente dopo OGNI tentativo) — qui serve lo stesso, dato che
+      // aggiornare la lista, la sidebar (useSessionPuzzles, cache separata)
+      // resta ferma a quella di prima finche' non arriva il prossimo
+      // tentativo registrato (vedi useRecordAttempt piu' sotto, che la
+      // sincronizza dopo OGNI tentativo) — qui serve lo stesso, dato che
       // questa query gira anche al primo caricamento di un giorno nuovo,
-      // prima di qualunque tentativo.
-      queryClient.invalidateQueries({ queryKey: ['session-puzzles', session?.id] })
+      // prima di qualunque tentativo. Solo il delta, non l'intera lista.
+      void syncSessionPuzzles(queryClient, session!.id)
       return outcome
     },
     enabled: !!session && !!user,
@@ -72,7 +73,7 @@ export function useRecordAttempt(session: TrainingSession | null | undefined) {
       timeSeconds: number
       puzzleRating: number
     }) => recordAttemptAndGetNextPuzzle({ sessionId: session!.id, ...params }),
-    onSuccess: (outcome) => {
+    onSuccess: (outcome, variables) => {
       // Il prossimo puzzle NON va scritto subito in cache 'next-puzzle':
       // questa mutation ora parte appena il puzzle finisce (vedi
       // TrainPage.handleComplete), non piu' al click su "Puzzle
@@ -94,10 +95,15 @@ export function useRecordAttempt(session: TrainingSession | null | undefined) {
       }
 
       // 'session-progress' non e' piu' una query separata in TrainPage (si
-      // deriva da 'session-puzzles', vedi deriveSessionProgress): invalidare
-      // solo quest'ultima basta a tenere aggiornati sia la sidebar sia la
-      // barra di avanzamento.
-      queryClient.invalidateQueries({ queryKey: ['session-puzzles', session?.id] })
+      // deriva da 'session-puzzles', vedi deriveSessionProgress): tenere
+      // aggiornata solo quest'ultima basta per la sidebar e per la barra di
+      // avanzamento. Si scarica solo il delta (i tentativi di questo puzzle
+      // + gli eventuali nuovi puzzle del pool), non l'intera lista. Non si
+      // attende: la mutation non deve restare "in corso" (isPending, quindi
+      // il bottone "Puzzle successivo") per una rilettura della sidebar.
+      if (session) {
+        void syncSessionPuzzles(queryClient, session.id, variables.sessionPuzzleId)
+      }
     },
   })
 }

@@ -1,3 +1,4 @@
+import { attemptsByRound } from '@/lib/session-puzzles-merge'
 import { supabase } from '@/lib/supabase'
 import type {
   PuzzleAttempt,
@@ -39,6 +40,22 @@ async function fetchSessionById(sessionId: string): Promise<TrainingSession> {
   return data
 }
 
+const SESSION_PUZZLE_SELECT =
+  'id, order_index, puzzle_id, lichess_puzzles(rating, fen, moves, themes), puzzle_attempts(*)'
+
+function toSessionPuzzleResult(row: RawSessionPuzzleRow): SessionPuzzleResult {
+  return {
+    sessionPuzzleId: row.id,
+    orderIndex: row.order_index,
+    puzzleId: row.puzzle_id,
+    rating: row.lichess_puzzles?.rating ?? 0,
+    fen: row.lichess_puzzles?.fen ?? '',
+    moves: row.lichess_puzzles?.moves ?? [],
+    themes: row.lichess_puzzles?.themes ?? [],
+    attempts: attemptsByRound(row.puzzle_attempts),
+  }
+}
+
 // Separata da fetchSessionDetail cosi' un chiamante che ha gia' l'oggetto
 // sessione (es. TrainPage, via useActiveSession) puo' chiedere solo i
 // puzzle senza rileggere anche la riga training_sessions che ha gia' in
@@ -48,29 +65,42 @@ export async function fetchSessionPuzzlesDetail(
 ): Promise<SessionPuzzleResult[]> {
   const { data: rows, error } = await supabase
     .from('session_puzzles')
-    .select(
-      'id, order_index, puzzle_id, lichess_puzzles(rating, fen, moves, themes), puzzle_attempts(*)',
-    )
+    .select(SESSION_PUZZLE_SELECT)
     .eq('session_id', sessionId)
     .order('order_index', { ascending: true })
   if (error) throw error
 
-  return (rows as unknown as RawSessionPuzzleRow[]).map((row) => {
-    const attempts: SessionPuzzleResult['attempts'] = {}
-    for (const attempt of row.puzzle_attempts) {
-      attempts[attempt.round_number] = attempt
-    }
-    return {
-      sessionPuzzleId: row.id,
-      orderIndex: row.order_index,
-      puzzleId: row.puzzle_id,
-      rating: row.lichess_puzzles?.rating ?? 0,
-      fen: row.lichess_puzzles?.fen ?? '',
-      moves: row.lichess_puzzles?.moves ?? [],
-      themes: row.lichess_puzzles?.themes ?? [],
-      attempts,
-    }
-  })
+  return (rows as unknown as RawSessionPuzzleRow[]).map(toSessionPuzzleResult)
+}
+
+// Solo i puzzle aggiunti al pool dopo quelli gia' in cache (giro 1: uno per
+// tentativo). Vedi syncSessionPuzzles: serve ad aggiornare la lista senza
+// riscaricarla tutta (fen/mosse/temi di 200 puzzle, ~200 KB).
+export async function fetchSessionPuzzlesAfter(
+  sessionId: string,
+  afterOrderIndex: number,
+): Promise<SessionPuzzleResult[]> {
+  const { data: rows, error } = await supabase
+    .from('session_puzzles')
+    .select(SESSION_PUZZLE_SELECT)
+    .eq('session_id', sessionId)
+    .gt('order_index', afterOrderIndex)
+    .order('order_index', { ascending: true })
+  if (error) throw error
+
+  return (rows as unknown as RawSessionPuzzleRow[]).map(toSessionPuzzleResult)
+}
+
+// Tutti i tentativi (al massimo uno per giro) di un solo puzzle di sessione.
+export async function fetchSessionPuzzleAttempts(
+  sessionPuzzleId: string,
+): Promise<PuzzleAttempt[]> {
+  const { data, error } = await supabase
+    .from('puzzle_attempts')
+    .select('*')
+    .eq('session_puzzle_id', sessionPuzzleId)
+  if (error) throw error
+  return data as PuzzleAttempt[]
 }
 
 export async function fetchSessionDetail(sessionId: string): Promise<SessionDetail> {

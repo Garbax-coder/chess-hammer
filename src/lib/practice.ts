@@ -6,14 +6,21 @@ export async function recordPracticeAttempt(params: {
   puzzleId: string
   result: AttemptResult
   timeSeconds: number
-}) {
-  const { error } = await supabase.from('practice_attempts').insert({
-    user_id: params.userId,
-    puzzle_id: params.puzzleId,
-    result: params.result,
-    time_seconds: params.timeSeconds,
-  })
+}): Promise<PracticeAttempt> {
+  // Restituisce la riga inserita (id e attempted_at li assegna il DB): serve
+  // a chi aggiorna la cache dei tentativi senza rileggerli tutti.
+  const { data, error } = await supabase
+    .from('practice_attempts')
+    .insert({
+      user_id: params.userId,
+      puzzle_id: params.puzzleId,
+      result: params.result,
+      time_seconds: params.timeSeconds,
+    })
+    .select()
+    .single()
   if (error) throw error
+  return data as PracticeAttempt
 }
 
 /** Tutti i tentativi di pratica libera per un insieme di puzzle, raggruppati per puzzle_id. */
