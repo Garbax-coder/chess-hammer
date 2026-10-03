@@ -24,8 +24,16 @@ const HEATMAP_TOP = CHART_HEIGHT + GAP_BETWEEN
 // Riquadro di raggruppamento giornaliero: leggermente piu' grande delle
 // celle che contiene, cosi' il bordo/sfondo resta visibile intorno a loro
 // invece di coincidere esattamente coi loro margini.
-const GROUP_PAD_X = 2
-const GROUP_PAD_Y = 2
+const GROUP_PAD_X = 3
+const GROUP_PAD_Y = 3
+// var(--color-border) e' quasi invisibile in dark mode (bianco al 10% di
+// opacita', pensato per separare blocchi gia' distinti da altro, non per
+// essere lui stesso il segnale): il contorno dei gruppi usa invece
+// var(--color-foreground) con opacita' esplicita sugli attributi SVG, che
+// resta leggibile sia in chiaro che in scuro (foreground e' quasi nero/
+// quasi bianco in base al tema).
+const GROUP_STROKE_OPACITY = 0.45
+const GROUP_FILL_OPACITY = [0.1, 0.22] as const
 
 const ROUND_COLORS: Record<Round, string> = {
   1: 'var(--color-chart-1)',
@@ -253,10 +261,11 @@ export function SessionPerformanceChart({
                     width={width}
                     height={height}
                     rx={5}
-                    fill="var(--color-muted-foreground)"
-                    fillOpacity={groupIndex % 2 === 0 ? 0.1 : 0.2}
-                    stroke="var(--color-border)"
-                    strokeWidth={1}
+                    fill="var(--color-foreground)"
+                    fillOpacity={GROUP_FILL_OPACITY[groupIndex % 2]}
+                    stroke="var(--color-foreground)"
+                    strokeOpacity={GROUP_STROKE_OPACITY}
+                    strokeWidth={1.5}
                     className="cursor-pointer"
                     onClick={() => onSelectDay(group.day)}
                   >
