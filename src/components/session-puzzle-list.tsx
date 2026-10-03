@@ -328,26 +328,31 @@ export function SessionPuzzleList({
     return day ? puzzleIdsForDay(puzzles, day) : new Set<string>()
   }, [puzzles, canPractice])
 
-  // Chi arriva da fuori (es. click su un quadratino della heatmap in
-  // dashboard) puo' selezionare un puzzle a meta' di una lista lunga anche
-  // 200 righe: la porta in vista automaticamente invece di lasciare
-  // l'utente a scorrere alla cieca per trovarla. Va fatto pero' UNA SOLA
-  // VOLTA per visita della pagina (il ref sotto), non ad ogni cambio di
-  // activeSessionPuzzleId: altrimenti anche il normale avanzamento da un
-  // puzzle al successivo durante l'allenamento ritriggerava lo scroll,
-  // e su mobile (dove la lista non ha un proprio riquadro scrollabile ma e'
-  // parte del flusso normale della pagina) questo faceva scorrere l'INTERA
-  // pagina lontano dalla scacchiera ad ogni "Puzzle successivo".
-  const hasAutoScrolledRef = useRef(false)
+  // In pratica libera (canPractice) il puzzle attivo va sempre in cima alla
+  // lista, qualunque sia il suo order_index: sia arrivando da fuori (click
+  // su un quadratino della heatmap in dashboard) sia passando al successivo
+  // durante la pratica, l'utente lo deve vedere subito senza scorrere una
+  // lista lunga fino a 200 righe. Durante l'allenamento del giro corrente
+  // (canPractice false) l'ordine resta quello normale (piu' recenti in
+  // cima): il puzzle attivo e' sempre il piu' recente del pool, gia' in
+  // cima da solo.
+  const orderedPuzzles = useMemo(() => {
+    const reversed = [...puzzles].reverse()
+    if (!canPractice || !activeSessionPuzzleId) return reversed
+    const activeIndex = reversed.findIndex((p) => p.sessionPuzzleId === activeSessionPuzzleId)
+    if (activeIndex <= 0) return reversed
+    const [active] = reversed.splice(activeIndex, 1)
+    reversed.unshift(active)
+    return reversed
+  }, [puzzles, canPractice, activeSessionPuzzleId])
+
+  // Il puzzle attivo e' sempre il primo elemento qui sopra: basta riportare
+  // il riquadro in cima a se stesso, niente scrollIntoView (che su una
+  // pagina lunga puo' trascinare con se' anche lo scroll della pagina
+  // intera, non solo di questo riquadro).
   useEffect(() => {
-    if (!activeSessionPuzzleId || !listRef.current || hasAutoScrolledRef.current) return
-    const row = listRef.current.querySelector<HTMLElement>(
-      `[data-session-puzzle-id="${activeSessionPuzzleId}"]`,
-    )
-    if (!row) return
-    row.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    hasAutoScrolledRef.current = true
-  }, [activeSessionPuzzleId, puzzles])
+    if (canPractice && listRef.current) listRef.current.scrollTop = 0
+  }, [activeSessionPuzzleId, canPractice])
 
   return (
     <Card className="min-h-0 w-full flex-1 lg:w-64">
@@ -370,7 +375,7 @@ export function SessionPuzzleList({
           {!isLoading && puzzles.length === 0 && (
             <p className="text-muted-foreground text-xs">{t.sessionPuzzleList.empty}</p>
           )}
-          {[...puzzles].reverse().map((result) => (
+          {orderedPuzzles.map((result) => (
             <PuzzleRow
               key={result.sessionPuzzleId}
               result={result}

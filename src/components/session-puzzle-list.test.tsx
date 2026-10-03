@@ -66,6 +66,51 @@ describe('SessionPuzzleList', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('pins the active puzzle first in practice mode, regardless of its order_index', () => {
+    const p1 = makePuzzleResult({ sessionPuzzleId: 'p1', orderIndex: 1 })
+    const p2 = makePuzzleResult({ sessionPuzzleId: 'p2', orderIndex: 2 })
+    const p3 = makePuzzleResult({ sessionPuzzleId: 'p3', orderIndex: 3 })
+
+    const { container } = render(
+      <SessionPuzzleList
+        puzzles={[p1, p2, p3]}
+        activeSessionPuzzleId="p2"
+        currentRound={1}
+        practiceAttemptsByPuzzle={new Map()}
+        canPractice
+        onSelectPuzzle={() => {}}
+      />,
+    )
+
+    const ids = [...container.querySelectorAll('[data-session-puzzle-id]')].map((el) =>
+      el.getAttribute('data-session-puzzle-id'),
+    )
+    expect(ids[0]).toBe('p2')
+    // Il resto mantiene l'ordine normale (piu' recenti prima): p3, poi p1.
+    expect(ids).toEqual(['p2', 'p3', 'p1'])
+  })
+
+  it('does not reorder the list outside of practice mode', () => {
+    const p1 = makePuzzleResult({ sessionPuzzleId: 'p1', orderIndex: 1 })
+    const p2 = makePuzzleResult({ sessionPuzzleId: 'p2', orderIndex: 2 })
+
+    const { container } = render(
+      <SessionPuzzleList
+        puzzles={[p1, p2]}
+        activeSessionPuzzleId="p1"
+        currentRound={1}
+        practiceAttemptsByPuzzle={new Map()}
+        canPractice={false}
+        onSelectPuzzle={() => {}}
+      />,
+    )
+
+    const ids = [...container.querySelectorAll('[data-session-puzzle-id]')].map((el) =>
+      el.getAttribute('data-session-puzzle-id'),
+    )
+    expect(ids).toEqual(['p2', 'p1'])
+  })
+
   it('shows the empty-state message when there are no puzzles', () => {
     render(
       <SessionPuzzleList

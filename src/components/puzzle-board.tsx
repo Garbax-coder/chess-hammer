@@ -730,7 +730,13 @@ export function PuzzleBoard({
     <>
       {progress && <span>{t.puzzleBoard.progress(progress.current, progress.total)}</span>}
       <span>{t.puzzleBoard.rating(puzzle.rating)}</span>
-      <span>{statusText}</span>
+      <span
+        className={
+          isDisplayThreefoldRepetition ? 'text-amber-600 dark:text-amber-400 font-semibold' : ''
+        }
+      >
+        {statusText}
+      </span>
       <span>{formatElapsed(elapsed)}</span>
     </>
   )
