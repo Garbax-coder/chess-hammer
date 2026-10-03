@@ -1,6 +1,12 @@
 import { Chess } from 'chess.js'
 import { parseUci } from '@/lib/uci'
 
+export function formatElapsed(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
+}
+
 /**
  * Genera il PGN completo di un puzzle: chess.js aggiunge da solo gli header
  * [FEN]/[SetUp] quando la partita non parte dalla posizione iniziale, quindi

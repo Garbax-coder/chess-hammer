@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { DailySessionSummary } from '@/components/daily-session-summary'
 import { DevToolsPanel } from '@/components/dev-tools-panel'
 import { EditableSessionName } from '@/components/editable-session-name'
 import { PuzzleBoard } from '@/components/puzzle-board'
@@ -29,6 +30,7 @@ import {
 } from '@/hooks/use-practice'
 import { useSessionPuzzles } from '@/hooks/use-session-history'
 import { useSoundEnabled } from '@/hooks/use-sound-enabled'
+import { entriesForDay, todayKey } from '@/lib/session-days'
 import {
   deriveSessionProgress,
   isFailedPuzzle,
@@ -74,6 +76,24 @@ export default function TrainPage() {
 
   const puzzleIds = useMemo(() => puzzles?.map((p) => p.puzzleId) ?? [], [puzzles])
   const { data: practiceAttemptsByPuzzle } = usePracticeAttempts(puzzleIds)
+
+  // order_index e' stabile tra i 3 giri (stesso pool, nuovi tentativi): dice
+  // la posizione del puzzle in pratica libera esattamente come in giro
+  // ufficiale, quindi si ricava dalla stessa lista invece di portarsela
+  // dietro in practiceSelection.
+  const practiceOrderIndex = practiceSelection
+    ? puzzles?.find((p) => p.sessionPuzzleId === practiceSelection.sessionPuzzleId)
+        ?.orderIndex
+    : undefined
+
+  // Riepilogo del giorno corrente, mostrato a fine quota/giro/sessione (vedi
+  // sotto): calcolato dagli stessi dati gia' in mano (puzzles), nessuna
+  // query in piu'.
+  const today = todayKey()
+  const todayEntries = useMemo(
+    () => entriesForDay(puzzles ?? [], today),
+    [puzzles, today],
+  )
 
   // Il risultato della mutation (il prossimo puzzle) viene tenuto qui
   // finche' l'utente non e' davvero pronto ad avanzare (handleAdvance):
@@ -331,6 +351,11 @@ export default function TrainPage() {
               isCompleting={recordPracticeAttempt.isPending}
               boardTheme={boardTheme}
               pieceSet={pieceSet}
+              progress={
+                practiceOrderIndex !== undefined
+                  ? { current: practiceOrderIndex, total: session.total_puzzles }
+                  : undefined
+              }
             />
           ) : (
             <PuzzleBoardSkeleton />
@@ -340,14 +365,20 @@ export default function TrainPage() {
             {loadingPuzzle && <PuzzleBoardSkeleton />}
 
             {outcome?.status === 'quota_reached' && (
-              <Card className="w-full max-w-sm">
+              <Card className="w-full max-w-md">
                 <CardHeader>
                   <CardTitle>{t.train.quotaTitle}</CardTitle>
                   <CardDescription>
                     {t.train.quotaDescription(outcome.round)}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex flex-col gap-4">
+                  <DailySessionSummary
+                    day={today}
+                    entries={todayEntries}
+                    boardTheme={boardTheme}
+                    showTitle={false}
+                  />
                   <Button asChild variant="outline" className="w-full">
                     <Link to="/dashboard">{t.train.backToDashboard}</Link>
                   </Button>
@@ -356,7 +387,7 @@ export default function TrainPage() {
             )}
 
             {outcome?.status === 'resting' && (
-              <Card className="w-full max-w-sm">
+              <Card className="w-full max-w-md">
                 <CardHeader>
                   <CardTitle>{t.train.restingTitle}</CardTitle>
                   <CardDescription>
@@ -366,32 +397,46 @@ export default function TrainPage() {
                     )}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() =>
-                      queryClient.invalidateQueries({
-                        queryKey: ['next-puzzle', session.id],
-                      })
-                    }
-                  >
-                    {t.train.checkAgain}
-                  </Button>
-                  <Button asChild variant="ghost" className="w-full">
-                    <Link to="/dashboard">{t.train.backToDashboard}</Link>
-                  </Button>
+                <CardContent className="flex flex-col gap-4">
+                  <DailySessionSummary
+                    day={today}
+                    entries={todayEntries}
+                    boardTheme={boardTheme}
+                    showTitle={false}
+                  />
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() =>
+                        queryClient.invalidateQueries({
+                          queryKey: ['next-puzzle', session.id],
+                        })
+                      }
+                    >
+                      {t.train.checkAgain}
+                    </Button>
+                    <Button asChild variant="ghost" className="w-full">
+                      <Link to="/dashboard">{t.train.backToDashboard}</Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}
 
             {outcome?.status === 'session_complete' && (
-              <Card className="w-full max-w-sm">
+              <Card className="w-full max-w-md">
                 <CardHeader>
                   <CardTitle>{t.train.sessionCompleteTitle}</CardTitle>
                   <CardDescription>{t.train.sessionCompleteDescription}</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex flex-col gap-4">
+                  <DailySessionSummary
+                    day={today}
+                    entries={todayEntries}
+                    boardTheme={boardTheme}
+                    showTitle={false}
+                  />
                   <Button asChild className="w-full">
                     <Link to="/dashboard">{t.train.backToDashboard}</Link>
                   </Button>
@@ -408,6 +453,17 @@ export default function TrainPage() {
                 isCompleting={recordAttempt.isPending}
                 boardTheme={boardTheme}
                 pieceSet={pieceSet}
+                progress={
+                  progress
+                    ? {
+                        current: Math.min(
+                          progress.attemptedThisRound + 1,
+                          progress.roundTargetSize,
+                        ),
+                        total: progress.roundTargetSize,
+                      }
+                    : undefined
+                }
               />
             )}
           </>
