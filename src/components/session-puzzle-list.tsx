@@ -328,31 +328,26 @@ export function SessionPuzzleList({
     return day ? puzzleIdsForDay(puzzles, day) : new Set<string>()
   }, [puzzles, canPractice])
 
-  // In pratica libera (canPractice) il puzzle attivo va sempre in cima alla
-  // lista, qualunque sia il suo order_index: sia arrivando da fuori (click
-  // su un quadratino della heatmap in dashboard) sia passando al successivo
-  // durante la pratica, l'utente lo deve vedere subito senza scorrere una
-  // lista lunga fino a 200 righe. Durante l'allenamento del giro corrente
-  // (canPractice false) l'ordine resta quello normale (piu' recenti in
-  // cima): il puzzle attivo e' sempre il piu' recente del pool, gia' in
-  // cima da solo.
-  const orderedPuzzles = useMemo(() => {
-    const reversed = [...puzzles].reverse()
-    if (!canPractice || !activeSessionPuzzleId) return reversed
-    const activeIndex = reversed.findIndex((p) => p.sessionPuzzleId === activeSessionPuzzleId)
-    if (activeIndex <= 0) return reversed
-    const [active] = reversed.splice(activeIndex, 1)
-    reversed.unshift(active)
-    return reversed
-  }, [puzzles, canPractice, activeSessionPuzzleId])
+  const orderedPuzzles = useMemo(() => [...puzzles].reverse(), [puzzles])
 
-  // Il puzzle attivo e' sempre il primo elemento qui sopra: basta riportare
-  // il riquadro in cima a se stesso, niente scrollIntoView (che su una
-  // pagina lunga puo' trascinare con se' anche lo scroll della pagina
-  // intera, non solo di questo riquadro).
+  // In pratica libera (canPractice), ogni volta che il puzzle attivo cambia
+  // la lista scorre fino a portarlo in cima alla propria area visibile,
+  // SENZA spostarlo dalla sua posizione naturale (order_index) nella lista:
+  // l'utente lo deve vedere senza scorrere a mano, ma la lista resta
+  // ordinata come sempre. Si imposta scrollTop direttamente sul contenitore
+  // (non scrollIntoView, che su una pagina lunga puo' trascinare con se'
+  // anche lo scroll della pagina intera, non solo di questo riquadro).
   useEffect(() => {
-    if (canPractice && listRef.current) listRef.current.scrollTop = 0
-  }, [activeSessionPuzzleId, canPractice])
+    if (!canPractice || !activeSessionPuzzleId || !listRef.current) return
+    const container = listRef.current
+    const row = container.querySelector<HTMLElement>(
+      `[data-session-puzzle-id="${activeSessionPuzzleId}"]`,
+    )
+    if (!row) return
+    const offset =
+      row.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop
+    container.scrollTop = offset
+  }, [activeSessionPuzzleId, canPractice, orderedPuzzles])
 
   return (
     <Card className="min-h-0 w-full flex-1 lg:w-64">
