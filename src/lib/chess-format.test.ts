@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { evalToWhitePercent, formatElapsed, formatScore, puzzlePgn } from './chess-format'
+import {
+  evalToWhitePercent,
+  formatElapsed,
+  formatScore,
+  puzzlePgn,
+  replayToChess,
+} from './chess-format'
+
+const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+// Scambio di cavalli avanti e indietro: dopo 4 mosse si torna alla posizione
+// di partenza (2a occorrenza), dopo 8 alla 3a — triplice ripetizione.
+const KNIGHT_SHUFFLE = ['b1c3', 'b8c6', 'c3b1', 'c6b8']
 
 describe('formatElapsed', () => {
   it('formats seconds as m:ss', () => {
@@ -25,6 +36,28 @@ describe('puzzlePgn', () => {
   it('stops silently at the first illegal move instead of throwing', () => {
     const fen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1'
     expect(() => puzzlePgn(fen, ['e2e4'])).not.toThrow()
+  })
+})
+
+describe('replayToChess', () => {
+  it('reaches the same position as replaying the moves directly', () => {
+    const game = replayToChess(START_FEN, ['e2e4', 'e7e5'])
+    expect(game.fen()).toBe(
+      'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
+    )
+  })
+
+  it('preserves position history, so isThreefoldRepetition becomes true after a 3rd occurrence', () => {
+    const afterOneShuffle = replayToChess(START_FEN, KNIGHT_SHUFFLE)
+    expect(afterOneShuffle.isThreefoldRepetition()).toBe(false) // 2nd occurrence only
+
+    const afterTwoShuffles = replayToChess(START_FEN, [...KNIGHT_SHUFFLE, ...KNIGHT_SHUFFLE])
+    expect(afterTwoShuffles.isThreefoldRepetition()).toBe(true) // 3rd occurrence
+  })
+
+  it('is false for a position reached only once (fresh Chess(fen) could never tell the difference)', () => {
+    const game = replayToChess(START_FEN, ['e2e4'])
+    expect(game.isThreefoldRepetition()).toBe(false)
   })
 })
 

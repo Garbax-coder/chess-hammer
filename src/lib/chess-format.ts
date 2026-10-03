@@ -8,6 +8,21 @@ export function formatElapsed(totalSeconds: number): string {
 }
 
 /**
+ * Chess() ottenuto rigiocando ogni mossa (UCI) a partire da startFen, non un
+ * Chess(fen) costruito direttamente sulla posizione finale: mantiene la
+ * cronologia delle posizioni attraversate, necessaria perche'
+ * game.isThreefoldRepetition() abbia qualcosa da contare (un Chess()
+ * caricato da un singolo FEN vede sempre e solo quella posizione).
+ */
+export function replayToChess(startFen: string, movesUci: string[]): Chess {
+  const game = new Chess(startFen)
+  for (const uci of movesUci) {
+    game.move(parseUci(uci))
+  }
+  return game
+}
+
+/**
  * Genera il PGN completo di un puzzle: chess.js aggiunge da solo gli header
  * [FEN]/[SetUp] quando la partita non parte dalla posizione iniziale, quindi
  * basta rigiocare le mosse della soluzione (UCI) sopra il FEN di partenza.

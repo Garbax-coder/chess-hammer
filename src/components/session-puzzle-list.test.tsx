@@ -66,6 +66,32 @@ describe('SessionPuzzleList', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('never reorders the list: puzzles always render most recent order_index first', () => {
+    const p1 = makePuzzleResult({ sessionPuzzleId: 'p1', orderIndex: 1 })
+    const p2 = makePuzzleResult({ sessionPuzzleId: 'p2', orderIndex: 2 })
+    const p3 = makePuzzleResult({ sessionPuzzleId: 'p3', orderIndex: 3 })
+
+    // L'attivo e' p1 (in fondo all'ordine normale): non deve saltare in
+    // cima alla lista, solo lo scroll porta il suo riquadro in vista (non
+    // verificabile in jsdom, che non ha un vero layout — vedi il test
+    // dedicato nel browser).
+    const { container } = render(
+      <SessionPuzzleList
+        puzzles={[p1, p2, p3]}
+        activeSessionPuzzleId="p1"
+        currentRound={1}
+        practiceAttemptsByPuzzle={new Map()}
+        canPractice
+        onSelectPuzzle={() => {}}
+      />,
+    )
+
+    const ids = [...container.querySelectorAll('[data-session-puzzle-id]')].map((el) =>
+      el.getAttribute('data-session-puzzle-id'),
+    )
+    expect(ids).toEqual(['p3', 'p2', 'p1'])
+  })
+
   it('shows the empty-state message when there are no puzzles', () => {
     render(
       <SessionPuzzleList

@@ -182,6 +182,7 @@ export interface Translations {
     progress: (current: number, total: number) => string
     rating: (rating: number) => string
     analysisMode: string
+    drawByRepetition: string
     reviewingMove: (ply: number) => string
     opponentMoving: string
     solved: string
@@ -583,6 +584,7 @@ export const it: Translations = {
     progress: (current, total) => `Puzzle ${current}/${total}`,
     rating: (rating) => `Rating ${rating}`,
     analysisMode: 'Modalità analisi — muovi liberamente',
+    drawByRepetition: 'Patta per triplice ripetizione',
     reviewingMove: (ply) => `Stai rivedendo la mossa ${ply}`,
     opponentMoving: "L'avversario muove…",
     solved: 'Risolto! 🎉',
@@ -1033,6 +1035,7 @@ export const en: Translations = {
     progress: (current, total) => `Puzzle ${current}/${total}`,
     rating: (rating) => `Rating ${rating}`,
     analysisMode: 'Analysis mode — move freely',
+    drawByRepetition: 'Draw by threefold repetition',
     reviewingMove: (ply) => `Reviewing move ${ply}`,
     opponentMoving: 'Opponent is moving…',
     solved: 'Solved! 🎉',

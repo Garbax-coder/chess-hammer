@@ -328,26 +328,26 @@ export function SessionPuzzleList({
     return day ? puzzleIdsForDay(puzzles, day) : new Set<string>()
   }, [puzzles, canPractice])
 
-  // Chi arriva da fuori (es. click su un quadratino della heatmap in
-  // dashboard) puo' selezionare un puzzle a meta' di una lista lunga anche
-  // 200 righe: la porta in vista automaticamente invece di lasciare
-  // l'utente a scorrere alla cieca per trovarla. Va fatto pero' UNA SOLA
-  // VOLTA per visita della pagina (il ref sotto), non ad ogni cambio di
-  // activeSessionPuzzleId: altrimenti anche il normale avanzamento da un
-  // puzzle al successivo durante l'allenamento ritriggerava lo scroll,
-  // e su mobile (dove la lista non ha un proprio riquadro scrollabile ma e'
-  // parte del flusso normale della pagina) questo faceva scorrere l'INTERA
-  // pagina lontano dalla scacchiera ad ogni "Puzzle successivo".
-  const hasAutoScrolledRef = useRef(false)
+  const orderedPuzzles = useMemo(() => [...puzzles].reverse(), [puzzles])
+
+  // In pratica libera (canPractice), ogni volta che il puzzle attivo cambia
+  // la lista scorre fino a portarlo in cima alla propria area visibile,
+  // SENZA spostarlo dalla sua posizione naturale (order_index) nella lista:
+  // l'utente lo deve vedere senza scorrere a mano, ma la lista resta
+  // ordinata come sempre. Si imposta scrollTop direttamente sul contenitore
+  // (non scrollIntoView, che su una pagina lunga puo' trascinare con se'
+  // anche lo scroll della pagina intera, non solo di questo riquadro).
   useEffect(() => {
-    if (!activeSessionPuzzleId || !listRef.current || hasAutoScrolledRef.current) return
-    const row = listRef.current.querySelector<HTMLElement>(
+    if (!canPractice || !activeSessionPuzzleId || !listRef.current) return
+    const container = listRef.current
+    const row = container.querySelector<HTMLElement>(
       `[data-session-puzzle-id="${activeSessionPuzzleId}"]`,
     )
     if (!row) return
-    row.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    hasAutoScrolledRef.current = true
-  }, [activeSessionPuzzleId, puzzles])
+    const offset =
+      row.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop
+    container.scrollTop = offset
+  }, [activeSessionPuzzleId, canPractice, orderedPuzzles])
 
   return (
     <Card className="min-h-0 w-full flex-1 lg:w-64">
@@ -370,7 +370,7 @@ export function SessionPuzzleList({
           {!isLoading && puzzles.length === 0 && (
             <p className="text-muted-foreground text-xs">{t.sessionPuzzleList.empty}</p>
           )}
-          {[...puzzles].reverse().map((result) => (
+          {orderedPuzzles.map((result) => (
             <PuzzleRow
               key={result.sessionPuzzleId}
               result={result}

@@ -14,7 +14,7 @@ import {
   DEFAULT_BOARD_THEME,
   type BoardThemeId,
 } from '@/lib/board-themes'
-import { evalToWhitePercent, formatElapsed } from '@/lib/chess-format'
+import { evalToWhitePercent, formatElapsed, replayToChess } from '@/lib/chess-format'
 import { useEngineSettings } from '@/lib/engine-settings'
 import { useTranslations } from '@/lib/language-context'
 import {
@@ -351,13 +351,14 @@ export function PuzzleBoard({
     [effectiveNodes, effectiveCurrentId],
   )
 
-  const replayFen = useMemo(() => {
-    const g = new Chess(puzzle.fen)
-    for (const node of timelinePath) {
-      g.move(parseUci(node.uci as string))
-    }
-    return g.fen()
-  }, [puzzle, timelinePath])
+  // replayToChess mantiene la cronologia delle posizioni (serve a
+  // game.isThreefoldRepetition() piu' sotto, vedi displayGame).
+  const replayGame = useMemo(
+    () => replayToChess(puzzle.fen, timelinePath.map((node) => node.uci as string)),
+    [puzzle, timelinePath],
+  )
+
+  const replayFen = useMemo(() => replayGame.fen(), [replayGame])
 
   const displayFen = isLive && effectiveWrongMove ? effectiveWrongMove.fen : replayFen
 
@@ -401,7 +402,13 @@ export function PuzzleBoard({
     ]
   }, [engineLines, engineSettings.showBestMoveArrow])
 
-  const displayGame = useMemo(() => new Chess(displayFen), [displayFen])
+  // replayGame ha la cronologia delle posizioni (serve a isThreefoldRepetition
+  // qui sotto); solo la mossa sbagliata dal vivo (un ramo a parte, mai
+  // nell'albero) resta un Chess() istantaneo da un FEN singolo.
+  const displayGame = useMemo(
+    () => (isLive && effectiveWrongMove ? new Chess(effectiveWrongMove.fen) : replayGame),
+    [isLive, effectiveWrongMove, replayGame],
+  )
   const displayTurn = displayGame.turn()
   // Su una posizione di matto Stockfish non ha mosse da cercare: non arriva
   // alcuna riga di analisi (vedi evalToWhitePercent/formatScore), quindi la
@@ -409,6 +416,10 @@ export function PuzzleBoard({
   // il matto. Va rilevato qui con chess.js, non dedotto da un punteggio che
   // semplicemente non arriva.
   const isDisplayCheckmate = displayGame.isCheckmate()
+  // A differenza dello scacco matto, una posizione ripetuta 3 volte non
+  // impedisce da sola altre mosse (sono ancora legali): va controllata a
+  // parte per terminare l'esplorazione in analisi, vedi attemptFreeMove.
+  const isDisplayThreefoldRepetition = displayGame.isThreefoldRepetition()
   const topLine = engineLines[0]
   const whitePercent = isDisplayCheckmate
     ? displayTurn === 'w'
@@ -524,6 +535,10 @@ export function PuzzleBoard({
     targetSquare: string,
     promotion?: PromotionPieceType,
   ): boolean {
+    // A differenza dello scacco matto (nessuna mossa legale, chess.js la
+    // blocca da solo), una posizione ripetuta 3 volte resta legale: va
+    // bloccata qui esplicitamente per terminare la partita in analisi.
+    if (isDisplayThreefoldRepetition) return false
     const game = new Chess(displayFen)
     if (!promotion && needsPromotion(game, sourceSquare, targetSquare)) {
       setSelection(null)
@@ -693,7 +708,9 @@ export function PuzzleBoard({
 
   const statusText = analysisEnabled
     ? isLive
-      ? t.puzzleBoard.analysisMode
+      ? isDisplayThreefoldRepetition
+        ? t.puzzleBoard.drawByRepetition
+        : t.puzzleBoard.analysisMode
       : t.puzzleBoard.reviewingMove(currentPly)
     : !isLive
       ? t.puzzleBoard.reviewingMove(currentPly)
@@ -713,41 +730,53 @@ export function PuzzleBoard({
     <>
       {progress && <span>{t.puzzleBoard.progress(progress.current, progress.total)}</span>}
       <span>{t.puzzleBoard.rating(puzzle.rating)}</span>
-      <span>{statusText}</span>
+      <span
+        className={
+          isDisplayThreefoldRepetition ? 'text-amber-600 dark:text-amber-400 font-semibold' : ''
+        }
+      >
+        {statusText}
+      </span>
       <span>{formatElapsed(elapsed)}</span>
     </>
   )
 
   const moveNavButtons = (
-    <>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon-sm"
-        disabled={effectiveCurrentId === ROOT_NODE_ID}
-        onClick={() => {
-          const parentId = effectiveNodes[effectiveCurrentId].parentId
-          if (parentId) navigateTo(parentId)
-        }}
-        aria-label={t.puzzleBoard.prevMove}
-      >
-        <ChevronLeft className="size-4" />
-      </Button>
-      <span className="text-muted-foreground w-16 text-center text-xs">{currentPly}</span>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon-sm"
-        disabled={isLive}
-        onClick={() => {
-          const childId = effectiveNodes[effectiveCurrentId].children[0]
-          if (childId) navigateTo(childId)
-        }}
-        aria-label={t.puzzleBoard.nextMove}
-      >
-        <ChevronRight className="size-4" />
-      </Button>
-    </>
+    <div className="flex w-full items-center gap-2">
+      <span className="text-muted-foreground w-6 shrink-0 text-center text-xs tabular-nums">
+        {currentPly}
+      </span>
+      <div className="min-w-0 flex-1">
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 w-full"
+          disabled={effectiveCurrentId === ROOT_NODE_ID}
+          onClick={() => {
+            const parentId = effectiveNodes[effectiveCurrentId].parentId
+            if (parentId) navigateTo(parentId)
+          }}
+          aria-label={t.puzzleBoard.prevMove}
+        >
+          <ChevronLeft className="size-4" />
+        </Button>
+      </div>
+      <div className="min-w-0 flex-1">
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 w-full"
+          disabled={isLive}
+          onClick={() => {
+            const childId = effectiveNodes[effectiveCurrentId].children[0]
+            if (childId) navigateTo(childId)
+          }}
+          aria-label={t.puzzleBoard.nextMove}
+        >
+          <ChevronRight className="size-4" />
+        </Button>
+      </div>
+    </div>
   )
 
   return (
@@ -897,7 +926,9 @@ export function PuzzleBoard({
           </div>
         )}
 
-        <div className="flex items-center gap-3 lg:hidden">{moveNavButtons}</div>
+        <div style={{ width: BOARD_SIZE }} className="lg:hidden">
+          {moveNavButtons}
+        </div>
 
         {/* Su mobile il bottone "puzzle successivo" si sposta qui, tra le
             frecce di navigazione e la card di analisi motore (su desktop
@@ -927,7 +958,7 @@ export function PuzzleBoard({
           {statusRow}
         </div>
 
-        <div className="hidden items-center gap-3 lg:flex">{moveNavButtons}</div>
+        <div className="hidden w-full lg:block">{moveNavButtons}</div>
 
         {pendingCompletion && (
           <div className="flex w-full flex-col gap-4">
