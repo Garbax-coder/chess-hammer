@@ -79,13 +79,9 @@ export default function SessionDetailPage() {
 
   function handlePracticeAdvance() {
     if (!selectedPuzzle) return
-    // Il sotto-switch "solo puzzle falliti" e' visibile solo con
-    // l'avanzamento automatico acceso: se e' spento lo si ignora anche se
-    // e' rimasto attivo da prima (vedi TrainPage per lo stesso schema).
-    const pool =
-      autoAdvance && onlyFailedPractice
-        ? puzzles.filter((p) => isFailedPuzzle(p, failedScope))
-        : puzzles
+    const pool = onlyFailedPractice
+      ? puzzles.filter((p) => isFailedPuzzle(p, failedScope))
+      : puzzles
     const currentIndex = pool.findIndex(
       (p) => p.sessionPuzzleId === selectedPuzzle.sessionPuzzleId,
     )
@@ -146,9 +142,8 @@ export default function SessionDetailPage() {
           </div>
 
           {/* Vedi TrainPage: ha senso solo in pratica (qui sempre il caso,
-              questa pagina e' solo pratica libera) e solo con avanzamento
-              automatico acceso. */}
-          {selectedPuzzle && autoAdvance && (
+              questa pagina e' solo pratica libera). */}
+          {selectedPuzzle && (
             <div className="flex flex-col gap-2 pl-1">
               <div className="flex items-center gap-2">
                 <Switch

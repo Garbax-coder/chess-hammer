@@ -178,14 +178,9 @@ export default function TrainPage() {
     // aspettare: il puzzle successivo si ricava subito dalla lista gia' in
     // mano (puzzles), quindi avanzare non deve aspettare handlePracticeAttempt.
     if (puzzles) {
-      // Il sotto-switch "solo puzzle falliti" e' visibile solo con
-      // l'avanzamento automatico acceso: se e' spento lo si ignora anche
-      // se e' rimasto attivo da prima, cosi' il comportamento segue
-      // esattamente cio' che l'utente vede in interfaccia.
-      const pool =
-        autoAdvance && onlyFailedPractice
-          ? puzzles.filter((p) => isFailedPuzzle(p, failedScope))
-          : puzzles
+      const pool = onlyFailedPractice
+        ? puzzles.filter((p) => isFailedPuzzle(p, failedScope))
+        : puzzles
       const currentIndex = pool.findIndex(
         (p) => p.sessionPuzzleId === practiceSelection.sessionPuzzleId,
       )
@@ -276,11 +271,10 @@ export default function TrainPage() {
             </Label>
           </div>
 
-          {/* Ha senso solo in pratica libera, e solo se l'avanzamento e'
-              automatico: con l'automatico spento non si "avanza" mai da
-              soli, e' sempre l'utente a scegliere il prossimo puzzle dalla
-              lista. */}
-          {practiceSelection && autoAdvance && (
+          {/* Ha senso solo in pratica libera: filtra anche la scelta del
+              "prossimo puzzle" quando l'avanzamento e' manuale (il bottone
+              "Puzzle successivo" c'e' comunque, solo non automatico). */}
+          {practiceSelection && (
             <div className="flex flex-col gap-2 pl-1">
               <div className="flex items-center gap-2">
                 <Switch
