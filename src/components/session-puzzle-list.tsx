@@ -1,5 +1,5 @@
 import { Check, Copy } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PuzzleMiniBoard } from '@/components/puzzle-mini-board'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -7,6 +7,7 @@ import type { BoardThemeId } from '@/lib/board-themes'
 import { puzzlePgn } from '@/lib/chess-format'
 import type { Translations } from '@/lib/i18n/translations'
 import { useTranslations } from '@/lib/language-context'
+import { lastAttemptDay, puzzleIdsForDay } from '@/lib/session-days'
 import type {
   PracticeAttempt,
   PuzzleAttempt,
@@ -112,6 +113,7 @@ function PracticeAttemptTags({
 interface PuzzleRowProps {
   result: SessionPuzzleResult
   isActive: boolean
+  isHighlighted: boolean
   currentRound: 1 | 2 | 3
   practiceAttempts: PracticeAttempt[] | undefined
   canPractice: boolean
@@ -123,6 +125,7 @@ interface PuzzleRowProps {
 function PuzzleRow({
   result,
   isActive,
+  isHighlighted,
   currentRound,
   practiceAttempts,
   canPractice,
@@ -142,7 +145,11 @@ function PuzzleRow({
   return (
     <div
       className={`flex w-full flex-col gap-1.5 rounded-md border px-2.5 py-2 transition-colors ${
-        isActive ? 'border-primary bg-primary/10' : 'border-border/60 bg-muted/40'
+        isActive
+          ? 'border-primary bg-primary/10'
+          : isHighlighted
+            ? 'border-sky-400/70 bg-sky-500/5'
+            : 'border-border/60 bg-muted/40'
       }`}
     >
       <button
@@ -184,6 +191,11 @@ function PuzzleRow({
               {result.rating}
             </span>
           </div>
+          {isHighlighted && !isActive && (
+            <span className="text-sky-600 dark:text-sky-400 self-start text-[0.6rem] font-medium">
+              {t.sessionPuzzleList.lastSessionBadge}
+            </span>
+          )}
           {lastAttempt && (
             <span className="text-muted-foreground text-[0.6rem]">
               {new Date(lastAttempt.attempted_at).toLocaleDateString(t.meta.locale)}
@@ -305,6 +317,17 @@ export function SessionPuzzleList({
   const t = useTranslations()
   const listRef = useRef<HTMLDivElement>(null)
 
+  // Evidenzia, solo in modalita' pratica libera (canPractice), i puzzle
+  // toccati nell'ultimo giorno di calendario in cui si e' allenato: aiuta a
+  // ritrovare "quelli di ieri" in una lista lunga fino a 200 righe. Non ha
+  // senso durante l'allenamento del giro corrente (canPractice false): li'
+  // l'evidenziazione si confonderebbe con lo stato "corrente" del puzzle.
+  const highlightedIds = useMemo(() => {
+    if (!canPractice) return new Set<string>()
+    const day = lastAttemptDay(puzzles)
+    return day ? puzzleIdsForDay(puzzles, day) : new Set<string>()
+  }, [puzzles, canPractice])
+
   // Chi arriva da fuori (es. click su un quadratino della heatmap in
   // dashboard) puo' selezionare un puzzle a meta' di una lista lunga anche
   // 200 righe: la porta in vista automaticamente invece di lasciare
@@ -352,6 +375,7 @@ export function SessionPuzzleList({
               key={result.sessionPuzzleId}
               result={result}
               isActive={result.sessionPuzzleId === activeSessionPuzzleId}
+              isHighlighted={highlightedIds.has(result.sessionPuzzleId)}
               currentRound={currentRound}
               practiceAttempts={practiceAttemptsByPuzzle.get(result.puzzleId)}
               canPractice={canPractice}

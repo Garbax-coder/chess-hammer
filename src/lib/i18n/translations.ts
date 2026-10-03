@@ -101,6 +101,7 @@ export interface Translations {
       openSession: string
       expandSession: string
       collapseSession: string
+      dayGroupTooltip: (date: string, count: number) => string
     }
   }
   newSession: {
@@ -143,6 +144,12 @@ export interface Translations {
     subtitle: (total: number, round: number, status: string) => string
     selectPrompt: string
   }
+  dailySummary: {
+    title: (date: string) => string
+    subtitle: (solved: number, failed: number, totalTime: string) => string
+    empty: string
+    backToSession: string
+  }
   sessionStatus: {
     in_progress: string
     completed: string
@@ -172,6 +179,7 @@ export interface Translations {
     backToDashboard: string
   }
   puzzleBoard: {
+    progress: (current: number, total: number) => string
     rating: (rating: number) => string
     analysisMode: string
     reviewingMove: (ply: number) => string
@@ -209,6 +217,7 @@ export interface Translations {
   sessionPuzzleList: {
     title: string
     quotaHint: string
+    lastSessionBadge: string
     empty: string
     roundResult: (round: number, solved: boolean, timeSeconds: number) => string
     roundTodo: (round: number) => string
@@ -401,6 +410,7 @@ export const it: Translations = {
       openSession: 'Apri sessione',
       expandSession: 'Espandi dettagli sessione',
       collapseSession: 'Comprimi dettagli sessione',
+      dayGroupTooltip: (date, count) => `${date} · ${count} puzzle`,
     },
   },
   newSession: {
@@ -531,6 +541,13 @@ export const it: Translations = {
     subtitle: (total, round, status) => `${total} puzzle · giro ${round}/3 · ${status}`,
     selectPrompt: 'Seleziona un puzzle dalla lista per rivederlo o risolverlo di nuovo.',
   },
+  dailySummary: {
+    title: (date) => `Riepilogo del ${date}`,
+    subtitle: (solved, failed, totalTime) =>
+      `${solved} risolti, ${failed} falliti · ${totalTime} totali`,
+    empty: 'Nessun tentativo in questo giorno.',
+    backToSession: 'Torna alla sessione',
+  },
   sessionStatus: {
     in_progress: 'In corso',
     completed: 'Completata',
@@ -563,6 +580,7 @@ export const it: Translations = {
     backToDashboard: 'Torna alla dashboard',
   },
   puzzleBoard: {
+    progress: (current, total) => `Puzzle ${current}/${total}`,
     rating: (rating) => `Rating ${rating}`,
     analysisMode: 'Modalità analisi — muovi liberamente',
     reviewingMove: (ply) => `Stai rivedendo la mossa ${ply}`,
@@ -599,6 +617,7 @@ export const it: Translations = {
   },
   sessionPuzzleList: {
     title: 'Puzzle della sessione',
+    lastSessionBadge: 'Ultimo allenamento',
     quotaHint: 'Quota di oggi completata: seleziona un puzzle per allenarti liberamente.',
     empty: 'Nessun puzzle ancora eseguito.',
     roundResult: (round, solved, timeSeconds) =>
@@ -841,6 +860,7 @@ export const en: Translations = {
       openSession: 'Open session',
       expandSession: 'Expand session details',
       collapseSession: 'Collapse session details',
+      dayGroupTooltip: (date, count) => `${date} · ${count} puzzles`,
     },
   },
   newSession: {
@@ -971,6 +991,13 @@ export const en: Translations = {
     subtitle: (total, round, status) => `${total} puzzles · round ${round}/3 · ${status}`,
     selectPrompt: 'Select a puzzle from the list to review it or solve it again.',
   },
+  dailySummary: {
+    title: (date) => `Summary for ${date}`,
+    subtitle: (solved, failed, totalTime) =>
+      `${solved} solved, ${failed} failed · ${totalTime} total`,
+    empty: 'No attempts on this day.',
+    backToSession: 'Back to session',
+  },
   sessionStatus: {
     in_progress: 'In progress',
     completed: 'Completed',
@@ -1003,6 +1030,7 @@ export const en: Translations = {
     backToDashboard: 'Back to dashboard',
   },
   puzzleBoard: {
+    progress: (current, total) => `Puzzle ${current}/${total}`,
     rating: (rating) => `Rating ${rating}`,
     analysisMode: 'Analysis mode — move freely',
     reviewingMove: (ply) => `Reviewing move ${ply}`,
@@ -1039,6 +1067,7 @@ export const en: Translations = {
   },
   sessionPuzzleList: {
     title: 'Session puzzles',
+    lastSessionBadge: 'Last session',
     quotaHint: "Today's quota completed: pick a puzzle to practice freely.",
     empty: 'No puzzle attempted yet.',
     roundResult: (round, solved, timeSeconds) =>

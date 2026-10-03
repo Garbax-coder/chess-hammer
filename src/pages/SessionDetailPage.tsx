@@ -218,6 +218,7 @@ export default function SessionDetailPage() {
               isCompleting={recordPracticeAttempt.isPending}
               boardTheme={boardTheme}
               pieceSet={pieceSet}
+              progress={{ current: selectedPuzzle.orderIndex, total: session.total_puzzles }}
             />
           ) : (
             <PuzzleBoardSkeleton />

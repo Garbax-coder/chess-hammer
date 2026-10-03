@@ -14,7 +14,7 @@ import {
   DEFAULT_BOARD_THEME,
   type BoardThemeId,
 } from '@/lib/board-themes'
-import { evalToWhitePercent } from '@/lib/chess-format'
+import { evalToWhitePercent, formatElapsed } from '@/lib/chess-format'
 import { useEngineSettings } from '@/lib/engine-settings'
 import { useTranslations } from '@/lib/language-context'
 import {
@@ -111,12 +111,6 @@ function playSoundForMove(move: { san: string; captured?: string }) {
   playMoveSound({ capture: !!move.captured, check, checkmate })
 }
 
-function formatElapsed(totalSeconds: number): string {
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
-}
-
 interface PendingCompletion {
   result: 'solved' | 'failed'
   timeSeconds: number
@@ -171,6 +165,12 @@ interface PuzzleBoardProps {
   isCompleting?: boolean
   boardTheme?: BoardThemeId
   pieceSet?: PieceSetId
+  // Posizione di questo puzzle nel pool della sessione (order_index) e
+  // totale puzzle della sessione: stessi numeri sia in giro ufficiale che in
+  // pratica libera, dato che order_index e' stabile tra i 3 giri. Opzionale:
+  // il componente e' usato anche altrove (es. onboarding) senza un contesto
+  // di sessione.
+  progress?: { current: number; total: number }
 }
 
 export function PuzzleBoard({
@@ -181,6 +181,7 @@ export function PuzzleBoard({
   isCompleting = false,
   boardTheme = DEFAULT_BOARD_THEME,
   pieceSet = DEFAULT_PIECE_SET,
+  progress,
 }: PuzzleBoardProps) {
   const t = useTranslations()
   const theme = useMemo(() => boardThemeById(boardTheme), [boardTheme])
@@ -710,6 +711,7 @@ export function PuzzleBoard({
   // aggancio diversi, cosi' le due versioni non possono disallinearsi.
   const statusRow = (
     <>
+      {progress && <span>{t.puzzleBoard.progress(progress.current, progress.total)}</span>}
       <span>{t.puzzleBoard.rating(puzzle.rating)}</span>
       <span>{statusText}</span>
       <span>{formatElapsed(elapsed)}</span>

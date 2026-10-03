@@ -97,6 +97,7 @@ function SessionRow({
               onSelectPuzzle={(sessionPuzzleId) =>
                 navigate(`/sessions/${session.id}?puzzle=${sessionPuzzleId}`)
               }
+              onSelectDay={(day) => navigate(`/sessions/${session.id}/day/${day}`)}
             />
           )}
         </div>

@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/protected-route'
+import DailySessionSummaryPage from '@/pages/DailySessionSummaryPage'
 import DashboardPage from '@/pages/DashboardPage'
 import FaqPage from '@/pages/FaqPage'
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
@@ -60,6 +61,14 @@ function App() {
         element={
           <ProtectedRoute>
             <SessionDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/sessions/:id/day/:date"
+        element={
+          <ProtectedRoute>
+            <DailySessionSummaryPage />
           </ProtectedRoute>
         }
       />

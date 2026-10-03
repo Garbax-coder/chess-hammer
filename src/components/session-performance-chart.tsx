@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react'
 import { PuzzleMiniBoard } from '@/components/puzzle-mini-board'
 import type { BoardThemeId } from '@/lib/board-themes'
 import { useTranslations } from '@/lib/language-context'
+import { dayGroupsForRound, dayKeyToLocalDate, type Round } from '@/lib/session-days'
 import type { SessionPuzzleResult } from '@/types/training'
 
-const ROUNDS = [1, 2, 3] as const
-type Round = (typeof ROUNDS)[number]
+const ROUNDS = [1, 2, 3] as const satisfies readonly Round[]
 
 // Larghezza di colonna e dimensioni cella FISSE (pixel reali, non
 // viewBox scalato): con sessioni fino a 200 puzzle il grafico deve poter
@@ -21,6 +21,11 @@ const CHART_MARGIN_TOP = 8
 const CHART_MARGIN_BOTTOM = 6
 const GAP_BETWEEN = 12
 const HEATMAP_TOP = CHART_HEIGHT + GAP_BETWEEN
+// Riquadro di raggruppamento giornaliero: leggermente piu' grande delle
+// celle che contiene, cosi' il bordo/sfondo resta visibile intorno a loro
+// invece di coincidere esattamente coi loro margini.
+const GROUP_PAD_X = 2
+const GROUP_PAD_Y = 2
 
 const ROUND_COLORS: Record<Round, string> = {
   1: 'var(--color-chart-1)',
@@ -41,14 +46,25 @@ export function SessionPerformanceChart({
   puzzles,
   boardTheme,
   onSelectPuzzle,
+  onSelectDay,
 }: {
   puzzles: SessionPuzzleResult[]
   boardTheme?: BoardThemeId
   onSelectPuzzle: (sessionPuzzleId: string) => void
+  // Click su un raggruppamento giornaliero (il contorno/sfondo condiviso da
+  // piu' celle, non su una cella stessa): apre il riepilogo di quel giorno.
+  onSelectDay: (day: string) => void
 }) {
   const t = useTranslations()
   const n = puzzles.length
   const [hover, setHover] = useState<HoverInfo | null>(null)
+
+  // Un raggruppamento per giro (riga) per ogni serie di celle consecutive
+  // attribuite allo stesso giorno di calendario: vedi dayGroupsForRound.
+  const dayGroupsByRound = useMemo(
+    () => ROUNDS.map((round) => ({ round, groups: dayGroupsForRound(puzzles, round) })),
+    [puzzles],
+  )
 
   const chart = useMemo(() => {
     const width = Math.max(n * COLUMN_WIDTH, COLUMN_WIDTH)
@@ -215,6 +231,44 @@ export function SessionPerformanceChart({
                   </title>
                 </circle>
               )),
+            )}
+
+            {dayGroupsByRound.map(({ round, groups }) =>
+              groups.map((group, groupIndex) => {
+                const x =
+                  chart.xForIndex(group.startIndex) - CELL_SIZE / 2 - GROUP_PAD_X
+                const width =
+                  chart.xForIndex(group.endIndex) -
+                  chart.xForIndex(group.startIndex) +
+                  CELL_SIZE +
+                  GROUP_PAD_X * 2
+                const y = HEATMAP_TOP + (round - 1) * ROW_HEIGHT - GROUP_PAD_Y
+                const height = CELL_SIZE + GROUP_PAD_Y * 2
+                const count = group.endIndex - group.startIndex + 1
+                return (
+                  <rect
+                    key={`group-${round}-${group.day}-${group.startIndex}`}
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={height}
+                    rx={5}
+                    fill="var(--color-muted-foreground)"
+                    fillOpacity={groupIndex % 2 === 0 ? 0.1 : 0.2}
+                    stroke="var(--color-border)"
+                    strokeWidth={1}
+                    className="cursor-pointer"
+                    onClick={() => onSelectDay(group.day)}
+                  >
+                    <title>
+                      {t.dashboard.puzzlePerformance.dayGroupTooltip(
+                        dayKeyToLocalDate(group.day).toLocaleDateString(t.meta.locale),
+                        count,
+                      )}
+                    </title>
+                  </rect>
+                )
+              }),
             )}
 
             {puzzles.map((p, i) =>
