@@ -11,8 +11,17 @@ export function signInWithEmail(email: string, password: string) {
   return supabase.auth.signInWithPassword({ email, password })
 }
 
-export function signUpWithEmail(email: string, password: string) {
-  return supabase.auth.signUp({ email, password })
+// legalVersion finisce nei metadata dell'utente auth e viene letto dal
+// trigger handle_new_user (supabase/migrations/0021_legal_acceptance.sql)
+// per salvare data e versione dell'accettazione: e' l'unico modo per
+// scriverlo in modo atomico, anche prima che esista una sessione
+// autenticata (richiesta di conferma email).
+export function signUpWithEmail(email: string, password: string, legalVersion: string) {
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { legal_version: legalVersion } },
+  })
 }
 
 export function signInWithOAuth(provider: OAuthProvider) {
@@ -57,8 +66,7 @@ export async function updatePassword(password: string) {
 }
 
 export type ChangePasswordResult =
-  | { ok: true }
-  | { ok: false; reason: 'wrong-current' | 'other'; message: string }
+  { ok: true } | { ok: false; reason: 'wrong-current' | 'other'; message: string }
 
 // updateUser da solo non chiede la password attuale: la si verifica prima con
 // un login, cosi' una sessione lasciata aperta non basta per cambiarla.
@@ -67,7 +75,10 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string,
 ): Promise<ChangePasswordResult> {
-  const verify = await supabase.auth.signInWithPassword({ email, password: currentPassword })
+  const verify = await supabase.auth.signInWithPassword({
+    email,
+    password: currentPassword,
+  })
   if (verify.error) {
     return {
       ok: false,

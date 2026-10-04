@@ -285,13 +285,34 @@ export interface Translations {
   }
   terms: {
     title: string
-    placeholder: string
-    backToProfile: string
+    back: string
   }
   privacy: {
     title: string
-    placeholder: string
-    backToProfile: string
+    back: string
+  }
+  footer: {
+    controller: (name: string, city: string) => string
+    privacyEmail: (email: string) => string
+    terms: string
+    privacy: string
+    credits: string
+  }
+  credits: {
+    title: string
+    intro: string
+    sourceNotice: string
+    engineTitle: string
+    engineBody: string
+    puzzlesTitle: string
+    puzzlesBody: string
+    piecesTitle: string
+    piecesBody: string
+    fontTitle: string
+    fontBody: string
+    librariesTitle: string
+    librariesIntro: string
+    back: string
   }
   appearance: {
     boardTheme: string
@@ -693,13 +714,39 @@ export const it: Translations = {
   },
   terms: {
     title: 'Termini e Condizioni',
-    placeholder: 'Il testo dei Termini e Condizioni sarà disponibile a breve.',
-    backToProfile: 'Torna al profilo',
+    back: 'Torna alla home',
   },
   privacy: {
     title: 'Privacy Policy',
-    placeholder: 'Il testo della Privacy Policy sarà disponibile a breve.',
-    backToProfile: 'Torna al profilo',
+    back: 'Torna alla home',
+  },
+  footer: {
+    controller: (name, city) => `${name} · ${city}, Italia`,
+    privacyEmail: (email) => `Privacy: ${email}`,
+    terms: 'Termini e Condizioni',
+    privacy: 'Privacy Policy',
+    credits: 'Crediti',
+  },
+  credits: {
+    title: 'Crediti e licenze',
+    intro:
+      'Chess Hammer è software libero: il codice di questo progetto, nella versione esattamente in esecuzione su questo sito, è pubblico sotto licenza GNU GPLv3 o successiva.',
+    sourceNotice: 'Codice sorgente su GitHub',
+    engineTitle: 'Motore scacchistico',
+    engineBody:
+      'Stockfish, di Tord Romstad, Marco Costalba, Joona Kiiski e i collaboratori del progetto. Licenza GPLv3. Eseguito nel browser come Web Worker; il codice sorgente della versione usata è pubblicato nello stesso repository di questo sito.',
+    puzzlesTitle: 'Database dei puzzle',
+    puzzlesBody:
+      'Puzzle tattici dal database pubblico di Lichess.org, rilasciato sotto licenza CC0 (dominio pubblico). Chess Hammer non è affiliato a Lichess.',
+    piecesTitle: 'Set di pezzi',
+    piecesBody:
+      'Dal progetto open source lichess-org/lila: Chessnut (Alexis Luengas, Apache-2.0), Fantasy e Spatial (Maurizio Monge, MIT).',
+    fontTitle: 'Font',
+    fontBody: 'Geist, di Vercel. Licenza SIL Open Font License 1.1.',
+    librariesTitle: 'Librerie',
+    librariesIntro:
+      'Elenco generato delle librerie open source usate in produzione e della loro licenza.',
+    back: 'Torna alla home',
   },
   appearance: {
     boardTheme: 'Stile scacchiera',
@@ -1144,13 +1191,38 @@ export const en: Translations = {
   },
   terms: {
     title: 'Terms and Conditions',
-    placeholder: 'The Terms and Conditions text will be available soon.',
-    backToProfile: 'Back to profile',
+    back: 'Back to home',
   },
   privacy: {
     title: 'Privacy Policy',
-    placeholder: 'The Privacy Policy text will be available soon.',
-    backToProfile: 'Back to profile',
+    back: 'Back to home',
+  },
+  footer: {
+    controller: (name, city) => `${name} · ${city}, Italy`,
+    privacyEmail: (email) => `Privacy: ${email}`,
+    terms: 'Terms and Conditions',
+    privacy: 'Privacy Policy',
+    credits: 'Credits',
+  },
+  credits: {
+    title: 'Credits and licenses',
+    intro:
+      'Chess Hammer is free software: the code for this project, in the exact version running on this site, is public under the GNU GPLv3 license or later.',
+    sourceNotice: 'Source code on GitHub',
+    engineTitle: 'Chess engine',
+    engineBody:
+      'Stockfish, by Tord Romstad, Marco Costalba, Joona Kiiski and the project contributors. GPLv3 license. Runs in the browser as a Web Worker; the source code for the version in use is published in this site’s own repository.',
+    puzzlesTitle: 'Puzzle database',
+    puzzlesBody:
+      'Tactical puzzles from the public Lichess.org database, released under the CC0 license (public domain). Chess Hammer is not affiliated with Lichess.',
+    piecesTitle: 'Piece sets',
+    piecesBody:
+      'From the open source lichess-org/lila project: Chessnut (Alexis Luengas, Apache-2.0), Fantasy and Spatial (Maurizio Monge, MIT).',
+    fontTitle: 'Font',
+    fontBody: 'Geist, by Vercel. SIL Open Font License 1.1.',
+    librariesTitle: 'Libraries',
+    librariesIntro: 'Generated list of the open source libraries used in production and their license.',
+    back: 'Back to home',
   },
   appearance: {
     boardTheme: 'Board style',

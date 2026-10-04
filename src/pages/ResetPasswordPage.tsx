@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { updatePassword } from '@/lib/auth'
 import { useAuth } from '@/lib/auth-context'
 import { useTranslations } from '@/lib/language-context'
+import { SiteFooter } from '@/components/site-footer'
 import { findPasswordProblem, MIN_PASSWORD_LENGTH } from '@/lib/password-policy'
 
 // Il link nell'email porta qui con una sessione di recupero: supabase-js la
@@ -54,7 +55,8 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center px-4">
+    <main className="flex min-h-svh flex-col">
+      <div className="flex flex-1 items-center justify-center px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">{t.resetPassword.title}</CardTitle>
@@ -112,6 +114,8 @@ export default function ResetPasswordPage() {
           )}
         </CardContent>
       </Card>
+      </div>
+      <SiteFooter />
     </main>
   )
 }

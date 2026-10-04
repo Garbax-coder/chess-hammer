@@ -1,6 +1,7 @@
 {
   "name": "chess-hammer",
   "private": true,
+  "license": "GPL-3.0-or-later",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -41,6 +42,7 @@
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
     "jsdom": "^29.1.1",
+    "license-checker-rseidelsohn": "^5.0.1",
     "oxlint": "^1.81.0",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
