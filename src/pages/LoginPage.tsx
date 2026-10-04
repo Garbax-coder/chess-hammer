@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { signInWithEmail } from '@/lib/auth'
 import { useTranslations } from '@/lib/language-context'
+import { SiteFooter } from '@/components/site-footer'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -37,7 +38,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center px-4">
+    <main className="flex min-h-svh flex-col">
+      <div className="flex flex-1 items-center justify-center px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">{t.login.title}</CardTitle>
@@ -99,6 +101,8 @@ export default function LoginPage() {
           </p>
         </CardContent>
       </Card>
+      </div>
+      <SiteFooter />
     </main>
   )
 }

@@ -155,6 +155,9 @@ export default function ProfilePage() {
           <Link to="/privacy" className="text-primary w-fit underline-offset-4 hover:underline">
             {t.profile.privacyLink}
           </Link>
+          <Link to="/credits" className="text-primary w-fit underline-offset-4 hover:underline">
+            {t.footer.credits}
+          </Link>
         </div>
       </section>
 

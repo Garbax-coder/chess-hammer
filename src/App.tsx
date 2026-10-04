@@ -7,6 +7,7 @@ import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
 import HomePage from '@/pages/HomePage'
 import LoginPage from '@/pages/LoginPage'
 import NewSessionPage from '@/pages/NewSessionPage'
+import CreditsPage from '@/pages/CreditsPage'
 import PrivacyPage from '@/pages/PrivacyPage'
 import ProfilePage from '@/pages/ProfilePage'
 import ResetPasswordPage from '@/pages/ResetPasswordPage'
@@ -90,6 +91,7 @@ function App() {
       />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/credits" element={<CreditsPage />} />
     </Routes>
   )
 }

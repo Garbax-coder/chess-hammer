@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { requestPasswordReset } from '@/lib/auth'
 import { useTranslations } from '@/lib/language-context'
+import { SiteFooter } from '@/components/site-footer'
 
 export default function ForgotPasswordPage() {
   const t = useTranslations()
@@ -35,7 +36,8 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center px-4">
+    <main className="flex min-h-svh flex-col">
+      <div className="flex flex-1 items-center justify-center px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">{t.forgotPassword.title}</CardTitle>
@@ -73,6 +75,8 @@ export default function ForgotPasswordPage() {
           </p>
         </CardContent>
       </Card>
+      </div>
+      <SiteFooter />
     </main>
   )
 }

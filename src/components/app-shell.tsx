@@ -1,6 +1,7 @@
 import { Moon, Sun, User as UserIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { SiteFooter } from '@/components/site-footer'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/hooks/use-theme'
 import { useAuth } from '@/lib/auth-context'
@@ -63,6 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <div className="flex flex-1 flex-col">{children}</div>
+      <SiteFooter />
     </div>
   )
 }
