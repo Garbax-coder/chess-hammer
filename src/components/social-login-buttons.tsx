@@ -9,7 +9,16 @@ const icons: Record<OAuthProvider, ComponentType<{ className?: string }>> = {
   facebook: GoogleIcon, // sostituito quando aggiungiamo il provider Facebook
 }
 
-export function SocialLoginButtons({ onError }: { onError: (message: string) => void }) {
+export function SocialLoginButtons({
+  onError,
+  disabled = false,
+}: {
+  onError: (message: string) => void
+  // Pagina di registrazione: il login Google crea un account al primo uso
+  // tanto quanto il form email/password, quindi va bloccato finche' non e'
+  // spuntato il checkbox di accettazione li' accanto (vedi SignupPage).
+  disabled?: boolean
+}) {
   const t = useTranslations()
 
   async function handleClick(provider: OAuthProvider) {
@@ -27,6 +36,7 @@ export function SocialLoginButtons({ onError }: { onError: (message: string) => 
             type="button"
             variant="outline"
             className="w-full"
+            disabled={disabled}
             onClick={() => handleClick(id)}
           >
             <Icon className="size-4" />

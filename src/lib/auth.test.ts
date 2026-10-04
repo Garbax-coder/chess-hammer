@@ -3,12 +3,27 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const signInWithPassword = vi.fn()
 const updateUser = vi.fn()
 const signOut = vi.fn()
+const signUp = vi.fn()
 
 vi.mock('@/lib/supabase', () => ({
-  supabase: { auth: { signInWithPassword, updateUser, signOut } },
+  supabase: { auth: { signInWithPassword, updateUser, signOut, signUp } },
 }))
 
-const { changePassword } = await import('./auth')
+const { changePassword, signUpWithEmail } = await import('./auth')
+
+describe('signUpWithEmail', () => {
+  it('passes the legal acceptance version as user metadata', async () => {
+    signUp.mockResolvedValue({ data: {}, error: null })
+
+    await signUpWithEmail('user@example.com', 'a long enough passphrase', '2026-10-04')
+
+    expect(signUp).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      password: 'a long enough passphrase',
+      options: { data: { legal_version: '2026-10-04' } },
+    })
+  })
+})
 
 describe('changePassword', () => {
   beforeEach(() => {
