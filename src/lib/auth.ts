@@ -7,8 +7,15 @@ export const oauthProviders: { id: OAuthProvider; label: string }[] = [
   // { id: 'facebook', label: 'Facebook' }, // in arrivo
 ]
 
-export function signInWithEmail(email: string, password: string) {
-  return supabase.auth.signInWithPassword({ email, password })
+// captchaToken e' richiesto solo se CAPTCHA e' abilitato lato Supabase
+// (Authentication -> Attack Protection): undefined quando il sito non ha
+// VITE_TURNSTILE_SITE_KEY configurata, vedi turnstile-widget.tsx.
+export function signInWithEmail(email: string, password: string, captchaToken?: string) {
+  return supabase.auth.signInWithPassword({
+    email,
+    password,
+    options: captchaToken ? { captchaToken } : undefined,
+  })
 }
 
 // legalVersion finisce nei metadata dell'utente auth e viene letto dal
@@ -16,11 +23,16 @@ export function signInWithEmail(email: string, password: string) {
 // per salvare data e versione dell'accettazione: e' l'unico modo per
 // scriverlo in modo atomico, anche prima che esista una sessione
 // autenticata (richiesta di conferma email).
-export function signUpWithEmail(email: string, password: string, legalVersion: string) {
+export function signUpWithEmail(
+  email: string,
+  password: string,
+  legalVersion: string,
+  captchaToken?: string,
+) {
   return supabase.auth.signUp({
     email,
     password,
-    options: { data: { legal_version: legalVersion } },
+    options: { data: { legal_version: legalVersion }, captchaToken },
   })
 }
 
@@ -48,9 +60,10 @@ export async function deleteOwnAccount() {
 
 // redirectTo deve essere tra i Redirect URLs consentiti in Supabase
 // (Authentication -> URL Configuration), altrimenti il link porta al Site URL.
-export function requestPasswordReset(email: string) {
+export function requestPasswordReset(email: string, captchaToken?: string) {
   return supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password`,
+    captchaToken,
   })
 }
 

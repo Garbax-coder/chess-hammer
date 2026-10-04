@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { SiteFooter } from '@/components/site-footer'
 import { SocialLoginButtons } from '@/components/social-login-buttons'
+import { captchaRequired, TurnstileWidget } from '@/components/turnstile-widget'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -76,25 +77,41 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [legalAccepted, setLegalAccepted] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
 
+  function resetCaptcha() {
+    // Un token Turnstile e' utilizzabile una sola volta: dopo un tentativo
+    // fallito va richiesto un nuovo token, non riusato quello scaduto.
+    setCaptchaToken(null)
+    setCaptchaResetKey((k) => k + 1)
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    if (!legalAccepted) return
+    if (!legalAccepted || (captchaRequired && !captchaToken)) return
     setSubmitting(true)
     const problem = await findPasswordProblem(password, email)
     if (problem) {
       setSubmitting(false)
       setError(t.passwordPolicy[problem])
+      resetCaptcha()
       return
     }
-    const { error } = await signUpWithEmail(email, password, SITE_LEGAL_VERSION)
+    const { error } = await signUpWithEmail(
+      email,
+      password,
+      SITE_LEGAL_VERSION,
+      captchaToken ?? undefined,
+    )
     setSubmitting(false)
     if (error) {
       setError(error.message)
+      resetCaptcha()
       return
     }
     setDone(true)
@@ -164,13 +181,18 @@ export default function SignupPage() {
                     </Label>
                   </div>
 
+                  <TurnstileWidget
+                    onVerify={setCaptchaToken}
+                    resetKey={captchaResetKey}
+                  />
+
                   {error && <p className="text-destructive text-sm">{error}</p>}
 
                   <Button
                     type="submit"
                     className="w-full"
                     loading={submitting}
-                    disabled={!legalAccepted}
+                    disabled={!legalAccepted || (captchaRequired && !captchaToken)}
                   >
                     {t.signup.submit}
                   </Button>
