@@ -4,12 +4,16 @@ const signInWithPassword = vi.fn()
 const updateUser = vi.fn()
 const signOut = vi.fn()
 const signUp = vi.fn()
+const resetPasswordForEmail = vi.fn()
 
 vi.mock('@/lib/supabase', () => ({
-  supabase: { auth: { signInWithPassword, updateUser, signOut, signUp } },
+  supabase: {
+    auth: { signInWithPassword, updateUser, signOut, signUp, resetPasswordForEmail },
+  },
 }))
 
-const { changePassword, signUpWithEmail } = await import('./auth')
+const { changePassword, requestPasswordReset, signInWithEmail, signUpWithEmail } =
+  await import('./auth')
 
 describe('signUpWithEmail', () => {
   it('passes the legal acceptance version as user metadata', async () => {
@@ -20,8 +24,57 @@ describe('signUpWithEmail', () => {
     expect(signUp).toHaveBeenCalledWith({
       email: 'user@example.com',
       password: 'a long enough passphrase',
-      options: { data: { legal_version: '2026-10-04' } },
+      options: { data: { legal_version: '2026-10-04' }, captchaToken: undefined },
     })
+  })
+
+  it('also passes a captcha token when given one', async () => {
+    signUp.mockResolvedValue({ data: {}, error: null })
+
+    await signUpWithEmail('user@example.com', 'a long enough passphrase', '2026-10-04', 'tok-1')
+
+    expect(signUp).toHaveBeenCalledWith(
+      expect.objectContaining({ options: expect.objectContaining({ captchaToken: 'tok-1' }) }),
+    )
+  })
+})
+
+describe('signInWithEmail', () => {
+  it('omits captcha options when no token is given (CAPTCHA not configured)', async () => {
+    signInWithPassword.mockResolvedValue({ data: {}, error: null })
+
+    await signInWithEmail('user@example.com', 'secret')
+
+    expect(signInWithPassword).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      password: 'secret',
+      options: undefined,
+    })
+  })
+
+  it('passes the captcha token when given one', async () => {
+    signInWithPassword.mockResolvedValue({ data: {}, error: null })
+
+    await signInWithEmail('user@example.com', 'secret', 'tok-2')
+
+    expect(signInWithPassword).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      password: 'secret',
+      options: { captchaToken: 'tok-2' },
+    })
+  })
+})
+
+describe('requestPasswordReset', () => {
+  it('passes the captcha token through to resetPasswordForEmail', async () => {
+    resetPasswordForEmail.mockResolvedValue({ data: {}, error: null })
+
+    await requestPasswordReset('user@example.com', 'tok-3')
+
+    expect(resetPasswordForEmail).toHaveBeenCalledWith(
+      'user@example.com',
+      expect.objectContaining({ captchaToken: 'tok-3' }),
+    )
   })
 })
 

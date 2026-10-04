@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { SiteFooter } from '@/components/site-footer'
 import { SocialLoginButtons } from '@/components/social-login-buttons'
+import { captchaRequired, TurnstileWidget } from '@/components/turnstile-widget'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -14,24 +16,28 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { signInWithEmail } from '@/lib/auth'
 import { useTranslations } from '@/lib/language-context'
-import { SiteFooter } from '@/components/site-footer'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const t = useTranslations()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    if (captchaRequired && !captchaToken) return
     setSubmitting(true)
-    const { error } = await signInWithEmail(email, password)
+    const { error } = await signInWithEmail(email, password, captchaToken ?? undefined)
     setSubmitting(false)
     if (error) {
       setError(error.message)
+      setCaptchaToken(null)
+      setCaptchaResetKey((k) => k + 1)
       return
     }
     navigate('/dashboard')
@@ -40,67 +46,74 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-svh flex-col">
       <div className="flex flex-1 items-center justify-center px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">{t.login.title}</CardTitle>
-          <CardDescription>{t.login.subtitle}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <SocialLoginButtons onError={setError} />
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl">{t.login.title}</CardTitle>
+            <CardDescription>{t.login.subtitle}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <SocialLoginButtons onError={setError} />
 
-          <div className="flex items-center gap-3">
-            <Separator className="flex-1" />
-            <span className="text-muted-foreground text-xs">{t.common.or}</span>
-            <Separator className="flex-1" />
-          </div>
-
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email">{t.common.email}</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-              />
+            <div className="flex items-center gap-3">
+              <Separator className="flex-1" />
+              <span className="text-muted-foreground text-xs">{t.common.or}</span>
+              <Separator className="flex-1" />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">{t.common.password}</Label>
-                <Link
-                  to="/forgot-password"
-                  className="text-muted-foreground hover:text-foreground text-xs underline underline-offset-4"
-                >
-                  {t.login.forgotPassword}
-                </Link>
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="email">{t.common.email}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                />
               </div>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-              />
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">{t.common.password}</Label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-muted-foreground hover:text-foreground text-xs underline underline-offset-4"
+                  >
+                    {t.login.forgotPassword}
+                  </Link>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+              </div>
 
-            {error && <p className="text-destructive text-sm">{error}</p>}
+              <TurnstileWidget onVerify={setCaptchaToken} resetKey={captchaResetKey} />
 
-            <Button type="submit" className="w-full" loading={submitting}>
-              {t.login.submit}
-            </Button>
-          </form>
+              {error && <p className="text-destructive text-sm">{error}</p>}
 
-          <p className="text-muted-foreground text-center text-sm">
-            {t.login.noAccount}{' '}
-            <Link to="/signup" className="text-foreground underline underline-offset-4">
-              {t.login.signup}
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
+              <Button
+                type="submit"
+                className="w-full"
+                loading={submitting}
+                disabled={captchaRequired && !captchaToken}
+              >
+                {t.login.submit}
+              </Button>
+            </form>
+
+            <p className="text-muted-foreground text-center text-sm">
+              {t.login.noAccount}{' '}
+              <Link to="/signup" className="text-foreground underline underline-offset-4">
+                {t.login.signup}
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
       </div>
       <SiteFooter />
     </main>
