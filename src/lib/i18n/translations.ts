@@ -740,7 +740,7 @@ export const it: Translations = {
       'Puzzle tattici dal database pubblico di Lichess.org, rilasciato sotto licenza CC0 (dominio pubblico). Chess Hammer non è affiliato a Lichess.',
     piecesTitle: 'Set di pezzi',
     piecesBody:
-      'Dal progetto open source lichess-org/lila: Chessnut (Alexis Luengas, Apache-2.0), Fantasy e Spatial (Maurizio Monge, MIT).',
+      'Dal progetto open source lichess-org/lila: Cburnett (Colin M.L. Burnett, GPLv2+), Merida (Armando Hernandez Marroquin, GPLv2+), Chessnut (Alexis Luengas, Apache-2.0), Fantasy e Spatial (Maurizio Monge, MIT).',
     fontTitle: 'Font',
     fontBody: 'Geist, di Vercel. Licenza SIL Open Font License 1.1.',
     librariesTitle: 'Librerie',
@@ -1217,7 +1217,7 @@ export const en: Translations = {
       'Tactical puzzles from the public Lichess.org database, released under the CC0 license (public domain). Chess Hammer is not affiliated with Lichess.',
     piecesTitle: 'Piece sets',
     piecesBody:
-      'From the open source lichess-org/lila project: Chessnut (Alexis Luengas, Apache-2.0), Fantasy and Spatial (Maurizio Monge, MIT).',
+      'From the open source lichess-org/lila project: Cburnett (Colin M.L. Burnett, GPLv2+), Merida (Armando Hernandez Marroquin, GPLv2+), Chessnut (Alexis Luengas, Apache-2.0), Fantasy and Spatial (Maurizio Monge, MIT).',
     fontTitle: 'Font',
     fontBody: 'Geist, by Vercel. SIL Open Font License 1.1.',
     librariesTitle: 'Libraries',

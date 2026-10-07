@@ -10,14 +10,15 @@ progetto.
 
 | Set | Autore | Licenza |
 |---|---|---|
+| cburnett | Colin M.L. Burnett | GPLv2+ |
+| merida | Armando Hernandez Marroquin | GPLv2+ |
 | chessnut | Alexis Luengas | Apache-2.0 |
 | fantasy | Maurizio Monge | MIT |
 | spatial | Maurizio Monge | MIT |
 
-I set cburnett (Colin M.L. Burnett) e merida (Armando Hernandez Marroquin),
-entrambi GPLv2+, sono stati rimossi (vedi
-`supabase/migrations/0020_remove_gpl_piece_sets.sql`) per restare liberi
-sulla licenza dei set di pezzi.
+cburnett e merida sono compatibili con la licenza GPLv3 dell'intero progetto
+(vedi [LICENSE](../../../LICENSE)): reintrodotti dopo essere stati rimossi
+temporaneamente durante la preparazione al lancio pubblico.
 
 I file SVG non sono modificati rispetto all'originale (solo racchiusi in un
 componente React che ne inietta il markup). Rigenerare con
