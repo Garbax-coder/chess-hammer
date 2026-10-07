@@ -330,15 +330,20 @@ export function SessionPuzzleList({
 
   const orderedPuzzles = useMemo(() => [...puzzles].reverse(), [puzzles])
 
-  // In pratica libera (canPractice), ogni volta che il puzzle attivo cambia
-  // la lista scorre fino a portarlo in cima alla propria area visibile,
-  // SENZA spostarlo dalla sua posizione naturale (order_index) nella lista:
-  // l'utente lo deve vedere senza scorrere a mano, ma la lista resta
-  // ordinata come sempre. Si imposta scrollTop direttamente sul contenitore
-  // (non scrollIntoView, che su una pagina lunga puo' trascinare con se'
-  // anche lo scroll della pagina intera, non solo di questo riquadro).
+  // Ogni volta che il puzzle attivo cambia la lista scorre fino a portarlo
+  // in cima alla propria area visibile, SENZA spostarlo dalla sua posizione
+  // naturale (order_index) nella lista: l'utente lo deve vedere senza
+  // scorrere a mano, ma la lista resta ordinata come sempre. Si imposta
+  // scrollTop direttamente sul contenitore (non scrollIntoView, che su una
+  // pagina lunga puo' trascinare con se' anche lo scroll della pagina
+  // intera, non solo di questo riquadro).
+  // Non e' gated da canPractice: durante il giro 1 funziona "per caso"
+  // perche' ogni nuovo puzzle viene inserito con l'order_index piu' alto
+  // (quindi finisce gia' in cima dopo il reverse), ma nei giri 2 e 3 si
+  // percorre lo stesso pool fisso dall'inizio, quindi senza questo scroll
+  // il puzzle attivo resta fuori vista mentre si avanza nella lista.
   useEffect(() => {
-    if (!canPractice || !activeSessionPuzzleId || !listRef.current) return
+    if (!activeSessionPuzzleId || !listRef.current) return
     const container = listRef.current
     const row = container.querySelector<HTMLElement>(
       `[data-session-puzzle-id="${activeSessionPuzzleId}"]`,
@@ -347,7 +352,7 @@ export function SessionPuzzleList({
     const offset =
       row.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop
     container.scrollTop = offset
-  }, [activeSessionPuzzleId, canPractice, orderedPuzzles])
+  }, [activeSessionPuzzleId, orderedPuzzles])
 
   return (
     <Card className="min-h-0 w-full flex-1 lg:w-64">
