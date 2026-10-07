@@ -92,6 +92,42 @@ describe('SessionPuzzleList', () => {
     expect(ids).toEqual(['p3', 'p2', 'p1'])
   })
 
+  it('scrolls the active puzzle into view even while training the current round (not practice mode)', () => {
+    // Regressione: lo scroll era gated da canPractice, quindi durante un
+    // giro attivo (canPractice=false) il puzzle corrente non veniva mai
+    // portato in vista nei giri 2/3, dove non c'e' l'inserimento di un
+    // nuovo puzzle in cima a "salvare" la situazione come nel giro 1.
+    // jsdom non ha un vero layout: si simula un riquadro con la riga
+    // attiva fuori vista (top 500) per far calcolare al componente un
+    // nuovo scrollTop diverso da zero.
+    const p1 = makePuzzleResult({ sessionPuzzleId: 'p1', orderIndex: 1 })
+    const p2 = makePuzzleResult({ sessionPuzzleId: 'p2', orderIndex: 2 })
+
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
+    HTMLElement.prototype.getBoundingClientRect = vi.fn(function (this: HTMLElement) {
+      const top = this.hasAttribute('data-session-puzzle-id') ? 500 : 0
+      return { top, left: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON() {} }
+    })
+
+    try {
+      const { container } = render(
+        <SessionPuzzleList
+          puzzles={[p1, p2]}
+          activeSessionPuzzleId="p1"
+          currentRound={2}
+          practiceAttemptsByPuzzle={new Map()}
+          canPractice={false}
+          onSelectPuzzle={() => {}}
+        />,
+      )
+
+      const scrollContainer = container.querySelector('.overflow-y-auto') as HTMLElement
+      expect(scrollContainer.scrollTop).toBe(500)
+    } finally {
+      HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect
+    }
+  })
+
   it('shows the empty-state message when there are no puzzles', () => {
     render(
       <SessionPuzzleList
