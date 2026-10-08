@@ -832,7 +832,15 @@ export function PuzzleBoard({
             }`}
             style={{ aspectRatio: '1 / 1' }}
           >
+            {/* key per puzzle: senza, react-chessboard anima il passaggio dalla
+                posizione finale del puzzle precedente a quella del nuovo come
+                fosse una mossa. Se cambia anche l'orientamento, la libreria
+                applica quell'animazione ai pezzi sbagliati (un pezzo del nuovo
+                puzzle scivola via e torna indietro prima della vera mossa
+                d'apertura). Un puzzle nuovo deve partire da una scacchiera
+                nuova, non da una "mossa" dal precedente. */}
             <Chessboard
+              key={puzzle.puzzle_id}
               options={{
                 position: displayFen,
                 onPieceDrop: handlePieceDrop,
