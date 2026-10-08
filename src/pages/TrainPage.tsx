@@ -214,6 +214,17 @@ export default function TrainPage() {
   const activeSessionPuzzleId =
     practiceSelection?.sessionPuzzleId ??
     (outcome?.status === 'next' ? outcome.data.sessionPuzzleId : null)
+  // Order_index piu' basso: da qui handlePracticeAdvance prosegue in ordine.
+  const practiceStart = puzzles?.[0]
+  const startPracticeButton = (
+    <Button
+      className="w-full"
+      disabled={!practiceStart}
+      onClick={() => practiceStart && handleSelectPuzzle(practiceStart)}
+    >
+      {t.train.startPractice}
+    </Button>
+  )
 
   return (
     <main className="flex w-full flex-1 flex-col items-center gap-4 px-4 py-8 lg:flex-row lg:items-start lg:justify-center lg:gap-3">
@@ -373,9 +384,12 @@ export default function TrainPage() {
                     boardTheme={boardTheme}
                     showTitle={false}
                   />
-                  <Button asChild variant="outline" className="w-full">
-                    <Link to="/dashboard">{t.train.backToDashboard}</Link>
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    {startPracticeButton}
+                    <Button asChild variant="outline" className="w-full">
+                      <Link to="/dashboard">{t.train.backToDashboard}</Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -399,6 +413,7 @@ export default function TrainPage() {
                     showTitle={false}
                   />
                   <div className="flex flex-col gap-2">
+                    {startPracticeButton}
                     <Button
                       variant="outline"
                       className="w-full"
@@ -431,9 +446,12 @@ export default function TrainPage() {
                     boardTheme={boardTheme}
                     showTitle={false}
                   />
-                  <Button asChild className="w-full">
-                    <Link to="/dashboard">{t.train.backToDashboard}</Link>
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    {startPracticeButton}
+                    <Button asChild variant="outline" className="w-full">
+                      <Link to="/dashboard">{t.train.backToDashboard}</Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}

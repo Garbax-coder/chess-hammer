@@ -160,6 +160,7 @@ export interface Translations {
     createSession: string
     practiceTitle: string
     practiceSubtitle: string
+    startPractice: string
     title: string
     roundInfo: (round: number, total: number) => string
     todayPuzzle: (current: number, target: number) => string
@@ -580,6 +581,7 @@ export const it: Translations = {
     createSession: 'Crea una sessione',
     practiceTitle: 'Pratica libera',
     practiceSubtitle: 'Il risultato non viene tracciato nella sessione ufficiale.',
+    startPractice: 'Continua in pratica libera',
     title: 'Allenamento',
     roundInfo: (round, total) => `Giro ${round} di 3 — ${total} puzzle totali`,
     todayPuzzle: (current, target) => `Puzzle di oggi: ${current}/${target}`,
@@ -1057,6 +1059,7 @@ export const en: Translations = {
     createSession: 'Create a session',
     practiceTitle: 'Free practice',
     practiceSubtitle: "The result isn't tracked in the official session.",
+    startPractice: 'Continue in free practice',
     title: 'Training',
     roundInfo: (round, total) => `Round ${round} of 3 — ${total} total puzzles`,
     todayPuzzle: (current, target) => `Today's puzzle: ${current}/${target}`,
