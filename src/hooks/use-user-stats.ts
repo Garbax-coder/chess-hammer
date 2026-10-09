@@ -3,6 +3,7 @@ import { useAuth } from '@/lib/auth-context'
 import type { BoardThemeId } from '@/lib/board-themes'
 import type { Language } from '@/lib/i18n/translations'
 import type { PieceSetId } from '@/lib/piece-sets'
+import type { FailedPuzzleScope } from '@/lib/session-progress'
 import { supabase } from '@/lib/supabase'
 
 interface UserStats {
@@ -13,6 +14,8 @@ interface UserStats {
   language: Language | null
   board_theme: BoardThemeId
   piece_set: PieceSetId
+  practice_only_failed: boolean
+  practice_failed_scope: FailedPuzzleScope
 }
 
 export function useUserStats() {
@@ -24,7 +27,7 @@ export function useUserStats() {
       const { data, error } = await supabase
         .from('user_stats')
         .select(
-          'current_elo, puzzles_solved, puzzles_failed, auto_advance, language, board_theme, piece_set',
+          'current_elo, puzzles_solved, puzzles_failed, auto_advance, language, board_theme, piece_set, practice_only_failed, practice_failed_scope',
         )
         .eq('user_id', user!.id)
         .single()
@@ -49,6 +52,37 @@ export function useUpdateAutoAdvance() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-stats', user?.id] })
+    },
+  })
+}
+
+type PracticeFilterPatch = Partial<
+  Pick<UserStats, 'practice_only_failed' | 'practice_failed_scope'>
+>
+
+// Ottimistico (a differenza degli altri): il filtro decide subito il puzzle
+// di "Continua in pratica libera", che non deve partire col valore vecchio
+// se viene premuto prima che la rilettura di user_stats sia tornata.
+export function useUpdatePracticeFilter() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const queryKey = ['user-stats', user?.id]
+
+  return useMutation({
+    mutationFn: async (patch: PracticeFilterPatch) => {
+      const { error } = await supabase
+        .from('user_stats')
+        .update(patch)
+        .eq('user_id', user!.id)
+      if (error) throw error
+    },
+    onMutate: (patch) => {
+      queryClient.setQueryData<UserStats>(queryKey, (current) =>
+        current ? { ...current, ...patch } : current,
+      )
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey })
     },
   })
 }

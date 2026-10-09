@@ -5,13 +5,14 @@ import { describe, expect, it, vi } from 'vitest'
 import { it as itTranslations } from '@/lib/i18n/translations'
 import type { NextPuzzleOutcome } from '@/lib/puzzle-engine'
 import { makeLichessPuzzle, makePuzzleResult, makeSession } from '@/test/fixtures'
-import type { SessionPuzzleResult } from '@/types/training'
+import type { PracticeAttempt, SessionPuzzleResult } from '@/types/training'
 import TrainPage from './TrainPage'
 
 // Stato letto dagli hook simulati qui sotto, impostato da ogni test.
 let outcome: NextPuzzleOutcome
 let sessionPuzzles: SessionPuzzleResult[]
-const session = makeSession()
+let practiceAttempts: Map<string, PracticeAttempt[]>
+const session = makeSession({ created_at: '2026-09-01T00:00:00Z' })
 
 vi.mock('@/lib/language-context', () => ({
   useTranslations: () => itTranslations,
@@ -30,7 +31,7 @@ vi.mock('@/hooks/use-practice', () => ({
     data: puzzleId ? makeLichessPuzzle({ puzzle_id: puzzleId }) : undefined,
   }),
   useRecordPracticeAttempt: () => ({ mutateAsync: async () => {}, isPending: false }),
-  usePracticeAttempts: () => ({ data: new Map() }),
+  usePracticeAttempts: () => ({ data: practiceAttempts }),
 }))
 vi.mock('@/hooks/use-session-history', () => ({
   useSessionPuzzles: () => ({ data: sessionPuzzles, isLoading: false }),
@@ -39,8 +40,15 @@ vi.mock('@/hooks/use-sound-enabled', () => ({
   useSoundEnabled: () => ({ enabled: false, setEnabled: () => {} }),
 }))
 vi.mock('@/hooks/use-user-stats', () => ({
-  useUserStats: () => ({ data: undefined }),
+  useUserStats: () => ({
+    data: {
+      auto_advance: true,
+      practice_only_failed: false,
+      practice_failed_scope: 'all',
+    },
+  }),
   useUpdateAutoAdvance: () => ({ mutate: () => {} }),
+  useUpdatePracticeFilter: () => ({ mutate: () => {} }),
 }))
 vi.mock(import('@/components/puzzle-board'), async (importOriginal) => ({
   ...(await importOriginal()),
@@ -67,6 +75,7 @@ describe('TrainPage summary screens', () => {
     ['session complete', { status: 'session_complete' }],
   ])('%s: "continue in free practice" opens the first puzzle of the session', (_, o) => {
     outcome = o
+    practiceAttempts = new Map()
     sessionPuzzles = [
       makePuzzleResult({ puzzleId: 'first', orderIndex: 1 }),
       makePuzzleResult({ puzzleId: 'second', orderIndex: 2 }),
@@ -81,8 +90,37 @@ describe('TrainPage summary screens', () => {
     ).toBeInTheDocument()
   })
 
+  it('resumes after the last puzzle concluded in free practice', () => {
+    outcome = { status: 'quota_reached', round: 1 }
+    sessionPuzzles = [
+      makePuzzleResult({ puzzleId: 'first', orderIndex: 1 }),
+      makePuzzleResult({ puzzleId: 'second', orderIndex: 2 }),
+    ]
+    practiceAttempts = new Map([
+      [
+        'first',
+        [
+          {
+            id: 'pa-1',
+            user_id: 'user-1',
+            puzzle_id: 'first',
+            result: 'solved',
+            time_seconds: 10,
+            attempted_at: '2026-09-05T00:00:00Z',
+          },
+        ],
+      ],
+    ])
+    renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: startLabel }))
+
+    expect(screen.getByTestId('puzzle-board')).toHaveTextContent('second')
+  })
+
   it('disables the button while the session has no puzzles to practice', () => {
     outcome = { status: 'quota_reached', round: 1 }
+    practiceAttempts = new Map()
     sessionPuzzles = []
     renderPage()
 

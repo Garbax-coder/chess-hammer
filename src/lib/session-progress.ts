@@ -7,6 +7,7 @@ import {
   startOfTodayIso,
 } from '@/lib/puzzle-engine'
 import type {
+  PracticeAttempt,
   SessionProgress,
   SessionPuzzleResult,
   TrainingSession,
@@ -74,4 +75,44 @@ export function isFailedPuzzle(
   }
   const lastRound = ([3, 2, 1] as const).find((r) => puzzle.attempts[r])
   return lastRound !== undefined && puzzle.attempts[lastRound]?.result === 'failed'
+}
+
+export interface PracticeFilter {
+  onlyFailed: boolean
+  scope: FailedPuzzleScope
+}
+
+export function practicePool(
+  puzzles: SessionPuzzleResult[],
+  filter: PracticeFilter,
+): SessionPuzzleResult[] {
+  return filter.onlyFailed
+    ? puzzles.filter((p) => isFailedPuzzle(p, filter.scope))
+    : puzzles
+}
+
+// Da dove riprende "Continua in pratica libera": il primo puzzle ammesso dal
+// filtro dopo l'ultimo concluso in pratica (per order_index), e da capo
+// dopo l'ultimo. I tentativi di pratica sono per puzzle, non per sessione:
+// quelli precedenti alla sessione (stesso puzzle pescato in una sessione
+// passata) non contano.
+export function practiceResumePuzzle(
+  puzzles: SessionPuzzleResult[],
+  practiceAttemptsByPuzzle: Map<string, PracticeAttempt[]>,
+  filter: PracticeFilter,
+  sessionCreatedAt: string,
+): SessionPuzzleResult | undefined {
+  const since = Date.parse(sessionCreatedAt)
+  let last: { puzzle: SessionPuzzleResult; at: number } | undefined
+  for (const puzzle of puzzles) {
+    for (const attempt of practiceAttemptsByPuzzle.get(puzzle.puzzleId) ?? []) {
+      const at = Date.parse(attempt.attempted_at)
+      if (at >= since && (!last || at > last.at)) last = { puzzle, at }
+    }
+  }
+
+  const pool = practicePool(puzzles, filter)
+  if (!last) return pool[0]
+  const lastOrderIndex = last.puzzle.orderIndex
+  return pool.find((p) => p.orderIndex > lastOrderIndex) ?? pool[0]
 }
