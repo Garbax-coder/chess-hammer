@@ -33,11 +33,16 @@ import { useSoundEnabled } from '@/hooks/use-sound-enabled'
 import { entriesForDay, todayKey } from '@/lib/session-days'
 import {
   deriveSessionProgress,
-  isFailedPuzzle,
-  type FailedPuzzleScope,
+  practicePool,
+  practiceResumePuzzle,
+  type PracticeFilter,
 } from '@/lib/session-progress'
 import { useTranslations } from '@/lib/language-context'
-import { useUpdateAutoAdvance, useUserStats } from '@/hooks/use-user-stats'
+import {
+  useUpdateAutoAdvance,
+  useUpdatePracticeFilter,
+  useUserStats,
+} from '@/hooks/use-user-stats'
 import type { NextPuzzleOutcome } from '@/lib/puzzle-engine'
 import type { SessionPuzzleResult } from '@/types/training'
 
@@ -66,13 +71,11 @@ export default function TrainPage() {
   } | null>(null)
   const { data: practicePuzzle } = usePuzzleById(practiceSelection?.puzzleId)
 
-  // Filtro di avanzamento per la pratica libera: attivabile solo con
-  // l'avanzamento automatico acceso (altrimenti il sotto-switch resta
-  // nascosto, vedi sotto), quindi qui possono restare valorizzati anche
-  // quando non visibili/applicati — handlePracticeAdvance li ignora se
-  // autoAdvance e' spento.
-  const [onlyFailedPractice, setOnlyFailedPractice] = useState(false)
-  const [failedScope, setFailedScope] = useState<FailedPuzzleScope>('all')
+  const updatePracticeFilter = useUpdatePracticeFilter()
+  const practiceFilter: PracticeFilter = {
+    onlyFailed: stats?.practice_only_failed ?? false,
+    scope: stats?.practice_failed_scope ?? 'all',
+  }
 
   const puzzleIds = useMemo(() => puzzles?.map((p) => p.puzzleId) ?? [], [puzzles])
   const { data: practiceAttemptsByPuzzle } = usePracticeAttempts(puzzleIds)
@@ -178,9 +181,7 @@ export default function TrainPage() {
     // aspettare: il puzzle successivo si ricava subito dalla lista gia' in
     // mano (puzzles), quindi avanzare non deve aspettare handlePracticeAttempt.
     if (puzzles) {
-      const pool = onlyFailedPractice
-        ? puzzles.filter((p) => isFailedPuzzle(p, failedScope))
-        : puzzles
+      const pool = practicePool(puzzles, practiceFilter)
       const currentIndex = pool.findIndex(
         (p) => p.sessionPuzzleId === practiceSelection.sessionPuzzleId,
       )
@@ -214,8 +215,17 @@ export default function TrainPage() {
   const activeSessionPuzzleId =
     practiceSelection?.sessionPuzzleId ??
     (outcome?.status === 'next' ? outcome.data.sessionPuzzleId : null)
-  // Order_index piu' basso: da qui handlePracticeAdvance prosegue in ordine.
-  const practiceStart = puzzles?.[0]
+  // Solo a dati pronti: con i tentativi di pratica o il filtro salvato non
+  // ancora arrivati partirebbe dal primo puzzle invece di riprendere.
+  const practiceStart =
+    puzzles && practiceAttemptsByPuzzle && stats
+      ? practiceResumePuzzle(
+          puzzles,
+          practiceAttemptsByPuzzle,
+          practiceFilter,
+          session.created_at,
+        )
+      : undefined
   const startPracticeButton = (
     <Button
       className="w-full"
@@ -282,16 +292,18 @@ export default function TrainPage() {
             </Label>
           </div>
 
-          {/* Ha senso solo in pratica libera: filtra anche la scelta del
-              "prossimo puzzle" quando l'avanzamento e' manuale (il bottone
-              "Puzzle successivo" c'e' comunque, solo non automatico). */}
-          {practiceSelection && (
+          {/* Solo quando la pratica libera e' disponibile: decide sia il
+              "Puzzle successivo" in pratica sia da dove riprende "Continua in
+              pratica libera" nelle schermate di riepilogo. */}
+          {(practiceSelection || canPractice) && (
             <div className="flex flex-col gap-2 pl-1">
               <div className="flex items-center gap-2">
                 <Switch
                   id="only-failed-practice"
-                  checked={onlyFailedPractice}
-                  onCheckedChange={setOnlyFailedPractice}
+                  checked={practiceFilter.onlyFailed}
+                  onCheckedChange={(checked) =>
+                    updatePracticeFilter.mutate({ practice_only_failed: checked })
+                  }
                 />
                 <Label
                   htmlFor="only-failed-practice"
@@ -301,16 +313,18 @@ export default function TrainPage() {
                 </Label>
               </div>
 
-              {onlyFailedPractice && (
+              {practiceFilter.onlyFailed && (
                 <div className="flex gap-1 pl-9">
                   {(['all', 'lastRound'] as const).map((scope) => (
                     <button
                       key={scope}
                       type="button"
-                      onClick={() => setFailedScope(scope)}
-                      aria-pressed={failedScope === scope}
+                      onClick={() =>
+                        updatePracticeFilter.mutate({ practice_failed_scope: scope })
+                      }
+                      aria-pressed={practiceFilter.scope === scope}
                       className={`rounded-md px-2 py-1 text-xs font-medium transition-colors ${
-                        failedScope === scope
+                        practiceFilter.scope === scope
                           ? 'bg-primary/10 text-primary'
                           : 'text-muted-foreground hover:bg-muted'
                       }`}

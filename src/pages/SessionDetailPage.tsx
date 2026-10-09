@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { EditableSessionName } from '@/components/editable-session-name'
 import { PuzzleBoard } from '@/components/puzzle-board'
@@ -14,9 +14,13 @@ import {
 } from '@/hooks/use-practice'
 import { useSessionDetail } from '@/hooks/use-session-history'
 import { useSoundEnabled } from '@/hooks/use-sound-enabled'
-import { useUpdateAutoAdvance, useUserStats } from '@/hooks/use-user-stats'
+import {
+  useUpdateAutoAdvance,
+  useUpdatePracticeFilter,
+  useUserStats,
+} from '@/hooks/use-user-stats'
 import { useTranslations } from '@/lib/language-context'
-import { isFailedPuzzle, type FailedPuzzleScope } from '@/lib/session-progress'
+import { practicePool, type PracticeFilter } from '@/lib/session-progress'
 
 // Stessa modalita' "pratica libera" di TrainPage (PuzzleBoard + tentativi
 // che non toccano la sessione/ELO ufficiali), ma qui utilizzabile per
@@ -33,10 +37,12 @@ export default function SessionDetailPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const recordPracticeAttempt = useRecordPracticeAttempt()
 
-  // Stesso filtro di avanzamento di TrainPage (vedi li' per il motivo):
-  // attivo solo quando l'avanzamento automatico e' acceso.
-  const [onlyFailedPractice, setOnlyFailedPractice] = useState(false)
-  const [failedScope, setFailedScope] = useState<FailedPuzzleScope>('all')
+  // Stesso filtro salvato di TrainPage.
+  const updatePracticeFilter = useUpdatePracticeFilter()
+  const practiceFilter: PracticeFilter = {
+    onlyFailed: stats?.practice_only_failed ?? false,
+    scope: stats?.practice_failed_scope ?? 'all',
+  }
 
   const selectedSessionPuzzleId = searchParams.get('puzzle')
   const selectedPuzzle = data?.puzzles.find(
@@ -79,9 +85,7 @@ export default function SessionDetailPage() {
 
   function handlePracticeAdvance() {
     if (!selectedPuzzle) return
-    const pool = onlyFailedPractice
-      ? puzzles.filter((p) => isFailedPuzzle(p, failedScope))
-      : puzzles
+    const pool = practicePool(puzzles, practiceFilter)
     const currentIndex = pool.findIndex(
       (p) => p.sessionPuzzleId === selectedPuzzle.sessionPuzzleId,
     )
@@ -148,8 +152,10 @@ export default function SessionDetailPage() {
               <div className="flex items-center gap-2">
                 <Switch
                   id="only-failed-practice"
-                  checked={onlyFailedPractice}
-                  onCheckedChange={setOnlyFailedPractice}
+                  checked={practiceFilter.onlyFailed}
+                  onCheckedChange={(checked) =>
+                    updatePracticeFilter.mutate({ practice_only_failed: checked })
+                  }
                 />
                 <Label
                   htmlFor="only-failed-practice"
@@ -159,16 +165,18 @@ export default function SessionDetailPage() {
                 </Label>
               </div>
 
-              {onlyFailedPractice && (
+              {practiceFilter.onlyFailed && (
                 <div className="flex gap-1 pl-9">
                   {(['all', 'lastRound'] as const).map((scope) => (
                     <button
                       key={scope}
                       type="button"
-                      onClick={() => setFailedScope(scope)}
-                      aria-pressed={failedScope === scope}
+                      onClick={() =>
+                        updatePracticeFilter.mutate({ practice_failed_scope: scope })
+                      }
+                      aria-pressed={practiceFilter.scope === scope}
                       className={`rounded-md px-2 py-1 text-xs font-medium transition-colors ${
-                        failedScope === scope
+                        practiceFilter.scope === scope
                           ? 'bg-primary/10 text-primary'
                           : 'text-muted-foreground hover:bg-muted'
                       }`}
