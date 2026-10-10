@@ -64,7 +64,7 @@ export const fr: Translations = {
     submit: 'S’inscrire',
     haveAccount: 'Vous avez déjà un compte ?',
     login: 'Se connecter',
-    legalBefore: 'J’ai au moins 14 ans et j’accepte les',
+    legalBefore: (minAge) => `J’ai au moins ${minAge} ans et j’accepte les`,
     legalAnd: 'et la',
     legalAfter: '.',
   },
@@ -392,10 +392,6 @@ export const fr: Translations = {
   privacy: {
     title: 'Politique de confidentialité',
     back: 'Retour à l’accueil',
-  },
-  legal: {
-    translationNotice:
-      'Ce document est disponible en italien et en anglais. Voici la version anglaise.',
   },
   footer: {
     controller: (name, city) => `${name} · ${city}, Italie`,

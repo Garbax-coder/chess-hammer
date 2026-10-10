@@ -1,3 +1,4 @@
+import type { Language } from '@/lib/i18n/translations'
 import { clearSnapshots } from '@/lib/session-puzzles-snapshot'
 import { supabase } from '@/lib/supabase'
 
@@ -28,13 +29,21 @@ export function signUpWithEmail(
   email: string,
   password: string,
   legalVersion: string,
+  language: Language,
   captchaToken?: string,
 ) {
   return supabase.auth.signUp({
     email,
     password,
-    options: { data: { legal_version: legalVersion }, captchaToken },
+    options: { data: { legal_version: legalVersion, language }, captchaToken },
   })
+}
+
+// Le email di Supabase Auth (conferma, recupero password, cambio email)
+// scelgono la lingua da user_metadata.language: vedi
+// supabase/email-templates/README.md.
+export function saveEmailLanguage(language: Language) {
+  return supabase.auth.updateUser({ data: { language } })
 }
 
 export function signInWithOAuth(provider: OAuthProvider) {

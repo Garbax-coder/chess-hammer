@@ -9,6 +9,7 @@ import {
 import { useLocation } from 'react-router-dom'
 import { marketingPageForPath } from '@/lib/marketing'
 import { useUpdateLanguage, useUserStats } from '@/hooks/use-user-stats'
+import { saveEmailLanguage } from '@/lib/auth'
 import { useAuth } from '@/lib/auth-context'
 import { detectBrowserLanguage } from '@/lib/i18n/detect-language'
 import { isLanguageLoaded, loadLanguage } from '@/lib/i18n/load-language'
@@ -48,6 +49,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       cancelled = true
     }
   }, [stats?.language, userOverride])
+
+  // Le email di Supabase Auth (recupero password, cambio email) scelgono la
+  // lingua dai metadati dell'account: si tengono allineati a quella dell'app,
+  // una volta note le preferenze salvate (altrimenti si scriverebbe prima la
+  // lingua del browser e subito dopo quella salvata).
+  const emailLanguage = userOverride ? language : (stats?.language ?? language)
+  const savedEmailLanguage = user?.user_metadata?.language as string | undefined
+  useEffect(() => {
+    if (!user || !stats || savedEmailLanguage === emailLanguage) return
+    void saveEmailLanguage(emailLanguage)
+  }, [user, stats, savedEmailLanguage, emailLanguage])
 
   function setLanguage(lang: Language) {
     setUserOverride(true)

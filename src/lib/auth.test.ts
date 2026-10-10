@@ -37,22 +37,38 @@ describe('signUpWithEmail', () => {
   it('passes the legal acceptance version as user metadata', async () => {
     signUp.mockResolvedValue({ data: {}, error: null })
 
-    await signUpWithEmail('user@example.com', 'a long enough passphrase', '2026-10-04')
+    await signUpWithEmail(
+      'user@example.com',
+      'a long enough passphrase',
+      '2026-10-04',
+      'fr',
+    )
 
     expect(signUp).toHaveBeenCalledWith({
       email: 'user@example.com',
       password: 'a long enough passphrase',
-      options: { data: { legal_version: '2026-10-04' }, captchaToken: undefined },
+      options: {
+        data: { legal_version: '2026-10-04', language: 'fr' },
+        captchaToken: undefined,
+      },
     })
   })
 
   it('also passes a captcha token when given one', async () => {
     signUp.mockResolvedValue({ data: {}, error: null })
 
-    await signUpWithEmail('user@example.com', 'a long enough passphrase', '2026-10-04', 'tok-1')
+    await signUpWithEmail(
+      'user@example.com',
+      'a long enough passphrase',
+      '2026-10-04',
+      'it',
+      'tok-1',
+    )
 
     expect(signUp).toHaveBeenCalledWith(
-      expect.objectContaining({ options: expect.objectContaining({ captchaToken: 'tok-1' }) }),
+      expect.objectContaining({
+        options: expect.objectContaining({ captchaToken: 'tok-1' }),
+      }),
     )
   })
 })

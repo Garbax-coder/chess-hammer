@@ -1,21 +1,33 @@
 # Template email di Supabase Auth
 
-Ogni email è bilingue (italiano sopra, inglese sotto), così funziona per tutti senza
-dover conoscere la lingua dell'utente. I file sono solo la sorgente: Supabase **non**
-li legge dal repo, vanno incollati a mano nel pannello.
+Ogni email è nella lingua dell'utente (italiano, inglese, francese, spagnolo o
+tedesco), letta da `user_metadata.language` (`{{ .Data.language }}`): l'app la
+salva alla registrazione e la aggiorna quando l'utente cambia lingua. Se manca
+(account creati prima), il corpo è bilingue italiano + inglese e l'oggetto in
+italiano. Supabase accetta oggetti di al massimo 255 caratteri: il generatore
+si ferma con un errore se un oggetto li supera.
+
+I file si generano con `node scripts/build-email-templates.mjs`: i testi vanno
+modificati lì, non negli HTML. Supabase **non** li legge dal repo, vanno
+incollati a mano nel pannello.
 
 Dashboard → Authentication → Emails → Templates (o "Email Templates"):
 
-| Template Supabase       | Oggetto (Subject)                                    | File                  |
-| ----------------------- | ---------------------------------------------------- | --------------------- |
-| Confirm signup          | `Conferma la tua email · Confirm your email`         | `confirm-signup.html` |
-| Reset password          | `Reimposta la password · Reset your password`        | `reset-password.html` |
-| Change email address    | `Conferma il nuovo indirizzo email · Confirm your new email address` | `change-email.html` |
+| Template Supabase    | Subject (incolla il contenuto del file)  | Corpo (Message body)  |
+| -------------------- | ---------------------------------------- | --------------------- |
+| Confirm signup       | `confirm-signup.subject.txt`             | `confirm-signup.html` |
+| Reset password       | `reset-password.subject.txt`             | `reset-password.html` |
+| Change email address | `change-email.subject.txt`               | `change-email.html`   |
 
-Per ciascuno: cambia il Subject, sostituisci tutto il corpo con il contenuto del file, Save.
+Per ciascuno: sostituisci Subject e corpo, Save.
 Magic link, Invite user e Reauthentication non sono usati dall'app: lasciali predefiniti.
 
-Variabili usate: `{{ .ConfirmationURL }}`, `{{ .Email }}`, `{{ .NewEmail }}`.
+Dopo averli salvati, prova una registrazione con un indirizzo `+prova` e una
+lingua diversa dall'italiano. Se l'oggetto arriva con le parentesi graffe
+(`{{ $lang := ...`), Supabase non interpreta le condizioni nell'oggetto: usa
+allora un oggetto fisso, ad es. `Chess Hammer · Conferma email / Confirm email`.
+
+Variabili usate: `{{ .ConfirmationURL }}`, `{{ .Email }}`, `{{ .NewEmail }}`, `{{ .Data.language }}`.
 
 Con Resend tieni **spento** il click tracking del dominio: riscriverebbe i link di
 conferma e li romperebbe.

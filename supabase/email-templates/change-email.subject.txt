@@ -1,0 +1,1 @@
+{{$l := or .Data.language ""}}{{if eq $l "en"}}Confirm your new email{{else if eq $l "fr"}}Confirmez le nouvel e-mail{{else if eq $l "es"}}Confirma tu nuevo correo{{else if eq $l "de"}}Bestätige deine neue E-Mail{{else}}Conferma la nuova email{{end}}
