@@ -1,101 +1,65 @@
+import { lazy, Suspense, type ReactNode } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/protected-route'
 import { useApplyAppStyle } from '@/hooks/use-app-style'
-import DailySessionSummaryPage from '@/pages/DailySessionSummaryPage'
-import DashboardPage from '@/pages/DashboardPage'
-import FaqPage from '@/pages/FaqPage'
-import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
-import HomePage from '@/pages/HomePage'
-import LoginPage from '@/pages/LoginPage'
-import NewSessionPage from '@/pages/NewSessionPage'
-import CreditsPage from '@/pages/CreditsPage'
-import PrivacyPage from '@/pages/PrivacyPage'
-import ProfilePage from '@/pages/ProfilePage'
-import ResetPasswordPage from '@/pages/ResetPasswordPage'
-import SessionDetailPage from '@/pages/SessionDetailPage'
-import SessionsHistoryPage from '@/pages/SessionsHistoryPage'
-import SignupPage from '@/pages/SignupPage'
-import TermsPage from '@/pages/TermsPage'
-import TrainPage from '@/pages/TrainPage'
+import { MARKETING_PATHS } from '@/lib/marketing'
+import GuidePage from '@/pages/GuidePage'
+import LandingPage from '@/pages/LandingPage'
+
+// Le pagine pubbliche (home e guida) stanno nel pacchetto iniziale e vengono
+// pre-generate in HTML; il resto dell'app si scarica solo quando serve, cosi'
+// chi arriva da un motore di ricerca non scarica dashboard, allenamento e
+// analisi solo per leggere la home.
+const LoginPage = lazy(() => import('@/pages/LoginPage'))
+const SignupPage = lazy(() => import('@/pages/SignupPage'))
+const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'))
+const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
+const NewSessionPage = lazy(() => import('@/pages/NewSessionPage'))
+const TrainPage = lazy(() => import('@/pages/TrainPage'))
+const SessionsHistoryPage = lazy(() => import('@/pages/SessionsHistoryPage'))
+const SessionDetailPage = lazy(() => import('@/pages/SessionDetailPage'))
+const DailySessionSummaryPage = lazy(() => import('@/pages/DailySessionSummaryPage'))
+const FaqPage = lazy(() => import('@/pages/FaqPage'))
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
+const TermsPage = lazy(() => import('@/pages/TermsPage'))
+const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'))
+const CreditsPage = lazy(() => import('@/pages/CreditsPage'))
+
+function Protected({ children }: { children: ReactNode }) {
+  return <ProtectedRoute>{children}</ProtectedRoute>
+}
 
 function App() {
   useApplyAppStyle()
 
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <DashboardPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/sessions/new"
-        element={
-          <ProtectedRoute>
-            <NewSessionPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/train"
-        element={
-          <ProtectedRoute>
-            <TrainPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/sessions"
-        element={
-          <ProtectedRoute>
-            <SessionsHistoryPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/sessions/:id"
-        element={
-          <ProtectedRoute>
-            <SessionDetailPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/sessions/:id/day/:date"
-        element={
-          <ProtectedRoute>
-            <DailySessionSummaryPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/faq"
-        element={
-          <ProtectedRoute>
-            <FaqPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="/terms" element={<TermsPage />} />
-      <Route path="/privacy" element={<PrivacyPage />} />
-      <Route path="/credits" element={<CreditsPage />} />
-    </Routes>
+    <Suspense fallback={null}>
+      <Routes>
+        <Route path={MARKETING_PATHS.home.it} element={<LandingPage lang="it" />} />
+        <Route path={MARKETING_PATHS.home.en} element={<LandingPage lang="en" />} />
+        <Route path={MARKETING_PATHS.guide.it} element={<GuidePage lang="it" />} />
+        <Route path={MARKETING_PATHS.guide.en} element={<GuidePage lang="en" />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/dashboard" element={<Protected><DashboardPage /></Protected>} />
+        <Route path="/sessions/new" element={<Protected><NewSessionPage /></Protected>} />
+        <Route path="/train" element={<Protected><TrainPage /></Protected>} />
+        <Route path="/sessions" element={<Protected><SessionsHistoryPage /></Protected>} />
+        <Route path="/sessions/:id" element={<Protected><SessionDetailPage /></Protected>} />
+        <Route
+          path="/sessions/:id/day/:date"
+          element={<Protected><DailySessionSummaryPage /></Protected>}
+        />
+        <Route path="/faq" element={<Protected><FaqPage /></Protected>} />
+        <Route path="/profile" element={<Protected><ProfilePage /></Protected>} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/credits" element={<CreditsPage />} />
+      </Routes>
+    </Suspense>
   )
 }
 
