@@ -3,7 +3,9 @@
 Ogni email è nella lingua dell'utente (italiano, inglese, francese, spagnolo o
 tedesco), letta da `user_metadata.language` (`{{ .Data.language }}`): l'app la
 salva alla registrazione e la aggiorna quando l'utente cambia lingua. Se manca
-(account creati prima), l'email è bilingue italiano + inglese.
+(account creati prima), il corpo è bilingue italiano + inglese e l'oggetto in
+italiano. Supabase accetta oggetti di al massimo 255 caratteri: il generatore
+si ferma con un errore se un oggetto li supera.
 
 I file si generano con `node scripts/build-email-templates.mjs`: i testi vanno
 modificati lì, non negli HTML. Supabase **non** li legge dal repo, vanno

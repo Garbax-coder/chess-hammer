@@ -65,7 +65,7 @@ const TEMPLATES = {
       ignore: 'If you didn’t create a Chess Hammer account, you can ignore this email.',
     },
     fr: {
-      subject: 'Confirmez votre adresse e-mail',
+      subject: 'Confirmez votre e-mail',
       title: 'Confirmez votre adresse e-mail',
       intro:
         'Merci de vous être inscrit sur Chess Hammer. Confirmez votre adresse e-mail pour activer votre compte et commencer à vous entraîner.',
@@ -74,7 +74,7 @@ const TEMPLATES = {
         'Si vous n’avez pas créé de compte Chess Hammer, vous pouvez ignorer cet e-mail.',
     },
     es: {
-      subject: 'Confirma tu correo electrónico',
+      subject: 'Confirma tu correo',
       title: 'Confirma tu dirección de correo',
       intro:
         'Gracias por registrarte en Chess Hammer. Confirma tu dirección de correo para activar la cuenta y empezar a entrenar.',
@@ -82,7 +82,7 @@ const TEMPLATES = {
       ignore: 'Si no has creado una cuenta en Chess Hammer, puedes ignorar este correo.',
     },
     de: {
-      subject: 'Bestätige deine E-Mail-Adresse',
+      subject: 'Bestätige deine E-Mail',
       title: 'Bestätige deine E-Mail-Adresse',
       intro:
         'Danke für deine Registrierung bei Chess Hammer. Bestätige deine E-Mail-Adresse, um dein Konto zu aktivieren und mit dem Training zu beginnen.',
@@ -111,7 +111,7 @@ const TEMPLATES = {
         'If you didn’t request a reset, ignore this email: your password stays the same.',
     },
     fr: {
-      subject: 'Réinitialisez votre mot de passe',
+      subject: 'Nouveau mot de passe',
       title: 'Réinitialisez votre mot de passe',
       intro:
         'Nous avons reçu une demande de réinitialisation du mot de passe de votre compte Chess Hammer. Utilisez le bouton ci-dessous pour en choisir un nouveau. Par sécurité, le lien n’est valable que peu de temps.',
@@ -128,7 +128,7 @@ const TEMPLATES = {
       ignore: 'Si no lo has solicitado tú, ignora este correo: tu contraseña no cambia.',
     },
     de: {
-      subject: 'Setze dein Passwort zurück',
+      subject: 'Passwort zurücksetzen',
       title: 'Setze dein Passwort zurück',
       intro:
         'Wir haben eine Anfrage erhalten, das Passwort deines Chess-Hammer-Kontos zurückzusetzen. Wähle über den Button unten ein neues. Aus Sicherheitsgründen ist der Link nur kurz gültig.',
@@ -139,7 +139,7 @@ const TEMPLATES = {
   },
   'change-email': {
     it: {
-      subject: 'Conferma il nuovo indirizzo email',
+      subject: 'Conferma la nuova email',
       title: 'Conferma il nuovo indirizzo email',
       intro:
         'Hai chiesto di cambiare l’indirizzo email del tuo account Chess Hammer da <strong>{{ .Email }}</strong> a <strong>{{ .NewEmail }}</strong>. Conferma per completare la modifica.',
@@ -148,7 +148,7 @@ const TEMPLATES = {
         'Se non hai richiesto tu questa modifica, ignora questa email e considera di cambiare la password.',
     },
     en: {
-      subject: 'Confirm your new email address',
+      subject: 'Confirm your new email',
       title: 'Confirm your new email address',
       intro:
         'You asked to change the email address of your Chess Hammer account from <strong>{{ .Email }}</strong> to <strong>{{ .NewEmail }}</strong>. Confirm to complete the change.',
@@ -157,7 +157,7 @@ const TEMPLATES = {
         'If you didn’t request this change, ignore this email and consider changing your password.',
     },
     fr: {
-      subject: 'Confirmez votre nouvelle adresse e-mail',
+      subject: 'Confirmez le nouvel e-mail',
       title: 'Confirmez votre nouvelle adresse e-mail',
       intro:
         'Vous avez demandé à remplacer l’adresse e-mail de votre compte Chess Hammer <strong>{{ .Email }}</strong> par <strong>{{ .NewEmail }}</strong>. Confirmez pour finaliser le changement.',
@@ -166,7 +166,7 @@ const TEMPLATES = {
         'Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail et pensez à changer votre mot de passe.',
     },
     es: {
-      subject: 'Confirma tu nueva dirección de correo',
+      subject: 'Confirma tu nuevo correo',
       title: 'Confirma tu nueva dirección de correo',
       intro:
         'Has pedido cambiar el correo de tu cuenta de Chess Hammer de <strong>{{ .Email }}</strong> a <strong>{{ .NewEmail }}</strong>. Confirma para completar el cambio.',
@@ -175,7 +175,7 @@ const TEMPLATES = {
         'Si no has pedido este cambio, ignora este correo y plantéate cambiar la contraseña.',
     },
     de: {
-      subject: 'Bestätige deine neue E-Mail-Adresse',
+      subject: 'Bestätige deine neue E-Mail',
       title: 'Bestätige deine neue E-Mail-Adresse',
       intro:
         'Du möchtest die E-Mail-Adresse deines Chess-Hammer-Kontos von <strong>{{ .Email }}</strong> zu <strong>{{ .NewEmail }}</strong> ändern. Bestätige, um die Änderung abzuschließen.',
@@ -250,13 +250,26 @@ function page(copies) {
 `
 }
 
-const subjects = {}
+// L'oggetto ha un limite di 255 caratteri in Supabase: forma compatta, e
+// l'italiano fa anche da ripiego per gli account senza lingua salvata.
+const SUBJECT_MAX = 255
+
+function subject(copies) {
+  const others = LANGS.filter((lang) => lang !== 'it').map(
+    (lang, i) =>
+      `{{${i === 0 ? 'if' : 'else if'} eq $l "${lang}"}}${copies[lang].subject}`,
+  )
+  return `{{$l := or .Data.language ""}}${others.join('')}{{else}}${copies.it.subject}{{end}}`
+}
+
 for (const [name, copies] of Object.entries(TEMPLATES)) {
   writeFileSync(join(OUT, `${name}.html`), page(copies))
-  subjects[name] = byLanguage(
-    (lang) => copies[lang].subject,
-    `${copies.it.subject} · ${copies.en.subject}`,
-  )
-  writeFileSync(join(OUT, `${name}.subject.txt`), subjects[name] + '\n')
+  const text = subject(copies)
+  if ([...text].length > SUBJECT_MAX) {
+    throw new Error(
+      `${name}: oggetto di ${[...text].length} caratteri, il massimo è ${SUBJECT_MAX}`,
+    )
+  }
+  writeFileSync(join(OUT, `${name}.subject.txt`), text + '\n')
   console.log(`email-templates: ${name}.html, ${name}.subject.txt`)
 }
