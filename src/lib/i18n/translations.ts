@@ -350,7 +350,7 @@ export const it: Translations = {
   },
   home: {
     subtitle:
-      'Allena la tattica con il Metodo Woodpecker: risolvi lo stesso set di puzzle per 3 giri, sempre più veloce, e traccia il tuo rating ELO nel tempo.',
+      'Allena la tattica risolvendo lo stesso set di puzzle per 3 giri, sempre più veloce, e traccia il tuo rating ELO nel tempo.',
     goToDashboard: 'Vai alla dashboard',
     startTraining: 'Inizia allenamento',
   },
@@ -364,7 +364,7 @@ export const it: Translations = {
   },
   login: {
     title: 'Accedi',
-    subtitle: 'Continua il tuo allenamento Woodpecker',
+    subtitle: 'Continua il tuo allenamento',
     submit: 'Accedi',
     noAccount: 'Non hai un account?',
     signup: 'Registrati',
@@ -397,7 +397,7 @@ export const it: Translations = {
   },
   signup: {
     title: 'Crea account',
-    subtitle: 'Inizia a tracciare i tuoi allenamenti Woodpecker',
+    subtitle: 'Inizia a tracciare i tuoi allenamenti',
     checkEmail: "Controlla la tua email per confermare l'account prima di accedere.",
     submit: 'Registrati',
     haveAccount: 'Hai già un account?',
@@ -419,7 +419,7 @@ export const it: Translations = {
     restingNote: (date) => `⏸ In pausa fino al ${date}`,
     continueTraining: 'Continua allenamento',
     noActiveSessionTitle: 'Nessuna sessione attiva',
-    noActiveSessionDescription: 'Configura un nuovo allenamento Woodpecker per iniziare.',
+    noActiveSessionDescription: 'Configura un nuovo allenamento per iniziare.',
     createSession: 'Crea nuova sessione',
     eloHistory: {
       title: 'Andamento ELO',
@@ -442,7 +442,7 @@ export const it: Translations = {
   newSession: {
     title: 'Nuova sessione',
     subtitle:
-      'Configura il tuo allenamento Woodpecker: stesso set di puzzle ripetuto per 3 giri, sempre più veloce.',
+      'Configura il tuo allenamento: stesso set di puzzle ripetuto per 3 giri, sempre più veloce.',
     sessionName: 'Nome sessione (opzionale)',
     sessionNamePlaceholder: 'es. Ripasso forchette',
     totalPuzzles: 'Totale puzzle nella sessione',
@@ -834,7 +834,7 @@ export const en: Translations = {
   },
   home: {
     subtitle:
-      'Train your tactics with the Woodpecker Method: solve the same puzzle set over 3 rounds, faster each time, and track your ELO rating over time.',
+      'Train your tactics by solving the same puzzle set over 3 rounds, faster each time, and track your ELO rating over time.',
     goToDashboard: 'Go to dashboard',
     startTraining: 'Start training',
   },
@@ -848,7 +848,7 @@ export const en: Translations = {
   },
   login: {
     title: 'Log in',
-    subtitle: 'Continue your Woodpecker training',
+    subtitle: 'Continue your training',
     submit: 'Log in',
     noAccount: "Don't have an account?",
     signup: 'Sign up',
@@ -881,7 +881,7 @@ export const en: Translations = {
   },
   signup: {
     title: 'Create account',
-    subtitle: 'Start tracking your Woodpecker training',
+    subtitle: 'Start tracking your training',
     checkEmail: 'Check your email to confirm your account before logging in.',
     submit: 'Sign up',
     haveAccount: 'Already have an account?',
@@ -903,7 +903,7 @@ export const en: Translations = {
     restingNote: (date) => `⏸ Resting until ${date}`,
     continueTraining: 'Continue training',
     noActiveSessionTitle: 'No active session',
-    noActiveSessionDescription: 'Set up a new Woodpecker training to get started.',
+    noActiveSessionDescription: 'Set up a new training to get started.',
     createSession: 'Create new session',
     eloHistory: {
       title: 'ELO trend',
@@ -926,7 +926,7 @@ export const en: Translations = {
   newSession: {
     title: 'New session',
     subtitle:
-      'Set up your Woodpecker training: the same puzzle set repeated over 3 rounds, faster each time.',
+      'Set up your training: the same puzzle set repeated over 3 rounds, faster each time.',
     sessionName: 'Session name (optional)',
     sessionNamePlaceholder: 'e.g. Fork practice',
     totalPuzzles: 'Total puzzles in the session',
