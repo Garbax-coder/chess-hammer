@@ -1,9 +1,17 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 import { useLocation } from 'react-router-dom'
 import { marketingPageForPath } from '@/lib/marketing'
 import { useUpdateLanguage, useUserStats } from '@/hooks/use-user-stats'
 import { useAuth } from '@/lib/auth-context'
 import { detectBrowserLanguage } from '@/lib/i18n/detect-language'
+import { isLanguageLoaded, loadLanguage } from '@/lib/i18n/load-language'
 import { translations, type Language, type Translations } from '@/lib/i18n/translations'
 
 interface LanguageContextValue {
@@ -26,16 +34,24 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => detectBrowserLanguage())
   const [userOverride, setUserOverride] = useState(false)
 
+  // Si passa a una lingua solo dopo averne caricato i testi (fr, es e de
+  // non sono nel pacchetto iniziale): fino ad allora resta quella attuale.
   useEffect(() => {
     if (userOverride) return
-    if (stats?.language) {
-      setLanguageState(stats.language)
+    const saved = stats?.language
+    if (!saved) return
+    let cancelled = false
+    void loadLanguage(saved).then(() => {
+      if (!cancelled) setLanguageState(saved)
+    })
+    return () => {
+      cancelled = true
     }
   }, [stats?.language, userOverride])
 
   function setLanguage(lang: Language) {
     setUserOverride(true)
-    setLanguageState(lang)
+    void loadLanguage(lang).then(() => setLanguageState(lang))
     if (user) {
       updateLanguage.mutate(lang)
     }
@@ -47,11 +63,26 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const { pathname } = useLocation()
   const effectiveLanguage = marketingPageForPath(pathname)?.lang ?? language
 
+  // Una pagina pubblica in una lingua non ancora caricata (navigazione interna
+  // verso /fr, /es, /de): si aspetta il caricamento prima di mostrarla.
+  const ready = isLanguageLoaded(effectiveLanguage)
+  const [, setLoadedCount] = useState(0)
+  useEffect(() => {
+    if (ready) return
+    void loadLanguage(effectiveLanguage).then(() => setLoadedCount((n) => n + 1))
+  }, [ready, effectiveLanguage])
+
   const value = useMemo<LanguageContextValue>(
-    () => ({ language: effectiveLanguage, setLanguage, t: translations[effectiveLanguage] }),
+    () => ({
+      language: effectiveLanguage,
+      setLanguage,
+      t: translations[effectiveLanguage],
+    }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [effectiveLanguage],
+    [effectiveLanguage, ready],
   )
+
+  if (!ready) return null
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
 }

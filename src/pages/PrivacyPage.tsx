@@ -328,7 +328,18 @@ export default function PrivacyPage() {
           {t.privacy.title}
         </h1>
         <div className="text-muted-foreground [&_a]:text-primary flex flex-col gap-4 text-sm leading-relaxed [&_a]:underline-offset-4 [&_a:hover]:underline [&_h2]:text-foreground [&_h2]:mt-2 [&_h2]:text-base [&_h2]:font-medium [&_li]:ml-5 [&_li]:list-disc [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1.5">
-          {language === 'it' ? <ContentIt /> : <ContentEn />}
+          {t.legal.translationNotice && (
+            <p className="bg-muted text-foreground rounded-md px-3 py-2">
+              {t.legal.translationNotice}
+            </p>
+          )}
+          {language === 'it' ? (
+            <ContentIt />
+          ) : (
+            <div lang="en" className="contents">
+              <ContentEn />
+            </div>
+          )}
         </div>
         <Link to="/" className="text-primary w-fit text-sm underline-offset-4 hover:underline">
           {t.privacy.back}

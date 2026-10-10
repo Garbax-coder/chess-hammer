@@ -10,8 +10,14 @@ export const SITE_URL = 'https://chesshammer.com'
 export type MarketingPageId = 'home' | 'guide'
 
 export const MARKETING_PATHS: Record<MarketingPageId, Record<Language, string>> = {
-  home: { it: '/', en: '/en' },
-  guide: { it: '/metodo-woodpecker', en: '/en/woodpecker-method' },
+  home: { it: '/', en: '/en', fr: '/fr', es: '/es', de: '/de' },
+  guide: {
+    it: '/metodo-woodpecker',
+    en: '/en/woodpecker-method',
+    fr: '/fr/methode-woodpecker',
+    es: '/es/metodo-woodpecker',
+    de: '/de/woodpecker-methode',
+  },
 }
 
 export interface MarketingPage {

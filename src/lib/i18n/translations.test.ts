@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { en, it as itTranslations } from './translations'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { loadLanguage } from './load-language'
+import { en, it as itTranslations, LANGUAGES, translations } from './translations'
 
 // Non verifica il TESTO (quello e' compito del parlante), ma che le due
 // lingue restino STRUTTURALMENTE allineate: una chiave aggiunta/rimossa in
@@ -14,14 +15,28 @@ function keyPaths(value: unknown, prefix = ''): string[] {
 }
 
 describe('translations', () => {
-  it('it and en expose exactly the same set of keys', () => {
-    const itKeys = keyPaths(itTranslations).sort()
-    const enKeys = keyPaths(en).sort()
-    expect(itKeys).toEqual(enKeys)
+  beforeAll(() => Promise.all(LANGUAGES.map(loadLanguage)))
+
+  it.each(LANGUAGES.filter((lang) => lang !== 'it'))(
+    '%s exposes exactly the same set of keys as it',
+    (lang) => {
+      expect(keyPaths(translations[lang]).sort()).toEqual(keyPaths(itTranslations).sort())
+    },
+  )
+
+  it('meta.locale differs between languages and starts with the language code', () => {
+    const locales = LANGUAGES.map((lang) => translations[lang].meta.locale)
+    expect(new Set(locales).size).toBe(LANGUAGES.length)
+    for (const lang of LANGUAGES)
+      expect(translations[lang].meta.locale).toMatch(new RegExp(`^${lang}-`))
   })
 
-  it('meta.locale differs between languages', () => {
-    expect(itTranslations.meta.locale).not.toBe(en.meta.locale)
+  it('only languages without their own legal texts show the translation notice', () => {
+    expect(itTranslations.legal.translationNotice).toBeNull()
+    expect(en.legal.translationNotice).toBeNull()
+    for (const lang of ['fr', 'es', 'de'] as const) {
+      expect(translations[lang].legal.translationNotice).toBeTruthy()
+    }
   })
 
   describe('interpolated strings produce the given values', () => {

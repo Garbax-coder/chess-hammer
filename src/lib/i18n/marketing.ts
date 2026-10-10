@@ -9,8 +9,7 @@ export interface MarketingCopy {
     signIn: string
     startFree: string
     goToDashboard: string
-    otherLanguage: string
-    otherLanguageLabel: string
+    languageMenu: string
   }
   seo: Record<'home' | 'guide', { title: string; description: string }>
   puzzle: {
@@ -66,8 +65,7 @@ const it: MarketingCopy = {
     signIn: 'Accedi',
     startFree: 'Inizia gratis',
     goToDashboard: 'Vai alla dashboard',
-    otherLanguage: 'EN',
-    otherLanguageLabel: 'Read in English',
+    languageMenu: 'Lingua',
   },
   seo: {
     home: {
@@ -233,8 +231,7 @@ const en: MarketingCopy = {
     signIn: 'Sign in',
     startFree: 'Start free',
     goToDashboard: 'Go to dashboard',
-    otherLanguage: 'IT',
-    otherLanguageLabel: 'Leggi in italiano',
+    languageMenu: 'Language',
   },
   seo: {
     home: {
@@ -393,4 +390,5 @@ const en: MarketingCopy = {
   },
 }
 
-export const marketingCopy: Record<Language, MarketingCopy> = { it, en }
+// Come translations: fr, es e de arrivano con loadLanguage (load-language.ts).
+export const marketingCopy = { it, en } as Record<Language, MarketingCopy>

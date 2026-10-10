@@ -1,10 +1,18 @@
-import type { Language } from '@/lib/i18n/translations'
+import { LANGUAGES, type Language } from '@/lib/i18n/translations'
 
-/** Italiano se il browser e' in italiano, inglese in tutti gli altri casi. */
+/**
+ * La prima lingua del browser tra quelle supportate (it, en, fr, es, de);
+ * inglese se nessuna corrisponde.
+ */
 export function detectBrowserLanguage(): Language {
   if (typeof navigator === 'undefined') return 'en'
-  const languages = navigator.languages && navigator.languages.length > 0
-    ? navigator.languages
-    : [navigator.language]
-  return languages.some((lang) => lang.toLowerCase().startsWith('it')) ? 'it' : 'en'
+  const languages =
+    navigator.languages && navigator.languages.length > 0
+      ? navigator.languages
+      : [navigator.language]
+  for (const tag of languages) {
+    const base = tag.toLowerCase().split('-')[0] as Language
+    if (LANGUAGES.includes(base)) return base
+  }
+  return 'en'
 }

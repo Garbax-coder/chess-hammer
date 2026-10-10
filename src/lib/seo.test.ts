@@ -1,14 +1,20 @@
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { loadLanguage } from './i18n/load-language'
 import { marketingCopy } from './i18n/marketing'
 import { marketingMeta, renderHeadTags, type PageMeta } from './seo'
 
 describe('marketingMeta', () => {
+  beforeAll(() => loadLanguage('de'))
+
   it('points canonical and hreflang alternates at absolute URLs, x-default in English', () => {
     const meta = marketingMeta('guide', 'it')
     expect(meta.canonical).toBe('https://chesshammer.com/metodo-woodpecker')
     expect(meta.alternates).toEqual([
       { hreflang: 'it', href: 'https://chesshammer.com/metodo-woodpecker' },
       { hreflang: 'en', href: 'https://chesshammer.com/en/woodpecker-method' },
+      { hreflang: 'fr', href: 'https://chesshammer.com/fr/methode-woodpecker' },
+      { hreflang: 'es', href: 'https://chesshammer.com/es/metodo-woodpecker' },
+      { hreflang: 'de', href: 'https://chesshammer.com/de/woodpecker-methode' },
       { hreflang: 'x-default', href: 'https://chesshammer.com/en/woodpecker-method' },
     ])
   })
@@ -20,6 +26,13 @@ describe('marketingMeta', () => {
     expect(meta.ogImage).toBe('https://chesshammer.com/og/og-en.png')
     expect(meta.ogLocale).toBe('en_US')
     expect(marketingMeta('home', 'it').ogLocale).toBe('it_IT')
+    expect(marketingMeta('home', 'de').ogLocale).toBe('de_DE')
+    expect(marketingMeta('home', 'de').ogLocaleAlternates).toEqual([
+      'it_IT',
+      'en_US',
+      'fr_FR',
+      'es_ES',
+    ])
   })
 
   it('describes the home as a free web application', () => {

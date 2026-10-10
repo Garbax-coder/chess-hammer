@@ -16,59 +16,29 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { signUpWithEmail } from '@/lib/auth'
-import { useLanguage, useTranslations } from '@/lib/language-context'
+import { useTranslations } from '@/lib/language-context'
 import { findPasswordProblem, MIN_PASSWORD_LENGTH } from '@/lib/password-policy'
 import { SITE_LEGAL_VERSION } from '@/lib/site-info'
 
 // Un solo checkbox copre sia l'accettazione di Termini/Privacy sia la
-// conferma di avere almeno 14 anni (l4/l5 del dossier di lancio): testo
-// composto qui invece che in translations.ts perche' contiene due link
-// (Termini, Privacy) che una stringa sola non puo' rendere bene.
+// conferma di avere almeno 14 anni (l4/l5 del dossier di lancio): la frase
+// e' spezzata in translations.ts attorno ai due link.
 function LegalAcceptanceLabel() {
-  const { language } = useLanguage()
-  if (language === 'it') {
-    return (
-      <>
-        Ho almeno 14 anni e accetto{' '}
-        <Link
-          to="/terms"
-          target="_blank"
-          className="text-primary underline underline-offset-4"
-        >
-          Termini e Condizioni
-        </Link>{' '}
-        e{' '}
-        <Link
-          to="/privacy"
-          target="_blank"
-          className="text-primary underline underline-offset-4"
-        >
-          Privacy Policy
-        </Link>
-        .
-      </>
-    )
-  }
+  const t = useTranslations()
+  const linkClass = 'text-primary underline underline-offset-4'
+  // Un unico <span>: Label e' flex, e testo e link sciolti diventerebbero colonne.
   return (
-    <>
-      I'm at least 14 years old and I accept the{' '}
-      <Link
-        to="/terms"
-        target="_blank"
-        className="text-primary underline underline-offset-4"
-      >
-        Terms and Conditions
+    <span>
+      {t.signup.legalBefore}{' '}
+      <Link to="/terms" target="_blank" className={linkClass}>
+        {t.footer.terms}
       </Link>{' '}
-      and{' '}
-      <Link
-        to="/privacy"
-        target="_blank"
-        className="text-primary underline underline-offset-4"
-      >
-        Privacy Policy
+      {t.signup.legalAnd}{' '}
+      <Link to="/privacy" target="_blank" className={linkClass}>
+        {t.footer.privacy}
       </Link>
-      .
-    </>
+      {t.signup.legalAfter}
+    </span>
   )
 }
 

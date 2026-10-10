@@ -2,7 +2,7 @@ import { lazy, Suspense, type ReactNode } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/protected-route'
 import { useApplyAppStyle } from '@/hooks/use-app-style'
-import { MARKETING_PATHS } from '@/lib/marketing'
+import { MARKETING_PAGES } from '@/lib/marketing'
 import GuidePage from '@/pages/GuidePage'
 import LandingPage from '@/pages/LandingPage'
 
@@ -36,25 +36,83 @@ function App() {
   return (
     <Suspense fallback={null}>
       <Routes>
-        <Route path={MARKETING_PATHS.home.it} element={<LandingPage lang="it" />} />
-        <Route path={MARKETING_PATHS.home.en} element={<LandingPage lang="en" />} />
-        <Route path={MARKETING_PATHS.guide.it} element={<GuidePage lang="it" />} />
-        <Route path={MARKETING_PATHS.guide.en} element={<GuidePage lang="en" />} />
+        {MARKETING_PAGES.map(({ id, lang, path }) => (
+          <Route
+            key={path}
+            path={path}
+            element={
+              id === 'home' ? <LandingPage lang={lang} /> : <GuidePage lang={lang} />
+            }
+          />
+        ))}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/dashboard" element={<Protected><DashboardPage /></Protected>} />
-        <Route path="/sessions/new" element={<Protected><NewSessionPage /></Protected>} />
-        <Route path="/train" element={<Protected><TrainPage /></Protected>} />
-        <Route path="/sessions" element={<Protected><SessionsHistoryPage /></Protected>} />
-        <Route path="/sessions/:id" element={<Protected><SessionDetailPage /></Protected>} />
+        <Route
+          path="/dashboard"
+          element={
+            <Protected>
+              <DashboardPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/sessions/new"
+          element={
+            <Protected>
+              <NewSessionPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/train"
+          element={
+            <Protected>
+              <TrainPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/sessions"
+          element={
+            <Protected>
+              <SessionsHistoryPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/sessions/:id"
+          element={
+            <Protected>
+              <SessionDetailPage />
+            </Protected>
+          }
+        />
         <Route
           path="/sessions/:id/day/:date"
-          element={<Protected><DailySessionSummaryPage /></Protected>}
+          element={
+            <Protected>
+              <DailySessionSummaryPage />
+            </Protected>
+          }
         />
-        <Route path="/faq" element={<Protected><FaqPage /></Protected>} />
-        <Route path="/profile" element={<Protected><ProfilePage /></Protected>} />
+        <Route
+          path="/faq"
+          element={
+            <Protected>
+              <FaqPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <Protected>
+              <ProfilePage />
+            </Protected>
+          }
+        />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/credits" element={<CreditsPage />} />
