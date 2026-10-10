@@ -16,12 +16,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { signUpWithEmail } from '@/lib/auth'
-import { useTranslations } from '@/lib/language-context'
+import { useLanguage, useTranslations } from '@/lib/language-context'
 import { findPasswordProblem, MIN_PASSWORD_LENGTH } from '@/lib/password-policy'
+import { MIN_AGE } from '@/lib/legal'
 import { SITE_LEGAL_VERSION } from '@/lib/site-info'
 
 // Un solo checkbox copre sia l'accettazione di Termini/Privacy sia la
-// conferma di avere almeno 14 anni (l4/l5 del dossier di lancio): la frase
+// conferma dell'eta' minima (l4/l5 del dossier di lancio): la frase
 // e' spezzata in translations.ts attorno ai due link.
 function LegalAcceptanceLabel() {
   const t = useTranslations()
@@ -29,7 +30,7 @@ function LegalAcceptanceLabel() {
   // Un unico <span>: Label e' flex, e testo e link sciolti diventerebbero colonne.
   return (
     <span>
-      {t.signup.legalBefore}{' '}
+      {t.signup.legalBefore(MIN_AGE)}{' '}
       <Link to="/terms" target="_blank" className={linkClass}>
         {t.footer.terms}
       </Link>{' '}
@@ -43,7 +44,7 @@ function LegalAcceptanceLabel() {
 }
 
 export default function SignupPage() {
-  const t = useTranslations()
+  const { language, t } = useLanguage()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [legalAccepted, setLegalAccepted] = useState(false)
@@ -76,6 +77,7 @@ export default function SignupPage() {
       email,
       password,
       SITE_LEGAL_VERSION,
+      language,
       captchaToken ?? undefined,
     )
     setSubmitting(false)

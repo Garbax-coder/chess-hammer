@@ -31,12 +31,8 @@ describe('translations', () => {
       expect(translations[lang].meta.locale).toMatch(new RegExp(`^${lang}-`))
   })
 
-  it('only languages without their own legal texts show the translation notice', () => {
-    expect(itTranslations.legal.translationNotice).toBeNull()
-    expect(en.legal.translationNotice).toBeNull()
-    for (const lang of ['fr', 'es', 'de'] as const) {
-      expect(translations[lang].legal.translationNotice).toBeTruthy()
-    }
+  it('signup consent states the minimum age it is given', () => {
+    for (const lang of LANGUAGES) expect(translations[lang].signup.legalBefore(16)).toContain('16')
   })
 
   describe('interpolated strings produce the given values', () => {

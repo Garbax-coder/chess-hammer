@@ -76,9 +76,9 @@ export interface Translations {
     submit: string
     haveAccount: string
     login: string
-    // "Ho almeno 14 anni e accetto [Termini] e [Privacy]." — i due link
+    // "Ho almeno 16 anni e accetto [Termini] e [Privacy]." — i due link
     // usano footer.terms / footer.privacy.
-    legalBefore: string
+    legalBefore: (minAge: number) => string
     legalAnd: string
     legalAfter: string
   }
@@ -304,11 +304,6 @@ export interface Translations {
     title: string
     back: string
   }
-  // Termini e Privacy esistono in italiano e inglese: nelle altre lingue si
-  // mostra la versione inglese preceduta da questo avviso (null = nessun avviso).
-  legal: {
-    translationNotice: string | null
-  }
   footer: {
     controller: (name: string, city: string) => string
     privacyEmail: (email: string) => string
@@ -411,7 +406,7 @@ export const it: Translations = {
     submit: 'Registrati',
     haveAccount: 'Hai già un account?',
     login: 'Accedi',
-    legalBefore: 'Ho almeno 14 anni e accetto',
+    legalBefore: (minAge) => `Ho almeno ${minAge} anni e accetto`,
     legalAnd: 'e',
     legalAfter: '.',
   },
@@ -737,9 +732,6 @@ export const it: Translations = {
     title: 'Privacy Policy',
     back: 'Torna alla home',
   },
-  legal: {
-    translationNotice: null,
-  },
   footer: {
     controller: (name, city) => `${name} · ${city}, Italia`,
     privacyEmail: (email) => `Privacy: ${email}`,
@@ -894,7 +886,7 @@ export const en: Translations = {
     submit: 'Sign up',
     haveAccount: 'Already have an account?',
     login: 'Log in',
-    legalBefore: 'I’m at least 14 years old and I accept the',
+    legalBefore: (minAge) => `I’m at least ${minAge} years old and I accept the`,
     legalAnd: 'and',
     legalAfter: '.',
   },
@@ -1219,9 +1211,6 @@ export const en: Translations = {
   privacy: {
     title: 'Privacy Policy',
     back: 'Back to home',
-  },
-  legal: {
-    translationNotice: null,
   },
   footer: {
     controller: (name, city) => `${name} · ${city}, Italy`,

@@ -64,7 +64,7 @@ export const de: Translations = {
     submit: 'Registrieren',
     haveAccount: 'Du hast schon ein Konto?',
     login: 'Anmelden',
-    legalBefore: 'Ich bin mindestens 14 Jahre alt und akzeptiere die',
+    legalBefore: (minAge) => `Ich bin mindestens ${minAge} Jahre alt und akzeptiere die`,
     legalAnd: 'und die',
     legalAfter: '.',
   },
@@ -393,10 +393,6 @@ export const de: Translations = {
   privacy: {
     title: 'Datenschutzerklärung',
     back: 'Zurück zur Startseite',
-  },
-  legal: {
-    translationNotice:
-      'Dieses Dokument gibt es auf Italienisch und Englisch. Hier folgt die englische Fassung.',
   },
   footer: {
     controller: (name, city) => `${name} · ${city}, Italien`,

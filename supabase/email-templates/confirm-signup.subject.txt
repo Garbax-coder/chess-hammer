@@ -1,0 +1,1 @@
+{{ $lang := or .Data.language "" }}{{ if eq $lang "it" }}Conferma la tua email{{ else if eq $lang "en" }}Confirm your email{{ else if eq $lang "fr" }}Confirmez votre adresse e-mail{{ else if eq $lang "es" }}Confirma tu correo electrónico{{ else if eq $lang "de" }}Bestätige deine E-Mail-Adresse{{ else }}Conferma la tua email · Confirm your email{{ end }}
