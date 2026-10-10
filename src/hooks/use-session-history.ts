@@ -1,12 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
-import {
-  fetchAllSessions,
-  fetchSessionDetail,
-  fetchSessionPuzzlesDetail,
-} from '@/lib/session-history'
+import { fetchAllSessions, fetchSessionDetail } from '@/lib/session-history'
 import { getSessionProgress } from '@/lib/session-progress'
-import { sessionPuzzlesKey } from '@/lib/session-puzzles-cache'
+import { loadSessionPuzzles, sessionPuzzlesKey } from '@/lib/session-puzzles-cache'
 import type { TrainingSession } from '@/types/training'
 
 export function useSessionsList() {
@@ -32,7 +28,7 @@ export function useSessionDetail(sessionId: string | undefined) {
 export function useSessionPuzzles(session: TrainingSession | null | undefined) {
   return useQuery({
     queryKey: sessionPuzzlesKey(session?.id),
-    queryFn: () => fetchSessionPuzzlesDetail(session!.id),
+    queryFn: () => loadSessionPuzzles(session!.id),
     enabled: !!session,
     // Dopo il primo caricamento la lista si aggiorna a mano (vedi
     // syncSessionPuzzles: solo il delta dopo ogni tentativo). Con

@@ -5,6 +5,8 @@
 // solo alla prima analisi richiesta (non appesantisce il caricamento
 // iniziale della pagina: il file .wasm pesa ~7MB).
 
+// Servito con cache immutabile di un anno (vercel.json): una nuova versione
+// del motore deve avere un nome di file nuovo, non sovrascrivere questo.
 const WORKER_URL = '/stockfish/stockfish-18-lite-single.js'
 
 export interface EngineLine {

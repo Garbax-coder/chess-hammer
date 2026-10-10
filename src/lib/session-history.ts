@@ -103,6 +103,44 @@ export async function fetchSessionPuzzleAttempts(
   return data as PuzzleAttempt[]
 }
 
+// Tentativi della sessione registrati da `since` in poi (incluso: quelli con
+// lo stesso istante si riapplicano senza effetti), o tutti se since e' null.
+export async function fetchSessionAttemptsSince(
+  sessionId: string,
+  since: string | null,
+): Promise<PuzzleAttempt[]> {
+  let query = supabase
+    .from('puzzle_attempts')
+    .select('*, session_puzzles!inner(session_id)')
+    .eq('session_puzzles.session_id', sessionId)
+  if (since) query = query.gte('attempted_at', since)
+  const { data, error } = await query
+  if (error) throw error
+  return (data as (PuzzleAttempt & { session_puzzles: unknown })[]).map(
+    ({ session_puzzles: _join, ...attempt }) => attempt,
+  )
+}
+
+// Solo i conteggi (richieste HEAD, nessun contenuto scaricato): servono a
+// verificare che una lista ricostruita a pezzi coincida con il database.
+export async function countSessionRows(
+  sessionId: string,
+): Promise<{ puzzles: number; attempts: number }> {
+  const [puzzles, attempts] = await Promise.all([
+    supabase
+      .from('session_puzzles')
+      .select('id', { count: 'exact', head: true })
+      .eq('session_id', sessionId),
+    supabase
+      .from('puzzle_attempts')
+      .select('id, session_puzzles!inner(session_id)', { count: 'exact', head: true })
+      .eq('session_puzzles.session_id', sessionId),
+  ])
+  if (puzzles.error) throw puzzles.error
+  if (attempts.error) throw attempts.error
+  return { puzzles: puzzles.count ?? 0, attempts: attempts.count ?? 0 }
+}
+
 export async function fetchSessionDetail(sessionId: string): Promise<SessionDetail> {
   // Indipendenti l'una dall'altra: in parallelo invece che in sequenza.
   const [session, puzzles] = await Promise.all([

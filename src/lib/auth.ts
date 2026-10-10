@@ -1,3 +1,4 @@
+import { clearSnapshots } from '@/lib/session-puzzles-snapshot'
 import { supabase } from '@/lib/supabase'
 
 export type OAuthProvider = 'google' | 'facebook'
@@ -44,6 +45,7 @@ export function signInWithOAuth(provider: OAuthProvider) {
 }
 
 export function signOut() {
+  clearSnapshots()
   return supabase.auth.signOut()
 }
 
@@ -55,6 +57,7 @@ export function signOut() {
 export async function deleteOwnAccount() {
   const { error } = await supabase.rpc('delete_own_account')
   if (error) throw error
+  clearSnapshots()
   await supabase.auth.signOut()
 }
 

@@ -128,7 +128,11 @@ function ContentIt() {
       </p>
       <ul>
         <li>la sessione di accesso (per restare collegato, gestita da Supabase Auth);</li>
-        <li>lingua, tema, suoni, stile scacchiera, set di pezzi, impostazioni del motore di analisi.</li>
+        <li>lingua, tema, suoni, stile scacchiera, set di pezzi, impostazioni del motore di analisi;</li>
+        <li>
+          una copia della lista puzzle della sessione in corso, per non riscaricarla intera
+          a ogni visita (cancellata quando esci dall'account).
+        </li>
       </ul>
       <p>Nessuno di questi dati lascia il tuo browser per finalità di tracciamento.</p>
 
@@ -278,7 +282,11 @@ function ContentEn() {
       </p>
       <ul>
         <li>your sign-in session (to keep you logged in, managed by Supabase Auth);</li>
-        <li>language, theme, sound, board style, piece set, analysis engine settings.</li>
+        <li>language, theme, sound, board style, piece set, analysis engine settings;</li>
+        <li>
+          a copy of the current session's puzzle list, so it isn't downloaded in full on
+          every visit (deleted when you sign out).
+        </li>
       </ul>
       <p>None of this data leaves your browser for tracking purposes.</p>
 
