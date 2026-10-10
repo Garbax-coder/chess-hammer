@@ -103,7 +103,10 @@ function ContentIt() {
         I dati restano finché il tuo account è attivo. Puoi scaricare una copia dei tuoi
         dati ed eliminare definitivamente il tuo account in qualsiasi momento dalla pagina{' '}
         <Link to="/profile">Profilo</Link>: l'eliminazione è immediata e cancella anche
-        sessioni, tentativi e statistiche collegate.
+        sessioni, tentativi e statistiche collegate. Per proteggere i dati da guasti, il
+        titolare conserva copie di sicurezza periodiche del database su supporti sotto il
+        proprio controllo, per un massimo di 8 settimane: entro questo termine i dati di
+        un account eliminato spariscono anche dalle copie.
       </p>
 
       <h2>Cookie e memoria del browser</h2>
@@ -240,7 +243,10 @@ function ContentEn() {
         Data stays as long as your account is active. You can download a copy of your data
         and permanently delete your account at any time from your{' '}
         <Link to="/profile">Profile</Link> page: deletion is immediate and also removes
-        linked sessions, attempts and statistics.
+        linked sessions, attempts and statistics. To protect data against failures, the
+        controller keeps periodic backup copies of the database on media under their own
+        control, for at most 8 weeks: within that period a deleted account's data also
+        disappears from the copies.
       </p>
 
       <h2>Cookies and browser storage</h2>
