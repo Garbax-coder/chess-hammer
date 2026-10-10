@@ -12,8 +12,26 @@ vi.mock('@/lib/supabase', () => ({
   },
 }))
 
-const { changePassword, requestPasswordReset, signInWithEmail, signUpWithEmail } =
-  await import('./auth')
+const {
+  changePassword,
+  requestPasswordReset,
+  signInWithEmail,
+  signOut: signOutUser,
+  signUpWithEmail,
+} = await import('./auth')
+const { readSnapshot, writeSnapshot } = await import('./session-puzzles-snapshot')
+
+describe('signOut', () => {
+  it("deletes the local copy of the session puzzle list, so the next user of the browser can't read it", async () => {
+    signOut.mockResolvedValue({ error: null })
+    writeSnapshot('session-1', [])
+
+    await signOutUser()
+
+    expect(readSnapshot('session-1')).toBeNull()
+    expect(signOut).toHaveBeenCalled()
+  })
+})
 
 describe('signUpWithEmail', () => {
   it('passes the legal acceptance version as user metadata', async () => {

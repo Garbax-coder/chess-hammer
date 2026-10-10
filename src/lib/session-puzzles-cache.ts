@@ -1,14 +1,60 @@
 import type { QueryClient } from '@tanstack/react-query'
 import {
+  countSessionRows,
+  fetchSessionAttemptsSince,
   fetchSessionPuzzleAttempts,
   fetchSessionPuzzlesAfter,
   fetchSessionPuzzlesDetail,
 } from '@/lib/session-history'
-import { maxOrderIndex, mergeSessionPuzzlesDelta } from '@/lib/session-puzzles-merge'
+import {
+  countAttempts,
+  latestAttemptAt,
+  maxOrderIndex,
+  mergeChangedAttempts,
+  mergeSessionPuzzlesDelta,
+} from '@/lib/session-puzzles-merge'
+import { readSnapshot, writeSnapshot } from '@/lib/session-puzzles-snapshot'
 import type { SessionPuzzleResult } from '@/types/training'
 
 export function sessionPuzzlesKey(sessionId: string | undefined) {
   return ['session-puzzles', sessionId]
+}
+
+// Carica la lista puzzle all'apertura di /train. Con una copia locale scarica
+// solo i puzzle aggiunti e i tentativi registrati dopo l'ultimo gia' noto
+// (anche da un altro dispositivo), invece di fen/mosse/temi di 200 puzzle a
+// ogni visita: era la voce piu' pesante del traffico dati per utente. Se i
+// conteggi del database non coincidono con la lista ricostruita (righe
+// cancellate, copia di una versione precedente) o una richiesta fallisce, si
+// riscarica tutto: mai una lista incoerente.
+export async function loadSessionPuzzles(
+  sessionId: string,
+): Promise<SessionPuzzleResult[]> {
+  const cached = readSnapshot(sessionId)
+  if (cached) {
+    try {
+      const [newPuzzles, changedAttempts, counts] = await Promise.all([
+        fetchSessionPuzzlesAfter(sessionId, maxOrderIndex(cached)),
+        fetchSessionAttemptsSince(sessionId, latestAttemptAt(cached)),
+        countSessionRows(sessionId),
+      ])
+      const merged = mergeSessionPuzzlesDelta(
+        mergeChangedAttempts(cached, changedAttempts),
+        {
+          newPuzzles,
+        },
+      )
+      if (merged.length === counts.puzzles && countAttempts(merged) === counts.attempts) {
+        writeSnapshot(sessionId, merged)
+        return merged
+      }
+    } catch (error) {
+      console.error('Aggiornamento della copia locale fallito, rilettura completa', error)
+    }
+  }
+  const full = await fetchSessionPuzzlesDetail(sessionId)
+  writeSnapshot(sessionId, full)
+  return full
 }
 
 // Aggiorna la lista puzzle in cache dopo un tentativo (o dopo che
@@ -39,7 +85,7 @@ export async function syncSessionPuzzles(
   try {
     const current = await queryClient.fetchQuery<SessionPuzzleResult[]>({
       queryKey: key,
-      queryFn: () => fetchSessionPuzzlesDetail(sessionId),
+      queryFn: () => loadSessionPuzzles(sessionId),
       staleTime: Infinity,
     })
     const [newPuzzles, changedAttempts] = await Promise.all([
@@ -48,7 +94,7 @@ export async function syncSessionPuzzles(
         ? fetchSessionPuzzleAttempts(changedSessionPuzzleId)
         : Promise.resolve(null),
     ])
-    queryClient.setQueryData<SessionPuzzleResult[]>(key, (latest) =>
+    const updated = queryClient.setQueryData<SessionPuzzleResult[]>(key, (latest) =>
       latest
         ? mergeSessionPuzzlesDelta(latest, {
             newPuzzles,
@@ -57,6 +103,7 @@ export async function syncSessionPuzzles(
           })
         : latest,
     )
+    if (updated) writeSnapshot(sessionId, updated)
   } catch (error) {
     console.error('Sincronizzazione incrementale fallita, rilettura completa', error)
     void queryClient.invalidateQueries({ queryKey: key })

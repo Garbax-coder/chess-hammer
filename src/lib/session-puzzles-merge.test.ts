@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { makeAttempt, makePuzzleResult } from '@/test/fixtures'
-import { attemptsByRound, maxOrderIndex, mergeSessionPuzzlesDelta } from './session-puzzles-merge'
+import {
+  attemptsByRound,
+  countAttempts,
+  latestAttemptAt,
+  maxOrderIndex,
+  mergeChangedAttempts,
+  mergeSessionPuzzlesDelta,
+} from './session-puzzles-merge'
 
 describe('attemptsByRound', () => {
   it('indexes attempts by round number', () => {
@@ -88,5 +95,62 @@ describe('mergeSessionPuzzlesDelta', () => {
 
     expect(result).toHaveLength(2)
     expect(result[0].attempts).toEqual({ 1: newAttempt })
+  })
+})
+
+describe('countAttempts and latestAttemptAt', () => {
+  const p1 = makePuzzleResult({
+    sessionPuzzleId: 'sp-1',
+    attempts: {
+      1: makeAttempt({
+        session_puzzle_id: 'sp-1',
+        attempted_at: '2026-09-10T10:00:00.000Z',
+      }),
+      2: makeAttempt({
+        session_puzzle_id: 'sp-1',
+        round_number: 2,
+        attempted_at: '2026-09-12T10:00:00.000Z',
+      }),
+    },
+  })
+  const p2 = makePuzzleResult({
+    sessionPuzzleId: 'sp-2',
+    attempts: {
+      1: makeAttempt({
+        session_puzzle_id: 'sp-2',
+        attempted_at: '2026-09-11T10:00:00.000Z',
+      }),
+    },
+  })
+
+  it('counts every attempt across puzzles and rounds', () => {
+    expect(countAttempts([p1, p2])).toBe(3)
+  })
+
+  it('returns the most recent attempt time, or null with no attempts', () => {
+    expect(latestAttemptAt([p1, p2])).toBe('2026-09-12T10:00:00.000Z')
+    expect(latestAttemptAt([makePuzzleResult()])).toBeNull()
+  })
+})
+
+describe('mergeChangedAttempts', () => {
+  it('adds a new round to a puzzle and keeps the rounds already there', () => {
+    const r1 = makeAttempt({ session_puzzle_id: 'sp-1', round_number: 1 })
+    const r2 = makeAttempt({ session_puzzle_id: 'sp-1', round_number: 2 })
+    const current = [makePuzzleResult({ sessionPuzzleId: 'sp-1', attempts: { 1: r1 } })]
+
+    const merged = mergeChangedAttempts(current, [r2])
+
+    expect(merged[0].attempts).toEqual({ 1: r1, 2: r2 })
+  })
+
+  it('is idempotent and ignores attempts of puzzles not in the list', () => {
+    const r1 = makeAttempt({ session_puzzle_id: 'sp-1', round_number: 1 })
+    const current = [makePuzzleResult({ sessionPuzzleId: 'sp-1', attempts: { 1: r1 } })]
+    const other = makeAttempt({ session_puzzle_id: 'sp-9', round_number: 1 })
+
+    const merged = mergeChangedAttempts(current, [r1, other])
+
+    expect(merged).toEqual(current)
   })
 })

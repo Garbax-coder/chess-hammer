@@ -70,6 +70,12 @@ function ContentIt() {
           <b>Sicurezza</b> (prevenire abusi, accessi non autorizzati): legittimo interesse
           a proteggere il Servizio e i suoi utenti.
         </li>
+        <li>
+          <b>Statistiche d'uso aggregate</b> (quante persone si allenano, quanto spesso
+          tornano), ricavate dai dati del Servizio senza strumenti di tracciamento, per
+          migliorarlo e decidere come svilupparlo: legittimo interesse. Si usano solo
+          numeri complessivi, mai profili dei singoli utenti.
+        </li>
       </ul>
       <p>
         Non mostriamo pubblicità, non vendiamo né cediamo i tuoi dati a terzi per finalità
@@ -122,7 +128,11 @@ function ContentIt() {
       </p>
       <ul>
         <li>la sessione di accesso (per restare collegato, gestita da Supabase Auth);</li>
-        <li>lingua, tema, suoni, stile scacchiera, set di pezzi, impostazioni del motore di analisi.</li>
+        <li>lingua, tema, suoni, stile scacchiera, set di pezzi, impostazioni del motore di analisi;</li>
+        <li>
+          una copia della lista puzzle della sessione in corso, per non riscaricarla
+          intera a ogni visita (cancellata quando esci dall'account).
+        </li>
       </ul>
       <p>Nessuno di questi dati lascia il tuo browser per finalità di tracciamento.</p>
 
@@ -215,6 +225,12 @@ function ContentEn() {
           <b>Security</b> (preventing abuse, unauthorized access): legitimate interest in
           protecting the Service and its users.
         </li>
+        <li>
+          <b>Aggregate usage statistics</b> (how many people train, how often they come
+          back), derived from the Service's own data without any tracking tools, to
+          improve it and decide how to develop it: legitimate interest. Only overall
+          numbers are used, never profiles of individual users.
+        </li>
       </ul>
       <p>
         We show no advertising, we don't sell or share your data with third parties for
@@ -266,7 +282,11 @@ function ContentEn() {
       </p>
       <ul>
         <li>your sign-in session (to keep you logged in, managed by Supabase Auth);</li>
-        <li>language, theme, sound, board style, piece set, analysis engine settings.</li>
+        <li>language, theme, sound, board style, piece set, analysis engine settings;</li>
+        <li>
+          a copy of the current session's puzzle list, so it isn't downloaded in full on
+          every visit (deleted when you sign out).
+        </li>
       </ul>
       <p>None of this data leaves your browser for tracking purposes.</p>
 

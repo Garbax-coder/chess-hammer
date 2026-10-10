@@ -45,28 +45,51 @@ Tutta la configurazione si ricrea con
 
 Ogni backup contiene:
 
-- `public.dump`: lo schema `public` completo (tabelle, funzioni, policy RLS, dati);
+- `public.dump`: lo schema `public` completo (tabelle, funzioni, policy RLS) e i dati,
+  tranne quelli delle tabelle Lichess;
 - `auth-users.dump`: solo i dati di `auth.users` e `auth.identities` (gli account).
 
-Il bucket cancella da solo le copie più vecchie di **8 settimane** (56 giorni, soft delete
-disattivato): è il termine dichiarato nella privacy policy, quindi cambiarlo solo insieme
+I puzzle Lichess non cambiano tra un backup e l'altro e pesano circa 43 MB di traffico
+Supabase a ogni esecuzione: ne esiste una copia unica in
+`gs://chess-hammer-db-backups/archivio/`, fatta con
+[scripts/cloud-backup/archive-puzzles.sh](scripts/cloud-backup/archive-puzzles.sh) e da
+rifare solo dopo un nuovo import di puzzle (`lichess_puzzle_order` e
+`lichess_rating_ranges` si ricostruiscono con `rebuild_lichess_puzzle_order()`):
+
+```bash
+gcloud run jobs execute db-backup --project=chess-hammer --region=europe-west1 --wait \
+  --args="^@^-c@$(cat scripts/cloud-backup/archive-puzzles.sh)"
+```
+
+Il bucket cancella da solo le cartelle dei backup più vecchie di **8 settimane** (56
+giorni, soft delete disattivato; la regola vale solo per le cartelle `20…`, non per
+`archivio/`): è il termine dichiarato nella privacy policy, quindi cambiarlo solo insieme
 al testo. Se un backup fallisce, o lo Scheduler non riesce ad avviarlo, Cloud Monitoring
 manda un'email: con la cancellazione automatica, un errore ignorato per 8 settimane
 lascerebbe il bucket vuoto.
 
-**Ripristino su un progetto Supabase nuovo** (da provare sul progetto di sviluppo):
+**Ripristino su un progetto Supabase nuovo** (da provare sul progetto di sviluppo).
+L'ordine conta: i vincoli che legano `session_puzzles` a `lichess_puzzles` si possono
+creare solo dopo aver caricato i puzzle.
 
 ```bash
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"   # pg_restore e psql: brew install libpq
 DB="postgresql://...:5432/postgres"   # connection string del progetto di destinazione
-B=gs://chess-hammer-db-backups/<data_ora>
+B=gs://chess-hammer-db-backups
+gcloud storage cp "$B/<data_ora>/*.dump" "$B/archivio/lichess-puzzles-<data>.dump" .
 # 1. account (nessun trigger su auth.users nel progetto nuovo, quindi niente user_stats doppie)
-gcloud storage cat "$B/auth-users.dump" | pg_restore --data-only --no-owner -d "$DB"
-# 2. schema public e dati (l'errore "schema public already exists" è atteso)
-gcloud storage cat "$B/public.dump" | pg_restore --no-owner --no-privileges -d "$DB"
-# 3. trigger su auth.users, che sta fuori dallo schema public
+pg_restore --data-only --no-owner -d "$DB" auth-users.dump
+# 2. schema public senza vincoli e indici (l'errore "schema public already exists" è atteso)
+pg_restore --section=pre-data --no-owner --no-privileges -d "$DB" public.dump
+# 3. puzzle Lichess, poi i dati degli utenti
+pg_restore --data-only --no-owner -d "$DB" lichess-puzzles-<data>.dump
+pg_restore --section=data --no-owner --no-privileges -d "$DB" public.dump
+# 4. vincoli e indici, tabelle derivate dei puzzle, trigger su auth.users
+pg_restore --section=post-data --no-owner --no-privileges -d "$DB" public.dump
+psql "$DB" -c "select public.rebuild_lichess_puzzle_order();"
 psql "$DB" -c "create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();"
+rm -f *.dump   # contengono dati personali
 ```
 
 Dopo il ripristino vanno riapplicati i permessi di `anon`/`authenticated` sullo schema
