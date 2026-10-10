@@ -120,6 +120,15 @@ export default function PrivacyFr() {
           personnelle.
         </li>
         <li>
+          <b>Cloudflare</b> (vérification anti-robot « Turnstile » à l’inscription, à la
+          connexion et à la réinitialisation du mot de passe).
+        </li>
+        <li>
+          <b>Have I Been Pwned</b> (vérifier que le mot de passe choisi ne figure pas dans
+          des fuites de données connues) : seul un fragment de son empreinte
+          cryptographique quitte le navigateur, jamais le mot de passe.
+        </li>
+        <li>
           <b>Google</b> (uniquement si vous choisissez « Continuer avec Google ») : Google
           traite les données en tant que responsable autonome selon sa propre politique de
           confidentialité.

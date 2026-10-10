@@ -114,6 +114,15 @@ export default function PrivacyDe() {
           Daten.
         </li>
         <li>
+          <b>Cloudflare</b> („Turnstile“-Prüfung gegen Bots bei Registrierung, Anmeldung
+          und Zurücksetzen des Passworts).
+        </li>
+        <li>
+          <b>Have I Been Pwned</b> (Prüfung, ob das gewählte Passwort in bekannten
+          Datenlecks vorkommt): Aus dem Browser wird nur ein Bruchstück seines
+          kryptografischen Fingerabdrucks übertragen, nie das Passwort.
+        </li>
+        <li>
           <b>Google</b> (nur wenn du „Weiter mit Google“ wählst): Google verarbeitet die
           Daten als eigenständiger Verantwortlicher gemäß seiner eigenen
           Datenschutzerklärung.

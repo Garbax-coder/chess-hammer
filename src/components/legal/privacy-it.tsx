@@ -112,6 +112,15 @@ export default function PrivacyIt() {
           raggiungibilità interroga il sito da più paesi e non riguarda dati personali.
         </li>
         <li>
+          <b>Cloudflare</b> (verifica anti-bot "Turnstile" su registrazione, accesso e
+          recupero password).
+        </li>
+        <li>
+          <b>Have I Been Pwned</b> (controllo che la password scelta non compaia in fughe
+          di dati note): dal browser parte solo un frammento della sua impronta
+          crittografica, mai la password.
+        </li>
+        <li>
           <b>Google</b> (solo se scegli di accedere con "Continua con Google"): Google
           tratta i dati come titolare autonomo secondo la propria informativa.
         </li>

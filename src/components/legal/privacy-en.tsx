@@ -107,6 +107,14 @@ export default function PrivacyEn() {
           countries and involves no personal data.
         </li>
         <li>
+          <b>Cloudflare</b> ("Turnstile" bot check on signup, sign-in and password reset).
+        </li>
+        <li>
+          <b>Have I Been Pwned</b> (checking that the chosen password doesn't appear in
+          known data breaches): only a fragment of its cryptographic fingerprint leaves
+          the browser, never the password.
+        </li>
+        <li>
           <b>Google</b> (only if you choose "Continue with Google"): Google processes data
           as an independent controller per its own privacy notice.
         </li>

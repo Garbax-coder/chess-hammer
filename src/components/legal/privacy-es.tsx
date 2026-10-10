@@ -113,6 +113,15 @@ export default function PrivacyEs() {
           personales.
         </li>
         <li>
+          <b>Cloudflare</b> (verificación antibots «Turnstile» al registrarse, iniciar
+          sesión y restablecer la contraseña).
+        </li>
+        <li>
+          <b>Have I Been Pwned</b> (comprobar que la contraseña elegida no aparece en
+          filtraciones de datos conocidas): del navegador solo sale un fragmento de su
+          huella criptográfica, nunca la contraseña.
+        </li>
+        <li>
           <b>Google</b> (solo si eliges «Continuar con Google»): Google trata los datos
           como responsable independiente según su propia política de privacidad.
         </li>
