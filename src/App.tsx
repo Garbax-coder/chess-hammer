@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/protected-route'
+import { useApplyAppStyle } from '@/hooks/use-app-style'
 import DailySessionSummaryPage from '@/pages/DailySessionSummaryPage'
 import DashboardPage from '@/pages/DashboardPage'
 import FaqPage from '@/pages/FaqPage'
@@ -18,6 +19,8 @@ import TermsPage from '@/pages/TermsPage'
 import TrainPage from '@/pages/TrainPage'
 
 function App() {
+  useApplyAppStyle()
+
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />

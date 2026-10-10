@@ -1,8 +1,10 @@
 import { Moon, Sun, User as UserIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { AppLogo } from '@/components/app-logo'
 import { SiteFooter } from '@/components/site-footer'
 import { Button } from '@/components/ui/button'
+import { useAppStyle } from '@/hooks/use-app-style'
 import { useTheme } from '@/hooks/use-theme'
 import { useAuth } from '@/lib/auth-context'
 import { useLanguage } from '@/lib/language-context'
@@ -11,6 +13,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { theme, toggleTheme } = useTheme()
   const { t } = useLanguage()
   const { user } = useAuth()
+  const appStyle = useAppStyle()
 
   const avatarUrl =
     (user?.user_metadata?.avatar_url as string | undefined) ??
@@ -22,8 +25,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
           <Link
             to="/dashboard"
-            className="text-foreground text-sm font-semibold tracking-tight"
+            className="text-foreground flex items-center gap-2 text-sm font-semibold tracking-tight"
           >
+            <AppLogo styleId={appStyle} className="size-6 shrink-0" />
             Chess Hammer
           </Link>
           <nav className="flex items-center gap-1">

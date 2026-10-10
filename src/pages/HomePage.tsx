@@ -1,16 +1,20 @@
 import { Link } from 'react-router-dom'
+import { AppLogo } from '@/components/app-logo'
 import { SiteFooter } from '@/components/site-footer'
 import { Button } from '@/components/ui/button'
+import { useAppStyle } from '@/hooks/use-app-style'
 import { useAuth } from '@/lib/auth-context'
 import { useTranslations } from '@/lib/language-context'
 
 export default function HomePage() {
   const { session, loading } = useAuth()
   const t = useTranslations()
+  const appStyle = useAppStyle()
 
   return (
     <main className="flex min-h-svh flex-col">
       <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+        <AppLogo styleId={appStyle} className="size-16" />
         <h1 className="text-foreground text-3xl font-semibold tracking-tight">
           Chess Hammer
         </h1>

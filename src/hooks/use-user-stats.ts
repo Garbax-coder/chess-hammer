@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { AppStyleId } from '@/lib/app-styles'
 import { useAuth } from '@/lib/auth-context'
 import type { BoardThemeId } from '@/lib/board-themes'
 import type { Language } from '@/lib/i18n/translations'
@@ -16,6 +17,7 @@ interface UserStats {
   piece_set: PieceSetId
   practice_only_failed: boolean
   practice_failed_scope: FailedPuzzleScope
+  app_style: AppStyleId
 }
 
 export function useUserStats() {
@@ -27,7 +29,7 @@ export function useUserStats() {
       const { data, error } = await supabase
         .from('user_stats')
         .select(
-          'current_elo, puzzles_solved, puzzles_failed, auto_advance, language, board_theme, piece_set, practice_only_failed, practice_failed_scope',
+          'current_elo, puzzles_solved, puzzles_failed, auto_advance, language, board_theme, piece_set, practice_only_failed, practice_failed_scope, app_style',
         )
         .eq('user_id', user!.id)
         .single()
@@ -79,6 +81,32 @@ export function useUpdatePracticeFilter() {
     onMutate: (patch) => {
       queryClient.setQueryData<UserStats>(queryKey, (current) =>
         current ? { ...current, ...patch } : current,
+      )
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey })
+    },
+  })
+}
+
+// Ottimistico: lo stile ricolora subito tutta l'interfaccia, senza aspettare
+// la rilettura di user_stats.
+export function useUpdateAppStyle() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const queryKey = ['user-stats', user?.id]
+
+  return useMutation({
+    mutationFn: async (appStyle: AppStyleId) => {
+      const { error } = await supabase
+        .from('user_stats')
+        .update({ app_style: appStyle })
+        .eq('user_id', user!.id)
+      if (error) throw error
+    },
+    onMutate: (appStyle) => {
+      queryClient.setQueryData<UserStats>(queryKey, (current) =>
+        current ? { ...current, app_style: appStyle } : current,
       )
     },
     onSettled: () => {

@@ -1,3 +1,4 @@
+import type { AppStyleId } from '@/lib/app-styles'
 import type { BoardThemeId } from '@/lib/board-themes'
 import type { PuzzleThemeCategoryId } from '@/lib/puzzle-themes'
 
@@ -316,6 +317,8 @@ export interface Translations {
     back: string
   }
   appearance: {
+    appStyle: string
+    appStyles: Record<AppStyleId, string>
     boardTheme: string
     pieceSet: string
     themes: Record<BoardThemeId, string>
@@ -751,6 +754,12 @@ export const it: Translations = {
     back: 'Torna alla home',
   },
   appearance: {
+    appStyle: "Stile dell'app",
+    appStyles: {
+      sage: 'Salvia',
+      slatewood: 'Ardesia e legno',
+      ochre: 'Ocra',
+    },
     boardTheme: 'Stile scacchiera',
     pieceSet: 'Stile pezzi',
     themes: {
@@ -1228,6 +1237,12 @@ export const en: Translations = {
     back: 'Back to home',
   },
   appearance: {
+    appStyle: 'App style',
+    appStyles: {
+      sage: 'Sage',
+      slatewood: 'Slate & wood',
+      ochre: 'Ochre',
+    },
     boardTheme: 'Board style',
     pieceSet: 'Piece style',
     themes: {
