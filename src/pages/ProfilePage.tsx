@@ -1,15 +1,19 @@
 import { LogOut, User as UserIcon } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AccountSecurityPanel } from '@/components/account-security-panel'
+import { AppLogo } from '@/components/app-logo'
 import { DataExportPanel } from '@/components/data-export-panel'
 import { DeleteAccountDialog } from '@/components/delete-account-dialog'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { useAppStyle } from '@/hooks/use-app-style'
 import {
+  useUpdateAppStyle,
   useUpdateBoardTheme,
   useUpdatePieceSet,
   useUserStats,
 } from '@/hooks/use-user-stats'
+import { APP_STYLES } from '@/lib/app-styles'
 import { signOut } from '@/lib/auth'
 import { useAuth } from '@/lib/auth-context'
 import { BOARD_THEMES, DEFAULT_BOARD_THEME } from '@/lib/board-themes'
@@ -30,6 +34,8 @@ export default function ProfilePage() {
   const { data: stats } = useUserStats()
   const updateBoardTheme = useUpdateBoardTheme()
   const updatePieceSet = useUpdatePieceSet()
+  const updateAppStyle = useUpdateAppStyle()
+  const appStyle = useAppStyle()
   const navigate = useNavigate()
 
   const boardTheme = stats?.board_theme ?? DEFAULT_BOARD_THEME
@@ -70,6 +76,28 @@ export default function ProfilePage() {
 
       <section className="flex flex-col gap-4">
         <h2 className="text-foreground text-base font-medium">{t.profile.appearanceTitle}</h2>
+
+        <div className="flex flex-col gap-2">
+          <span className="text-muted-foreground text-sm">{t.appearance.appStyle}</span>
+          <div className="flex flex-wrap gap-2">
+            {APP_STYLES.map((style) => (
+              <button
+                key={style.id}
+                type="button"
+                onClick={() => updateAppStyle.mutate(style.id)}
+                aria-pressed={appStyle === style.id}
+                className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm transition-colors ${
+                  appStyle === style.id
+                    ? 'border-primary bg-primary/10 text-foreground'
+                    : 'text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <AppLogo styleId={style.id} className="size-6 shrink-0" />
+                {t.appearance.appStyles[style.id]}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="flex items-center justify-between gap-2">
           <span className="text-muted-foreground text-sm">{t.language.label}</span>

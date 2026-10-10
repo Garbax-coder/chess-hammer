@@ -43,8 +43,9 @@ function ContentIt() {
           allenamento che crei.
         </li>
         <li>
-          <b>Preferenze:</b> lingua, tema chiaro/scuro, stile scacchiera e set di pezzi,
-          suoni attivi/disattivi, avanzamento automatico.
+          <b>Preferenze:</b> lingua, tema chiaro/scuro, stile dell'app, stile scacchiera e
+          set di pezzi, suoni attivi/disattivi, avanzamento automatico, filtro della
+          pratica libera.
         </li>
         <li>
           <b>Dati tecnici minimi:</b> indirizzo IP e informazioni del browser, trattati dai
@@ -180,8 +181,8 @@ function ContentEn() {
           time taken), your ELO rating, and the training sessions you create.
         </li>
         <li>
-          <b>Preferences:</b> language, light/dark theme, board style and piece set, sound
-          on/off, auto-advance.
+          <b>Preferences:</b> language, light/dark theme, app style, board style and piece
+          set, sound on/off, auto-advance, free practice filter.
         </li>
         <li>
           <b>Minimal technical data:</b> IP address and browser information, processed by
