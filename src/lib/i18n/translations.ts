@@ -29,6 +29,7 @@ export interface Translations {
     train: string
     history: string
     faq: string
+    menu: string
     toggleTheme: string
     signOut: string
   }
@@ -359,6 +360,7 @@ export const it: Translations = {
     train: 'Allenamento',
     history: 'Storico',
     faq: 'FAQ',
+    menu: 'Menu',
     toggleTheme: 'Cambia tema',
     signOut: 'Esci',
   },
@@ -843,6 +845,7 @@ export const en: Translations = {
     train: 'Training',
     history: 'History',
     faq: 'FAQ',
+    menu: 'Menu',
     toggleTheme: 'Toggle theme',
     signOut: 'Sign out',
   },
