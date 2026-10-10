@@ -244,6 +244,10 @@
        far apparire/sparire la scrollbar e spostare di qualche pixel il
        contenuto centrato (inclusa la scacchiera). */
     scrollbar-gutter: stable;
+    /* Difesa in profondita': un elemento che sfori la larghezza dello
+       schermo non deve mai rendere scrollabile in orizzontale l'intera
+       pagina; lo scroll verticale resta normale. */
+    overflow-x: hidden;
   }
 }
 
