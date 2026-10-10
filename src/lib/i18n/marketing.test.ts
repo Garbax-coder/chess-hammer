@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { loadLanguage } from './load-language'
 import { marketingCopy } from './marketing'
+import { LANGUAGES } from './translations'
 
 // Come translations.test.ts: controlla che le due lingue abbiano la stessa
 // struttura (anche il numero di voci negli elenchi), non il testo.
@@ -11,12 +13,19 @@ function keyPaths(value: unknown, prefix = ''): string[] {
 }
 
 describe('marketingCopy', () => {
-  it('it and en have the same keys and list lengths', () => {
-    expect(keyPaths(marketingCopy.it).sort()).toEqual(keyPaths(marketingCopy.en).sort())
-  })
+  beforeAll(() => Promise.all(LANGUAGES.map(loadLanguage)))
+
+  it.each(LANGUAGES.filter((lang) => lang !== 'it'))(
+    '%s has the same keys and list lengths as it',
+    (lang) => {
+      expect(keyPaths(marketingCopy[lang]).sort()).toEqual(
+        keyPaths(marketingCopy.it).sort(),
+      )
+    },
+  )
 
   it('has no empty strings', () => {
-    for (const lang of ['it', 'en'] as const) {
+    for (const lang of LANGUAGES) {
       const empty = keyPaths(marketingCopy[lang]).filter((path) => {
         const value = path
           .split('.')
@@ -31,7 +40,7 @@ describe('marketingCopy', () => {
   })
 
   it('keeps search titles and descriptions within what results pages show', () => {
-    for (const lang of ['it', 'en'] as const) {
+    for (const lang of LANGUAGES) {
       for (const { title, description } of Object.values(marketingCopy[lang].seo)) {
         expect(title.length, title).toBeLessThanOrEqual(70)
         expect(description.length, description).toBeGreaterThanOrEqual(70)

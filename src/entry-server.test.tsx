@@ -29,6 +29,14 @@ describe('prerendered public pages', () => {
     expect(render('/en')).toContain('href="/"')
     expect(render('/')).toContain('href="/en"')
     expect(render('/metodo-woodpecker')).toContain('href="/en/woodpecker-method"')
+    const guideFr = render('/fr/methode-woodpecker')
+    for (const href of [
+      '/metodo-woodpecker',
+      '/es/metodo-woodpecker',
+      '/de/woodpecker-methode',
+    ]) {
+      expect(guideFr).toContain(`href="${href}"`)
+    }
   })
 
   it('renders the shared footer in English on English pages', () => {

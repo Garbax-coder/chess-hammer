@@ -17,16 +17,17 @@ import { APP_STYLES } from '@/lib/app-styles'
 import { signOut } from '@/lib/auth'
 import { useAuth } from '@/lib/auth-context'
 import { BOARD_THEMES, DEFAULT_BOARD_THEME } from '@/lib/board-themes'
-import type { Language } from '@/lib/i18n/translations'
+import { LANGUAGE_NAMES, LANGUAGES, type Language } from '@/lib/i18n/translations'
 import { useLanguage } from '@/lib/language-context'
 import { DEFAULT_PIECE_SET, PIECE_SETS } from '@/lib/piece-sets'
 
 const LANGUAGE_FLAGS: Record<Language, string> = {
   it: '🇮🇹',
   en: '🇬🇧',
+  fr: '🇫🇷',
+  es: '🇪🇸',
+  de: '🇩🇪',
 }
-
-const LANGUAGES: Language[] = ['it', 'en']
 
 export default function ProfilePage() {
   const { user } = useAuth()
@@ -107,7 +108,8 @@ export default function ProfilePage() {
                 key={lang}
                 type="button"
                 onClick={() => setLanguage(lang)}
-                aria-label={t.language[lang]}
+                aria-label={LANGUAGE_NAMES[lang]}
+                title={LANGUAGE_NAMES[lang]}
                 aria-pressed={language === lang}
                 className={`flex size-8 items-center justify-center rounded-md text-lg transition-colors ${
                   language === lang ? 'bg-primary/10 ring-primary ring-2' : 'hover:bg-muted'

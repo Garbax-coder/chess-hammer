@@ -2,7 +2,19 @@ import type { AppStyleId } from '@/lib/app-styles'
 import type { BoardThemeId } from '@/lib/board-themes'
 import type { PuzzleThemeCategoryId } from '@/lib/puzzle-themes'
 
-export type Language = 'it' | 'en'
+export type Language = 'it' | 'en' | 'fr' | 'es' | 'de'
+
+export const LANGUAGES: Language[] = ['it', 'en', 'fr', 'es', 'de']
+
+// Ogni lingua col proprio nome (endonimo): e' cosi' che la cerca chi non
+// legge la lingua attuale della pagina.
+export const LANGUAGE_NAMES: Record<Language, string> = {
+  it: 'Italiano',
+  en: 'English',
+  fr: 'Français',
+  es: 'Español',
+  de: 'Deutsch',
+}
 
 export interface Translations {
   meta: { locale: string }
@@ -16,8 +28,6 @@ export interface Translations {
   }
   language: {
     label: string
-    it: string
-    en: string
   }
   nav: {
     dashboard: string
@@ -66,6 +76,11 @@ export interface Translations {
     submit: string
     haveAccount: string
     login: string
+    // "Ho almeno 14 anni e accetto [Termini] e [Privacy]." — i due link
+    // usano footer.terms / footer.privacy.
+    legalBefore: string
+    legalAnd: string
+    legalAfter: string
   }
   socialLogin: {
     continueWith: (provider: string) => string
@@ -289,6 +304,11 @@ export interface Translations {
     title: string
     back: string
   }
+  // Termini e Privacy esistono in italiano e inglese: nelle altre lingue si
+  // mostra la versione inglese preceduta da questo avviso (null = nessun avviso).
+  legal: {
+    translationNotice: string | null
+  }
   footer: {
     controller: (name: string, city: string) => string
     privacyEmail: (email: string) => string
@@ -341,8 +361,6 @@ export const it: Translations = {
   },
   language: {
     label: 'Lingua',
-    it: 'Italiano',
-    en: 'English',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -393,6 +411,9 @@ export const it: Translations = {
     submit: 'Registrati',
     haveAccount: 'Hai già un account?',
     login: 'Accedi',
+    legalBefore: 'Ho almeno 14 anni e accetto',
+    legalAnd: 'e',
+    legalAfter: '.',
   },
   socialLogin: {
     continueWith: (provider) => `Continua con ${provider}`,
@@ -716,6 +737,9 @@ export const it: Translations = {
     title: 'Privacy Policy',
     back: 'Torna alla home',
   },
+  legal: {
+    translationNotice: null,
+  },
   footer: {
     controller: (name, city) => `${name} · ${city}, Italia`,
     privacyEmail: (email) => `Privacy: ${email}`,
@@ -820,8 +844,6 @@ export const en: Translations = {
   },
   language: {
     label: 'Language',
-    it: 'Italiano',
-    en: 'English',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -872,6 +894,9 @@ export const en: Translations = {
     submit: 'Sign up',
     haveAccount: 'Already have an account?',
     login: 'Log in',
+    legalBefore: 'I’m at least 14 years old and I accept the',
+    legalAnd: 'and',
+    legalAfter: '.',
   },
   socialLogin: {
     continueWith: (provider) => `Continue with ${provider}`,
@@ -1195,6 +1220,9 @@ export const en: Translations = {
     title: 'Privacy Policy',
     back: 'Back to home',
   },
+  legal: {
+    translationNotice: null,
+  },
   footer: {
     controller: (name, city) => `${name} · ${city}, Italy`,
     privacyEmail: (email) => `Privacy: ${email}`,
@@ -1219,7 +1247,8 @@ export const en: Translations = {
     fontTitle: 'Font',
     fontBody: 'Geist, by Vercel. SIL Open Font License 1.1.',
     librariesTitle: 'Libraries',
-    librariesIntro: 'Generated list of the open source libraries used in production and their license.',
+    librariesIntro:
+      'Generated list of the open source libraries used in production and their license.',
     back: 'Back to home',
   },
   appearance: {
@@ -1286,4 +1315,7 @@ export const en: Translations = {
   },
 }
 
-export const translations: Record<Language, Translations> = { it, en }
+// Italiano e inglese sono nel pacchetto iniziale; francese, spagnolo e
+// tedesco si aggiungono qui con loadLanguage (load-language.ts) prima di
+// essere mostrati, cosi' chi non li usa non li scarica.
+export const translations = { it, en } as Record<Language, Translations>

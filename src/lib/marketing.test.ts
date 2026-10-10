@@ -3,8 +3,8 @@ import { MARKETING_PAGES, marketingPageForPath } from './marketing'
 
 describe('marketing pages', () => {
   it('lists one page per id and language, each with a distinct path', () => {
-    expect(MARKETING_PAGES).toHaveLength(4)
-    expect(new Set(MARKETING_PAGES.map((p) => p.path)).size).toBe(4)
+    expect(MARKETING_PAGES).toHaveLength(10)
+    expect(new Set(MARKETING_PAGES.map((p) => p.path)).size).toBe(10)
   })
 
   it('resolves the language from the path', () => {
@@ -14,6 +14,15 @@ describe('marketing pages', () => {
     expect(marketingPageForPath('/en/woodpecker-method')).toMatchObject({
       id: 'guide',
       lang: 'en',
+    })
+    expect(marketingPageForPath('/fr')).toMatchObject({ id: 'home', lang: 'fr' })
+    expect(marketingPageForPath('/es/metodo-woodpecker')).toMatchObject({
+      id: 'guide',
+      lang: 'es',
+    })
+    expect(marketingPageForPath('/de/woodpecker-methode')).toMatchObject({
+      id: 'guide',
+      lang: 'de',
     })
   })
 

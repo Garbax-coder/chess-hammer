@@ -1,5 +1,5 @@
 import { marketingCopy } from '@/lib/i18n/marketing'
-import type { Language } from '@/lib/i18n/translations'
+import { LANGUAGES, type Language } from '@/lib/i18n/translations'
 import { MARKETING_PATHS, SITE_URL, type MarketingPageId } from '@/lib/marketing'
 import { SITE_CONTROLLER_NAME } from '@/lib/site-info'
 
@@ -11,10 +11,17 @@ export interface PageMeta {
   alternates: { hreflang: string; href: string }[]
   ogImage: string
   ogLocale: string
+  ogLocaleAlternates: string[]
   jsonLd: Record<string, unknown>[]
 }
 
-const LANGUAGES: Language[] = ['it', 'en']
+const OG_LOCALES: Record<Language, string> = {
+  it: 'it_IT',
+  en: 'en_US',
+  fr: 'fr_FR',
+  es: 'es_ES',
+  de: 'de_DE',
+}
 const GUIDE_PUBLISHED = '2026-10-11'
 
 function absolute(path: string): string {
@@ -78,7 +85,8 @@ export function marketingMeta(id: MarketingPageId, lang: Language): PageMeta {
       { hreflang: 'x-default', href: absolute(paths.en) },
     ],
     ogImage,
-    ogLocale: lang === 'it' ? 'it_IT' : 'en_US',
+    ogLocale: OG_LOCALES[lang],
+    ogLocaleAlternates: LANGUAGES.filter((l) => l !== lang).map((l) => OG_LOCALES[l]),
     jsonLd: [main, faqPage],
   }
 }
@@ -110,6 +118,9 @@ export function renderHeadTags(meta: PageMeta): string {
     `<meta property="og:image:width" content="1200" />`,
     `<meta property="og:image:height" content="630" />`,
     `<meta property="og:locale" content="${meta.ogLocale}" />`,
+    ...meta.ogLocaleAlternates.map(
+      (locale) => `<meta property="og:locale:alternate" content="${locale}" />`,
+    ),
     `<meta name="twitter:card" content="summary_large_image" />`,
     ...meta.jsonLd.map(
       (data) =>
