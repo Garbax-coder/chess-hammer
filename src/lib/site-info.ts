@@ -10,4 +10,4 @@ export const SITE_GITHUB_URL = 'https://github.com/Garbax-coder/chess-hammer'
 // quelle pagine (TermsPage.tsx/PrivacyPage.tsx). Salvata insieme
 // all'accettazione al signup (vedi supabase/migrations/0021_legal_acceptance.sql):
 // cambiarla quando il testo legale cambia in modo sostanziale.
-export const SITE_LEGAL_VERSION = '2026-10-04'
+export const SITE_LEGAL_VERSION = '2026-10-10'

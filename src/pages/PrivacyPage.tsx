@@ -89,6 +89,10 @@ function ContentIt() {
           <b>Resend</b> (invio delle email di servizio tramite il dominio {SITE_DOMAIN}).
         </li>
         <li>
+          <b>Google Cloud</b> (archivio privato delle copie di sicurezza del database) —
+          infrastruttura nella regione UE (Belgio).
+        </li>
+        <li>
           <b>Google</b> (solo se scegli di accedere con "Continua con Google"): Google
           tratta i dati come titolare autonomo secondo la propria informativa.
         </li>
@@ -103,7 +107,11 @@ function ContentIt() {
         I dati restano finché il tuo account è attivo. Puoi scaricare una copia dei tuoi
         dati ed eliminare definitivamente il tuo account in qualsiasi momento dalla pagina{' '}
         <Link to="/profile">Profilo</Link>: l'eliminazione è immediata e cancella anche
-        sessioni, tentativi e statistiche collegate.
+        sessioni, tentativi e statistiche collegate. Per proteggere i dati da guasti, una
+        copia di sicurezza del database viene salvata ogni settimana su Google Cloud, in
+        un archivio privato nell'Unione Europea, e conservata per un massimo di 8
+        settimane: entro questo termine i dati di un account eliminato spariscono anche
+        dalle copie.
       </p>
 
       <h2>Cookie e memoria del browser</h2>
@@ -226,6 +234,10 @@ function ContentEn() {
           <b>Resend</b> (sending service emails through the {SITE_DOMAIN} domain).
         </li>
         <li>
+          <b>Google Cloud</b> (private storage for database backup copies) — EU-region
+          infrastructure (Belgium).
+        </li>
+        <li>
           <b>Google</b> (only if you choose "Continue with Google"): Google processes data
           as an independent controller per its own privacy notice.
         </li>
@@ -240,7 +252,10 @@ function ContentEn() {
         Data stays as long as your account is active. You can download a copy of your data
         and permanently delete your account at any time from your{' '}
         <Link to="/profile">Profile</Link> page: deletion is immediate and also removes
-        linked sessions, attempts and statistics.
+        linked sessions, attempts and statistics. To protect data against failures, a
+        backup copy of the database is saved every week on Google Cloud, in private
+        storage in the European Union, and kept for at most 8 weeks: within that period a
+        deleted account's data also disappears from the copies.
       </p>
 
       <h2>Cookies and browser storage</h2>
