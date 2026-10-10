@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
+import { marketingPageForPath } from '@/lib/marketing'
 import { useUpdateLanguage, useUserStats } from '@/hooks/use-user-stats'
 import { useAuth } from '@/lib/auth-context'
 import { detectBrowserLanguage } from '@/lib/i18n/detect-language'
@@ -39,10 +41,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Sulle pagine pubbliche (home, guida) la lingua la decide l'URL: ogni
+  // versione ha il suo indirizzo per i motori di ricerca, e l'HTML
+  // pre-generato deve coincidere con quello mostrato nel browser.
+  const { pathname } = useLocation()
+  const effectiveLanguage = marketingPageForPath(pathname)?.lang ?? language
+
   const value = useMemo<LanguageContextValue>(
-    () => ({ language, setLanguage, t: translations[language] }),
+    () => ({ language: effectiveLanguage, setLanguage, t: translations[effectiveLanguage] }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [language],
+    [effectiveLanguage],
   )
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>

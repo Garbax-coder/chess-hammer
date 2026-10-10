@@ -19,11 +19,6 @@ export interface Translations {
     it: string
     en: string
   }
-  home: {
-    subtitle: string
-    goToDashboard: string
-    startTraining: string
-  }
   nav: {
     dashboard: string
     train: string
@@ -348,12 +343,6 @@ export const it: Translations = {
     label: 'Lingua',
     it: 'Italiano',
     en: 'English',
-  },
-  home: {
-    subtitle:
-      'Allena la tattica risolvendo lo stesso set di puzzle per 3 giri, sempre più veloce, e traccia il tuo rating ELO nel tempo.',
-    goToDashboard: 'Vai alla dashboard',
-    startTraining: 'Inizia allenamento',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -833,12 +822,6 @@ export const en: Translations = {
     label: 'Language',
     it: 'Italiano',
     en: 'English',
-  },
-  home: {
-    subtitle:
-      'Train your tactics by solving the same puzzle set over 3 rounds, faster each time, and track your ELO rating over time.',
-    goToDashboard: 'Go to dashboard',
-    startTraining: 'Start training',
   },
   nav: {
     dashboard: 'Dashboard',
