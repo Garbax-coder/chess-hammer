@@ -33,7 +33,9 @@ gcloud storage buckets create gs://$BUCKET --project=$PROJECT --location=$REGION
   --default-storage-class=STANDARD --uniform-bucket-level-access \
   --public-access-prevention --soft-delete-duration=0
 lifecycle="$(mktemp)"
-printf '%s\n' '{"rule":[{"action":{"type":"Delete"},"condition":{"age":56}}]}' > "$lifecycle"
+# Solo le cartelle dei backup (<data_ora>/, iniziano con "20"): l'archivio
+# dei puzzle Lichess in archivio/ deve restare.
+printf '%s\n' '{"rule":[{"action":{"type":"Delete"},"condition":{"age":56,"matchesPrefix":["20"]}}]}' > "$lifecycle"
 gcloud storage buckets update gs://$BUCKET --lifecycle-file="$lifecycle"
 rm -f "$lifecycle"
 gcloud storage buckets add-iam-policy-binding gs://$BUCKET \
@@ -50,6 +52,11 @@ gcloud run jobs create db-backup --project=$PROJECT --region=$REGION \
   --task-timeout=15m --max-retries=1 --cpu=1 --memory=512Mi
 gcloud run jobs add-iam-policy-binding db-backup --project=$PROJECT --region=$REGION \
   --member="serviceAccount:$SA" --role=roles/run.invoker
+
+# Archivio una tantum dei puzzle Lichess (esclusi dal backup settimanale):
+# stesso job, script diverso solo per questa esecuzione.
+gcloud run jobs execute db-backup --project=$PROJECT --region=$REGION --wait \
+  --args="^@^-c@$(cat "$ROOT/scripts/cloud-backup/archive-puzzles.sh")"
 
 gcloud scheduler jobs create http db-backup-weekly --project=$PROJECT --location=$REGION \
   --schedule="0 3 * * 0" --time-zone=Europe/Rome \
