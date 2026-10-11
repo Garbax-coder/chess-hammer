@@ -1,4 +1,5 @@
 import type { Breadcrumb, ErrorEvent } from '@sentry/react'
+import { isStaleChunkNoise } from '@/lib/stale-chunk-reload'
 
 // Segnalazione degli errori con Sentry (regione UE), attiva solo in
 // produzione e solo se VITE_SENTRY_DSN e' impostata. Il pacchetto si scarica
@@ -60,7 +61,11 @@ export function startErrorMonitoring() {
           // visita: servono solo gli errori.
           integrations: (defaults) => defaults.filter((i) => i.name !== 'BrowserSession'),
           beforeBreadcrumb: scrubBreadcrumb,
-          beforeSend: scrubEvent,
+          beforeSend: (event) => {
+            const message =
+              event.exception?.values?.map((v) => v.value ?? '').join(' ') ?? ''
+            return isStaleChunkNoise(message) ? null : scrubEvent(event)
+          },
         }),
       )
       .catch(() => {})
