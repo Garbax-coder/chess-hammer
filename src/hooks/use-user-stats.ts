@@ -18,6 +18,9 @@ interface UserStats {
   practice_only_failed: boolean
   practice_failed_scope: FailedPuzzleScope
   app_style: AppStyleId
+  // Versione di Termini/Privacy accettata (null: mai accettata, ad es. chi
+  // si e' registrato con Google): vedi LegalUpdateBanner.
+  legal_version: string | null
 }
 
 export function useUserStats() {
@@ -29,7 +32,7 @@ export function useUserStats() {
       const { data, error } = await supabase
         .from('user_stats')
         .select(
-          'current_elo, puzzles_solved, puzzles_failed, auto_advance, language, board_theme, piece_set, practice_only_failed, practice_failed_scope, app_style',
+          'current_elo, puzzles_solved, puzzles_failed, auto_advance, language, board_theme, piece_set, practice_only_failed, practice_failed_scope, app_style, legal_version',
         )
         .eq('user_id', user!.id)
         .single()
@@ -160,6 +163,26 @@ export function useUpdatePieceSet() {
       const { error } = await supabase
         .from('user_stats')
         .update({ piece_set: pieceSet })
+        .eq('user_id', user!.id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-stats', user?.id] })
+    },
+  })
+}
+
+// Accettazione della versione attuale di Termini/Privacy dall'avviso
+// nell'app (la registrazione con email la salva gia' dal trigger handle_new_user).
+export function useAcceptLegalTerms() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (version: string) => {
+      const { error } = await supabase
+        .from('user_stats')
+        .update({ legal_version: version, legal_accepted_at: new Date().toISOString() })
         .eq('user_id', user!.id)
       if (error) throw error
     },

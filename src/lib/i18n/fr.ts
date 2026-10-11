@@ -386,6 +386,28 @@ export const fr: Translations = {
     passwordChanged: 'Mot de passe mis à jour. Vos autres appareils ont été déconnectés.',
     wrongCurrentPassword: 'Le mot de passe actuel est incorrect.',
   },
+  legalUpdate: {
+    updatedTitle:
+      'Nous avons mis à jour nos conditions et notre politique de confidentialité',
+    updatedIntro: 'Voici ce qui change :',
+    changes: [
+      'L’âge minimum pour utiliser Chess Hammer est désormais de 16 ans.',
+      'Les rapports d’erreur de l’application passent par Sentry (données dans l’UE, sans e-mail ni adresse IP).',
+      'La liste des prestataires inclut désormais Cloudflare (vérification anti-robot) et Have I Been Pwned (contrôle des mots de passe divulgués).',
+      'Les comptes inutilisés pendant 24 mois sont supprimés, avec un e-mail d’avertissement 30 jours avant ; les comptes jamais confirmés, après 7 jours.',
+      'Les conditions et la politique de confidentialité sont disponibles en cinq langues ; en cas de différence, le texte italien prévaut.',
+    ],
+    continuing:
+      'En continuant à utiliser Chess Hammer, vous acceptez les textes mis à jour.',
+    acknowledge: 'J’ai compris',
+    acceptTitle: 'Conditions et confidentialité',
+    acceptBefore: (minAge) =>
+      `Pour continuer, confirmez que vous avez au moins ${minAge} ans et que vous acceptez les`,
+    acceptAnd: 'et la',
+    acceptAfter: '.',
+    accept: 'J’accepte',
+    error: 'Enregistrement impossible. Réessayez.',
+  },
   terms: {
     title: 'Conditions générales',
     back: 'Retour à l’accueil',
