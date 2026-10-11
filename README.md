@@ -75,6 +75,31 @@ supabase db push                                      # produzione (progetto col
 Editor e poi registrate con `supabase migration repair --status applied`: da qui in
 poi lo storico è tenuto dalla CLI.
 
+## Conservazione degli account
+
+Ogni notte (4:30 UTC) un job `pg_cron` nel database esegue `run_account_retention()`
+(migrazione [0027](supabase/migrations/0027_account_retention.sql)), come promesso
+nell'informativa privacy:
+
+- gli account **mai confermati** si eliminano 7 giorni dopo la registrazione;
+- chi non usa l'account da **23 mesi** riceve un'email (Resend, nella sua lingua) che
+  annuncia l'eliminazione **30 giorni** dopo; se nel frattempo accede o gioca, l'avviso
+  si annulla;
+- passati i 30 giorni, l'account si elimina con tutti i suoi dati.
+
+"Uso" vuol dire accesso, rinnovo automatico della sessione o puzzle giocato. L'email
+parte solo se in Supabase Vault c'è il segreto `resend_api_key`: senza, nessun account
+inattivo viene avvisato e quindi nessuno viene eliminato (solo quelli mai confermati).
+Il testo dell'email si genera con `node scripts/build-email-templates.mjs`
+(`supabase/email-templates/account-deletion-warning.sql`, copiato nella migrazione
+[0028](supabase/migrations/0028_account_retention_emails.sql)).
+
+Prova sul progetto di sviluppo (transazione annullata alla fine, non lascia tracce):
+
+```bash
+psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/account-retention.sql
+```
+
 ## Backup del database
 
 Il piano gratuito di Supabase non fa backup. Ne fa uno **ogni domenica alle 3:00** un

@@ -11,7 +11,7 @@ export default function PrivacyIt() {
   return (
     <>
       <p>
-        Ultimo aggiornamento: 10 ottobre 2026. Questa informativa descrive quali dati
+        Ultimo aggiornamento: 11 ottobre 2026. Questa informativa descrive quali dati
         personali raccoglie {SITE_DOMAIN} ("Chess Hammer", "il Servizio"), per quali
         finalità e con quali diritti puoi gestirli, in base al Regolamento (UE) 2016/679
         (GDPR).
@@ -139,7 +139,10 @@ export default function PrivacyIt() {
         copia di sicurezza del database viene salvata ogni settimana su Google Cloud, in
         un archivio privato nell'Unione Europea, e conservata per un massimo di 8
         settimane: entro questo termine i dati di un account eliminato spariscono anche
-        dalle copie. Le segnalazioni di errore sono cancellate dopo 30 giorni.
+        dalle copie. Le segnalazioni di errore sono cancellate dopo 30 giorni. Se non usi
+        il tuo account per 24 mesi lo eliminiamo, con tutti i suoi dati: ti avvisiamo via
+        email 30 giorni prima, e per tenerlo basta accedere. Gli account registrati ma mai
+        confermati vengono eliminati dopo 7 giorni.
       </p>
 
       <h2>Cookie e memoria del browser</h2>

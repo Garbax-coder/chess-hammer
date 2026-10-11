@@ -211,7 +211,7 @@ const FONT =
 // PNG perche' Gmail e Outlook non mostrano gli SVG: e' public/email/logo.png.
 const LOGO_URL = 'https://chesshammer.com/email/logo.png'
 
-function block(lang, copy, { label }) {
+function block(lang, copy, { label, link = '{{ .ConfirmationURL }}' }) {
   const heading = label
     ? `\n          <p style="margin:0 0 14px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:${COLORS.sage};">${LANGUAGE_NAMES[lang]}</p>`
     : ''
@@ -219,10 +219,10 @@ function block(lang, copy, { label }) {
           <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:${COLORS.ink};">${copy.title}</h1>
           <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:${COLORS.body};">${copy.intro}</p>
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;"><tr><td style="border-radius:8px;background:${COLORS.sage};">
-            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;">${copy.button}</a>
+            <a href="${link}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;">${copy.button}</a>
           </td></tr></table>
           <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:${COLORS.muted};">${COMMON[lang].fallback}</p>
-          <p style="margin:0 0 20px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:${COLORS.sage};">{{ .ConfirmationURL }}</a></p>
+          <p style="margin:0 0 20px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="${link}" style="color:${COLORS.sage};">${link}</a></p>
           <p style="margin:0;padding-top:18px;border-top:1px solid ${COLORS.divider};font-size:13px;line-height:1.5;color:${COLORS.muted};">${copy.ignore}</p>
           </div>`
 }
@@ -249,6 +249,10 @@ function page(copies) {
     `${copies.it.subject} / ${copies.en.subject}`,
   )
   const tagline = byLanguage((lang) => COMMON[lang].tagline, COMMON.it.tagline)
+  return layout(body, preheader, tagline)
+}
+
+function layout(body, preheader, tagline) {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -305,3 +309,72 @@ for (const [name, copies] of Object.entries(TEMPLATES)) {
   writeFileSync(join(OUT, `${name}.subject.txt`), text + '\n')
   console.log(`email-templates: ${name}.html, ${name}.subject.txt`)
 }
+
+// Avviso di eliminazione per inattivita' (24 mesi senza accessi, vedi la
+// migrazione 0027): non passa da Supabase Auth ma dalla funzione
+// run_account_retention(), che lo invia con Resend 30 giorni prima. Una pagina
+// per lingua, senza condizioni Go; {{DELETE_DATE}} e {{LOGIN_URL}} si
+// sostituiscono all'invio. Il risultato e' SQL: per cambiare i testi gia' in
+// produzione si rigenera e si copia in una nuova migrazione.
+const ACCOUNT_DELETION_WARNING = {
+  it: {
+    subject: 'Il tuo account Chess Hammer sarà eliminato',
+    title: 'Il tuo account sta per essere eliminato',
+    intro:
+      'Non usi Chess Hammer da quasi due anni. Come previsto dall’informativa privacy, il tuo account e tutti i suoi dati verranno eliminati il <strong>{{DELETE_DATE}}</strong>. Per tenerlo basta accedere prima di quella data: l’eliminazione si annulla da sola.',
+    button: 'Accedi',
+    ignore: 'Se non ti serve più, non devi fare nulla.',
+  },
+  en: {
+    subject: 'Your Chess Hammer account will be deleted',
+    title: 'Your account is about to be deleted',
+    intro:
+      'You haven’t used Chess Hammer for almost two years. As stated in our privacy notice, your account and all its data will be deleted on <strong>{{DELETE_DATE}}</strong>. To keep it, just sign in before that date: the deletion is cancelled automatically.',
+    button: 'Sign in',
+    ignore: 'If you no longer need it, you don’t have to do anything.',
+  },
+  fr: {
+    subject: 'Votre compte Chess Hammer va être supprimé',
+    title: 'Votre compte va bientôt être supprimé',
+    intro:
+      'Vous n’avez pas utilisé Chess Hammer depuis près de deux ans. Comme prévu par notre politique de confidentialité, votre compte et toutes ses données seront supprimés le <strong>{{DELETE_DATE}}</strong>. Pour le conserver, il suffit de vous connecter avant cette date : la suppression est annulée automatiquement.',
+    button: 'Se connecter',
+    ignore: 'Si vous n’en avez plus besoin, vous n’avez rien à faire.',
+  },
+  es: {
+    subject: 'Tu cuenta de Chess Hammer se va a eliminar',
+    title: 'Tu cuenta está a punto de eliminarse',
+    intro:
+      'Hace casi dos años que no usas Chess Hammer. Como indica nuestra política de privacidad, tu cuenta y todos sus datos se eliminarán el <strong>{{DELETE_DATE}}</strong>. Para conservarla, basta con iniciar sesión antes de esa fecha: la eliminación se cancela sola.',
+    button: 'Iniciar sesión',
+    ignore: 'Si ya no la necesitas, no tienes que hacer nada.',
+  },
+  de: {
+    subject: 'Dein Chess-Hammer-Konto wird gelöscht',
+    title: 'Dein Konto wird bald gelöscht',
+    intro:
+      'Du hast Chess Hammer seit fast zwei Jahren nicht genutzt. Wie in unserer Datenschutzerklärung beschrieben, werden dein Konto und alle zugehörigen Daten am <strong>{{DELETE_DATE}}</strong> gelöscht. Wenn du es behalten möchtest, melde dich einfach vor diesem Datum an: Die Löschung wird dann automatisch aufgehoben.',
+    button: 'Anmelden',
+    ignore: 'Wenn du es nicht mehr brauchst, musst du nichts tun.',
+  },
+}
+
+const warningRows = LANGS.map((lang) => {
+  const copy = ACCOUNT_DELETION_WARNING[lang]
+  const html = layout(
+    block(lang, copy, { label: false, link: '{{LOGIN_URL}}' }),
+    copy.subject,
+    COMMON[lang].tagline,
+  )
+  if (html.includes('$tpl$')) throw new Error('il testo contiene il delimitatore $tpl$')
+  return `  ('account-deletion-warning', '${lang}', $tpl$${copy.subject}$tpl$, $tpl$${html}$tpl$)`
+})
+writeFileSync(
+  join(OUT, 'account-deletion-warning.sql'),
+  `-- Generato da scripts/build-email-templates.mjs: non modificare a mano.
+insert into public.app_email_templates (name, lang, subject, html) values
+${warningRows.join(',\n')}
+on conflict (name, lang) do update set subject = excluded.subject, html = excluded.html;
+`,
+)
+console.log('email-templates: account-deletion-warning.sql')

@@ -11,7 +11,7 @@ export default function PrivacyFr() {
   return (
     <>
       <p>
-        Dernière mise à jour : 10 octobre 2026. Cette politique décrit quelles données
+        Dernière mise à jour : 11 octobre 2026. Cette politique décrit quelles données
         personnelles {SITE_DOMAIN} (« Chess Hammer », « le Service ») collecte, à quelles
         fins et de quels droits vous disposez, conformément au règlement (UE) 2016/679
         (RGPD).
@@ -150,7 +150,10 @@ export default function PrivacyFr() {
         données est enregistrée chaque semaine sur Google Cloud, dans un stockage privé
         dans l’Union européenne, et conservée au maximum 8 semaines : passé ce délai, les
         données d’un compte supprimé disparaissent aussi des copies. Les rapports d’erreur
-        sont supprimés après 30 jours.
+        sont supprimés après 30 jours. Si vous n’utilisez pas votre compte pendant 24
+        mois, nous le supprimons avec toutes ses données : nous vous prévenons par e-mail
+        30 jours avant, et il suffit de vous connecter pour le conserver. Les comptes
+        créés mais jamais confirmés sont supprimés après 7 jours.
       </p>
 
       <h2>Cookies et stockage du navigateur</h2>
