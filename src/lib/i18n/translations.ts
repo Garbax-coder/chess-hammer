@@ -297,6 +297,21 @@ export interface Translations {
     passwordChanged: string
     wrongCurrentPassword: string
   }
+  // Avviso nell'app quando Termini/Privacy cambiano (SITE_LEGAL_VERSION):
+  // changes elenca le novita' della versione attuale, da aggiornare con i testi.
+  legalUpdate: {
+    updatedTitle: string
+    updatedIntro: string
+    changes: string[]
+    continuing: string
+    acknowledge: string
+    acceptTitle: string
+    acceptBefore: (minAge: number) => string
+    acceptAnd: string
+    acceptAfter: string
+    accept: string
+    error: string
+  }
   terms: {
     title: string
     back: string
@@ -725,6 +740,25 @@ export const it: Translations = {
     changePasswordSubmit: 'Salva la nuova password',
     passwordChanged: 'Password aggiornata. Gli altri dispositivi sono stati disconnessi.',
     wrongCurrentPassword: 'La password attuale non è corretta.',
+  },
+  legalUpdate: {
+    updatedTitle: "Abbiamo aggiornato Termini e Privacy",
+    updatedIntro: "Ecco cosa cambia:",
+    changes: [
+      "L'età minima per usare Chess Hammer è ora 16 anni.",
+      "Le segnalazioni di errore dell'app passano da Sentry (dati nell'UE, senza email né indirizzo IP).",
+      "Tra i fornitori ora sono elencati anche Cloudflare (verifica anti-bot) e Have I Been Pwned (controllo delle password trapelate).",
+      "Gli account non usati per 24 mesi vengono eliminati, con un'email di avviso 30 giorni prima; quelli mai confermati dopo 7 giorni.",
+      "Termini e Privacy sono disponibili in cinque lingue; in caso di differenze prevale l'italiano.",
+    ],
+    continuing: "Continuando a usare Chess Hammer accetti i testi aggiornati.",
+    acknowledge: "Ho capito",
+    acceptTitle: "Termini e Privacy",
+    acceptBefore: (minAge) => `Per continuare, conferma di avere almeno ${minAge} anni e di accettare`,
+    acceptAnd: "e",
+    acceptAfter: ".",
+    accept: "Accetto",
+    error: "Non è stato possibile salvare. Riprova.",
   },
   terms: {
     title: 'Termini e Condizioni',
@@ -1206,6 +1240,25 @@ export const en: Translations = {
     changePasswordSubmit: 'Save new password',
     passwordChanged: 'Password updated. Your other devices were signed out.',
     wrongCurrentPassword: 'The current password is incorrect.',
+  },
+  legalUpdate: {
+    updatedTitle: "We've updated our Terms and Privacy Policy",
+    updatedIntro: "Here's what changed:",
+    changes: [
+      "The minimum age to use Chess Hammer is now 16.",
+      "App error reports go through Sentry (data in the EU, without email or IP address).",
+      "The list of providers now also includes Cloudflare (bot check) and Have I Been Pwned (leaked password check).",
+      "Accounts unused for 24 months are deleted, with a warning email 30 days before; accounts never confirmed after 7 days.",
+      "The Terms and Privacy Policy are available in five languages; if they differ, the Italian text prevails.",
+    ],
+    continuing: "By continuing to use Chess Hammer you accept the updated texts.",
+    acknowledge: "Got it",
+    acceptTitle: "Terms and Privacy Policy",
+    acceptBefore: (minAge) => `To continue, confirm that you're at least ${minAge} years old and accept the`,
+    acceptAnd: "and the",
+    acceptAfter: ".",
+    accept: "I accept",
+    error: "Couldn't save. Please try again.",
   },
   terms: {
     title: 'Terms and Conditions',

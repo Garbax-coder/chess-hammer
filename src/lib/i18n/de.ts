@@ -387,6 +387,28 @@ export const de: Translations = {
     passwordChanged: 'Passwort aktualisiert. Deine anderen Geräte wurden abgemeldet.',
     wrongCurrentPassword: 'Das aktuelle Passwort ist falsch.',
   },
+  legalUpdate: {
+    updatedTitle:
+      'Wir haben unsere Nutzungsbedingungen und Datenschutzerklärung aktualisiert',
+    updatedIntro: 'Das ändert sich:',
+    changes: [
+      'Das Mindestalter für Chess Hammer liegt jetzt bei 16 Jahren.',
+      'Fehlerberichte der App laufen über Sentry (Daten in der EU, ohne E-Mail-Adresse oder IP-Adresse).',
+      'Zu den Anbietern gehören jetzt auch Cloudflare (Bot-Prüfung) und Have I Been Pwned (Prüfung auf geleakte Passwörter).',
+      'Konten, die 24 Monate nicht genutzt werden, werden gelöscht, mit einer Warn-E-Mail 30 Tage vorher; nie bestätigte Konten nach 7 Tagen.',
+      'Nutzungsbedingungen und Datenschutzerklärung gibt es in fünf Sprachen; bei Abweichungen gilt der italienische Text.',
+    ],
+    continuing:
+      'Wenn du Chess Hammer weiter nutzt, akzeptierst du die aktualisierten Texte.',
+    acknowledge: 'Verstanden',
+    acceptTitle: 'Nutzungsbedingungen und Datenschutz',
+    acceptBefore: (minAge) =>
+      `Um fortzufahren, bestätige, dass du mindestens ${minAge} Jahre alt bist und die`,
+    acceptAnd: 'und die',
+    acceptAfter: ' akzeptierst.',
+    accept: 'Ich akzeptiere',
+    error: 'Speichern nicht möglich. Bitte versuche es erneut.',
+  },
   terms: {
     title: 'Nutzungsbedingungen',
     back: 'Zurück zur Startseite',
