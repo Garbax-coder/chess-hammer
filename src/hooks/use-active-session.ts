@@ -24,9 +24,10 @@ export function useCreateTrainingSession() {
   return useMutation({
     mutationFn: (input: NewTrainingSessionInput) =>
       createTrainingSession(user!.id, input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['active-session', user?.id] })
-    },
+    // Restituita (e quindi attesa da mutateAsync): chi apre subito
+    // l'allenamento deve trovare gia' la sessione nuova, non quella vecchia.
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['active-session', user?.id] }),
   })
 }
 

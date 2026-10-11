@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { PuzzleThemesPicker } from '@/components/puzzle-themes-picker'
 import { SessionCalendarPreview } from '@/components/session-calendar-preview'
 import { Button } from '@/components/ui/button'
@@ -18,16 +18,20 @@ import { daysForRound } from '@/lib/training-sessions'
 import { DEFAULT_SESSION_CONFIG, type NewTrainingSessionInput } from '@/types/training'
 
 export default function NewSessionPage() {
-  const navigate = useNavigate()
   const t = useTranslations()
   const { data: activeSession, isLoading: loadingActiveSession } = useActiveSession()
   const createSession = useCreateTrainingSession()
   const [form, setForm] = useState<NewTrainingSessionInput>(DEFAULT_SESSION_CONFIG)
   const [validationError, setValidationError] = useState<string | null>(null)
+  // Segnato prima di creare la sessione: quando la sessione nuova arriva
+  // dalla query, il rinvio qui sotto porta all'allenamento e non alla
+  // dashboard.
+  const [starting, setStarting] = useState(false)
 
-  // Vincolo: una sola sessione attiva alla volta.
+  // Vincolo: una sola sessione attiva alla volta. Appena creata la sessione
+  // si parte subito dal primo puzzle.
   if (!loadingActiveSession && activeSession) {
-    return <Navigate to="/dashboard" replace />
+    return <Navigate to={starting ? '/train' : '/dashboard'} replace />
   }
 
   function updateField(field: keyof NewTrainingSessionInput, value: string) {
@@ -60,8 +64,13 @@ export default function NewSessionPage() {
       return
     }
     setValidationError(null)
-    await createSession.mutateAsync(form)
-    navigate('/dashboard')
+    setStarting(true)
+    try {
+      await createSession.mutateAsync(form)
+    } catch {
+      // L'errore e' gia' mostrato da createSession.isError, sotto il modulo.
+      setStarting(false)
+    }
   }
 
   const rounds: {
