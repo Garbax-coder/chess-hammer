@@ -1,0 +1,17 @@
+# Generato da scripts/build-email-templates.mjs: non modificare a mano.
+# `npm run email:push` lo invia al progetto collegato con la Supabase CLI.
+# Dichiara solo i template delle email: il resto della configurazione di
+# Supabase non viene toccato.
+project_id = "chess-hammer"
+
+[auth.email.template.confirmation]
+subject = "{{$l := or .Data.language \"\"}}{{if eq $l \"en\"}}Confirm your email{{else if eq $l \"fr\"}}Confirmez votre e-mail{{else if eq $l \"es\"}}Confirma tu correo{{else if eq $l \"de\"}}Bestätige deine E-Mail{{else}}Conferma la tua email{{end}}"
+content_path = "./supabase/email-templates/confirm-signup.html"
+
+[auth.email.template.recovery]
+subject = "{{$l := or .Data.language \"\"}}{{if eq $l \"en\"}}Reset your password{{else if eq $l \"fr\"}}Nouveau mot de passe{{else if eq $l \"es\"}}Restablece tu contraseña{{else if eq $l \"de\"}}Passwort zurücksetzen{{else}}Reimposta la password{{end}}"
+content_path = "./supabase/email-templates/reset-password.html"
+
+[auth.email.template.email_change]
+subject = "{{$l := or .Data.language \"\"}}{{if eq $l \"en\"}}Confirm your new email{{else if eq $l \"fr\"}}Confirmez le nouvel e-mail{{else if eq $l \"es\"}}Confirma tu nuevo correo{{else if eq $l \"de\"}}Bestätige deine neue E-Mail{{else}}Conferma la nuova email{{end}}"
+content_path = "./supabase/email-templates/change-email.html"
