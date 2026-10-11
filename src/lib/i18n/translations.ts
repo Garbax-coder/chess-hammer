@@ -256,6 +256,7 @@ export interface Translations {
     deleteActiveSession: string
     skipRest: string
     addKnightPromotionPuzzle: string
+    addDoubleMatePuzzle: string
   }
   profile: {
     openLabel: string
@@ -675,6 +676,7 @@ export const it: Translations = {
     deleteActiveSession: 'Elimina sessione attiva',
     skipRest: 'Salta pausa',
     addKnightPromotionPuzzle: 'Aggiungi puzzle promozione a cavallo',
+    addDoubleMatePuzzle: 'Try double finish puzzle',
   },
   profile: {
     openLabel: 'Profilo',
@@ -1155,6 +1157,7 @@ export const en: Translations = {
     deleteActiveSession: 'Delete active session',
     skipRest: 'Skip rest',
     addKnightPromotionPuzzle: 'Add knight promotion puzzle',
+    addDoubleMatePuzzle: 'Try double finish puzzle',
   },
   profile: {
     openLabel: 'Profile',

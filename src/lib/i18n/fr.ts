@@ -336,6 +336,7 @@ export const fr: Translations = {
     deleteActiveSession: 'Supprimer la session active',
     skipRest: 'Passer la pause',
     addKnightPromotionPuzzle: 'Ajouter un puzzle de promotion en cavalier',
+    addDoubleMatePuzzle: 'Try double finish puzzle',
   },
   profile: {
     openLabel: 'Profil',
