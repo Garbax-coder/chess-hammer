@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { captchaRequired, TurnstileWidget } from '@/components/turnstile-widget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -69,11 +70,14 @@ function ChangePasswordForm({ email }: { email: string }) {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
     setDone(false)
+    if (captchaRequired && !captchaToken) return
     if (password !== confirm) {
       setError(t.resetPassword.mismatch)
       return
@@ -85,8 +89,16 @@ function ChangePasswordForm({ email }: { email: string }) {
       setError(t.passwordPolicy[problem])
       return
     }
-    const result = await changePassword(email, current, password)
+    const result = await changePassword(
+      email,
+      current,
+      password,
+      captchaToken ?? undefined,
+    )
     setSubmitting(false)
+    // Un token vale per un solo tentativo: se ne chiede uno nuovo in ogni caso.
+    setCaptchaToken(null)
+    setCaptchaResetKey((k) => k + 1)
     if (!result.ok) {
       setError(
         result.reason === 'wrong-current'
@@ -144,10 +156,18 @@ function ChangePasswordForm({ email }: { email: string }) {
           autoComplete="new-password"
         />
       </div>
+      {captchaRequired && (
+        <TurnstileWidget onVerify={setCaptchaToken} resetKey={captchaResetKey} />
+      )}
       {error && <p className="text-destructive text-sm">{error}</p>}
       {done && <p className="text-sm">{t.profile.passwordChanged}</p>}
       <div>
-        <Button type="submit" size="sm" loading={submitting}>
+        <Button
+          type="submit"
+          size="sm"
+          loading={submitting}
+          disabled={captchaRequired && !captchaToken}
+        >
           {t.profile.changePasswordSubmit}
         </Button>
       </div>

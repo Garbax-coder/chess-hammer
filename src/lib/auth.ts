@@ -95,14 +95,19 @@ export type ChangePasswordResult =
 
 // updateUser da solo non chiede la password attuale: la si verifica prima con
 // un login, cosi' una sessione lasciata aperta non basta per cambiarla.
+// La password attuale si verifica con un nuovo accesso: con il CAPTCHA
+// attivo Supabase lo rifiuta senza token ("no captcha_token found"), quindi il
+// modulo del profilo mostra lo stesso controllo del login e lo passa qui.
 export async function changePassword(
   email: string,
   currentPassword: string,
   newPassword: string,
+  captchaToken?: string,
 ): Promise<ChangePasswordResult> {
   const verify = await supabase.auth.signInWithPassword({
     email,
     password: currentPassword,
+    options: { captchaToken },
   })
   if (verify.error) {
     return {

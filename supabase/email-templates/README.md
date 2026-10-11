@@ -27,6 +27,10 @@ lingua diversa dall'italiano. Se l'oggetto arriva con le parentesi graffe
 (`{{ $lang := ...`), Supabase non interpreta le condizioni nell'oggetto: usa
 allora un oggetto fisso, ad es. `Chess Hammer · Conferma email / Confirm email`.
 
+Stile "Carta" con la palette Salvia del sito. Il logo è `public/email/logo.png`,
+servito da https://chesshammer.com/email/logo.png: incolla i template dopo aver
+pubblicato il sito, altrimenti il logo non si vede.
+
 Variabili usate: `{{ .ConfirmationURL }}`, `{{ .Email }}`, `{{ .NewEmail }}`, `{{ .Data.language }}`.
 
 Con Resend tieni **spento** il click tracking del dominio: riscriverebbe i link di

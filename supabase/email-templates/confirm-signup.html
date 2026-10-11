@@ -6,84 +6,90 @@
   <meta name="color-scheme" content="light">
   <meta name="supported-color-schemes" content="light">
   <title>Chess Hammer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<body style="margin:0;padding:0;background:#F7F6EE;font-family:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">{{ $lang := or .Data.language "" }}{{ if eq $lang "it" }}Conferma la tua email{{ else if eq $lang "en" }}Confirm your email{{ else if eq $lang "fr" }}Confirmez votre e-mail{{ else if eq $lang "es" }}Confirma tu correo{{ else if eq $lang "de" }}Bestätige deine E-Mail{{ else }}Conferma la tua email / Confirm your email{{ end }}</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F6EE;">
     <tr><td align="center" style="padding:32px 16px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
-        <tr><td style="padding:0 0 16px;font-size:18px;font-weight:700;color:#111827;">&#9822; Chess Hammer</td></tr>
-        <tr><td style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:32px;">
+        <tr><td style="padding:0 4px 18px;">
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+            <td style="padding-right:10px;"><img src="https://chesshammer.com/email/logo.png" width="32" height="32" alt="" style="display:block;border:0;border-radius:7px;"></td>
+            <td style="font-size:17px;font-weight:700;color:#262B22;letter-spacing:-.01em;">Chess Hammer</td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="background:#FFFFFF;border:1px solid #E1E2D3;border-radius:12px;padding:32px;">
           {{ $lang := or .Data.language "" }}{{ if eq $lang "it" }}<div lang="it">
-          <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#111827;">Conferma il tuo indirizzo email</h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">Grazie per esserti registrato su Chess Hammer. Conferma l’indirizzo email per attivare il tuo account e iniziare ad allenarti.</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;"><tr><td style="border-radius:8px;background:#111827;">
-            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">Conferma email</a>
+          <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#262B22;">Conferma il tuo indirizzo email</h1>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4A5143;">Grazie per esserti registrato su Chess Hammer. Conferma l’indirizzo email per attivare il tuo account e iniziare ad allenarti.</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;"><tr><td style="border-radius:8px;background:#5A6D43;">
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;">Conferma email</a>
           </td></tr></table>
-          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#6b7280;">Se il pulsante non funziona, copia e incolla questo link nel browser:</p>
-          <p style="margin:0 0 16px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#2563eb;">{{ .ConfirmationURL }}</a></p>
-          <p style="margin:0;font-size:13px;line-height:1.5;color:#6b7280;">Se non hai creato tu un account su Chess Hammer, puoi ignorare questa email.</p>
+          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#5A6251;">Se il pulsante non funziona, copia e incolla questo link nel browser:</p>
+          <p style="margin:0 0 20px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#5A6D43;">{{ .ConfirmationURL }}</a></p>
+          <p style="margin:0;padding-top:18px;border-top:1px solid #ECEEE2;font-size:13px;line-height:1.5;color:#5A6251;">Se non hai creato tu un account su Chess Hammer, puoi ignorare questa email.</p>
           </div>{{ else if eq $lang "en" }}<div lang="en">
-          <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#111827;">Confirm your email address</h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">Thanks for signing up for Chess Hammer. Confirm your email address to activate your account and start training.</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;"><tr><td style="border-radius:8px;background:#111827;">
-            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">Confirm email</a>
+          <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#262B22;">Confirm your email address</h1>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4A5143;">Thanks for signing up for Chess Hammer. Confirm your email address to activate your account and start training.</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;"><tr><td style="border-radius:8px;background:#5A6D43;">
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;">Confirm email</a>
           </td></tr></table>
-          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#6b7280;">If the button doesn’t work, copy and paste this link into your browser:</p>
-          <p style="margin:0 0 16px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#2563eb;">{{ .ConfirmationURL }}</a></p>
-          <p style="margin:0;font-size:13px;line-height:1.5;color:#6b7280;">If you didn’t create a Chess Hammer account, you can ignore this email.</p>
+          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#5A6251;">If the button doesn’t work, copy and paste this link into your browser:</p>
+          <p style="margin:0 0 20px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#5A6D43;">{{ .ConfirmationURL }}</a></p>
+          <p style="margin:0;padding-top:18px;border-top:1px solid #ECEEE2;font-size:13px;line-height:1.5;color:#5A6251;">If you didn’t create a Chess Hammer account, you can ignore this email.</p>
           </div>{{ else if eq $lang "fr" }}<div lang="fr">
-          <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#111827;">Confirmez votre adresse e-mail</h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">Merci de vous être inscrit sur Chess Hammer. Confirmez votre adresse e-mail pour activer votre compte et commencer à vous entraîner.</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;"><tr><td style="border-radius:8px;background:#111827;">
-            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">Confirmer l’e-mail</a>
+          <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#262B22;">Confirmez votre adresse e-mail</h1>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4A5143;">Merci de vous être inscrit sur Chess Hammer. Confirmez votre adresse e-mail pour activer votre compte et commencer à vous entraîner.</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;"><tr><td style="border-radius:8px;background:#5A6D43;">
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;">Confirmer l’e-mail</a>
           </td></tr></table>
-          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#6b7280;">Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</p>
-          <p style="margin:0 0 16px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#2563eb;">{{ .ConfirmationURL }}</a></p>
-          <p style="margin:0;font-size:13px;line-height:1.5;color:#6b7280;">Si vous n’avez pas créé de compte Chess Hammer, vous pouvez ignorer cet e-mail.</p>
+          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#5A6251;">Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</p>
+          <p style="margin:0 0 20px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#5A6D43;">{{ .ConfirmationURL }}</a></p>
+          <p style="margin:0;padding-top:18px;border-top:1px solid #ECEEE2;font-size:13px;line-height:1.5;color:#5A6251;">Si vous n’avez pas créé de compte Chess Hammer, vous pouvez ignorer cet e-mail.</p>
           </div>{{ else if eq $lang "es" }}<div lang="es">
-          <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#111827;">Confirma tu dirección de correo</h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">Gracias por registrarte en Chess Hammer. Confirma tu dirección de correo para activar la cuenta y empezar a entrenar.</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;"><tr><td style="border-radius:8px;background:#111827;">
-            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">Confirmar correo</a>
+          <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#262B22;">Confirma tu dirección de correo</h1>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4A5143;">Gracias por registrarte en Chess Hammer. Confirma tu dirección de correo para activar la cuenta y empezar a entrenar.</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;"><tr><td style="border-radius:8px;background:#5A6D43;">
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;">Confirmar correo</a>
           </td></tr></table>
-          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#6b7280;">Si el botón no funciona, copia y pega este enlace en tu navegador:</p>
-          <p style="margin:0 0 16px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#2563eb;">{{ .ConfirmationURL }}</a></p>
-          <p style="margin:0;font-size:13px;line-height:1.5;color:#6b7280;">Si no has creado una cuenta en Chess Hammer, puedes ignorar este correo.</p>
+          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#5A6251;">Si el botón no funciona, copia y pega este enlace en tu navegador:</p>
+          <p style="margin:0 0 20px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#5A6D43;">{{ .ConfirmationURL }}</a></p>
+          <p style="margin:0;padding-top:18px;border-top:1px solid #ECEEE2;font-size:13px;line-height:1.5;color:#5A6251;">Si no has creado una cuenta en Chess Hammer, puedes ignorar este correo.</p>
           </div>{{ else if eq $lang "de" }}<div lang="de">
-          <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#111827;">Bestätige deine E-Mail-Adresse</h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">Danke für deine Registrierung bei Chess Hammer. Bestätige deine E-Mail-Adresse, um dein Konto zu aktivieren und mit dem Training zu beginnen.</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;"><tr><td style="border-radius:8px;background:#111827;">
-            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">E-Mail bestätigen</a>
+          <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#262B22;">Bestätige deine E-Mail-Adresse</h1>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4A5143;">Danke für deine Registrierung bei Chess Hammer. Bestätige deine E-Mail-Adresse, um dein Konto zu aktivieren und mit dem Training zu beginnen.</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;"><tr><td style="border-radius:8px;background:#5A6D43;">
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;">E-Mail bestätigen</a>
           </td></tr></table>
-          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#6b7280;">Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:</p>
-          <p style="margin:0 0 16px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#2563eb;">{{ .ConfirmationURL }}</a></p>
-          <p style="margin:0;font-size:13px;line-height:1.5;color:#6b7280;">Wenn du kein Konto bei Chess Hammer erstellt hast, kannst du diese E-Mail ignorieren.</p>
+          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#5A6251;">Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:</p>
+          <p style="margin:0 0 20px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#5A6D43;">{{ .ConfirmationURL }}</a></p>
+          <p style="margin:0;padding-top:18px;border-top:1px solid #ECEEE2;font-size:13px;line-height:1.5;color:#5A6251;">Wenn du kein Konto bei Chess Hammer erstellt hast, kannst du diese E-Mail ignorieren.</p>
           </div>{{ else }}<div lang="it">
-          <p style="margin:0 0 16px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">Italiano</p>
-          <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#111827;">Conferma il tuo indirizzo email</h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">Grazie per esserti registrato su Chess Hammer. Conferma l’indirizzo email per attivare il tuo account e iniziare ad allenarti.</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;"><tr><td style="border-radius:8px;background:#111827;">
-            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">Conferma email</a>
+          <p style="margin:0 0 14px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#5A6D43;">Italiano</p>
+          <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#262B22;">Conferma il tuo indirizzo email</h1>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4A5143;">Grazie per esserti registrato su Chess Hammer. Conferma l’indirizzo email per attivare il tuo account e iniziare ad allenarti.</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;"><tr><td style="border-radius:8px;background:#5A6D43;">
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;">Conferma email</a>
           </td></tr></table>
-          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#6b7280;">Se il pulsante non funziona, copia e incolla questo link nel browser:</p>
-          <p style="margin:0 0 16px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#2563eb;">{{ .ConfirmationURL }}</a></p>
-          <p style="margin:0;font-size:13px;line-height:1.5;color:#6b7280;">Se non hai creato tu un account su Chess Hammer, puoi ignorare questa email.</p>
+          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#5A6251;">Se il pulsante non funziona, copia e incolla questo link nel browser:</p>
+          <p style="margin:0 0 20px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#5A6D43;">{{ .ConfirmationURL }}</a></p>
+          <p style="margin:0;padding-top:18px;border-top:1px solid #ECEEE2;font-size:13px;line-height:1.5;color:#5A6251;">Se non hai creato tu un account su Chess Hammer, puoi ignorare questa email.</p>
           </div>
-          <hr style="border:0;border-top:1px solid #e5e7eb;margin:32px 0;">
+          <hr style="border:0;border-top:1px solid #ECEEE2;margin:32px 0;">
           <div lang="en">
-          <p style="margin:0 0 16px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">English</p>
-          <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#111827;">Confirm your email address</h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">Thanks for signing up for Chess Hammer. Confirm your email address to activate your account and start training.</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;"><tr><td style="border-radius:8px;background:#111827;">
-            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">Confirm email</a>
+          <p style="margin:0 0 14px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#5A6D43;">English</p>
+          <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#262B22;">Confirm your email address</h1>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4A5143;">Thanks for signing up for Chess Hammer. Confirm your email address to activate your account and start training.</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;"><tr><td style="border-radius:8px;background:#5A6D43;">
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;">Confirm email</a>
           </td></tr></table>
-          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#6b7280;">If the button doesn’t work, copy and paste this link into your browser:</p>
-          <p style="margin:0 0 16px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#2563eb;">{{ .ConfirmationURL }}</a></p>
-          <p style="margin:0;font-size:13px;line-height:1.5;color:#6b7280;">If you didn’t create a Chess Hammer account, you can ignore this email.</p>
+          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#5A6251;">If the button doesn’t work, copy and paste this link into your browser:</p>
+          <p style="margin:0 0 20px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#5A6D43;">{{ .ConfirmationURL }}</a></p>
+          <p style="margin:0;padding-top:18px;border-top:1px solid #ECEEE2;font-size:13px;line-height:1.5;color:#5A6251;">If you didn’t create a Chess Hammer account, you can ignore this email.</p>
           </div>{{ end }}
         </td></tr>
-        <tr><td style="padding:16px 0 0;font-size:12px;line-height:1.5;color:#9ca3af;">Chess Hammer &middot; chesshammer.com</td></tr>
+        <tr><td style="padding:18px 4px 0;font-size:12px;line-height:1.6;color:#7C826F;">Chess Hammer &middot; {{ $lang := or .Data.language "" }}{{ if eq $lang "it" }}Allenamento tattico per scacchisti{{ else if eq $lang "en" }}Chess tactics training{{ else if eq $lang "fr" }}Entraînement tactique aux échecs{{ else if eq $lang "es" }}Entrenamiento táctico de ajedrez{{ else if eq $lang "de" }}Taktiktraining für Schach{{ else }}Allenamento tattico per scacchisti{{ end }}<br><a href="https://chesshammer.com" style="color:#7C826F;text-decoration:none;">chesshammer.com</a></td></tr>
       </table>
     </td></tr>
   </table>

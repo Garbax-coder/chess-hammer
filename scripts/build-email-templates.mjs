@@ -29,17 +29,24 @@ const LANG_VAR = '{{ $lang := or .Data.language "" }}'
 
 const COMMON = {
   it: {
+    tagline: 'Allenamento tattico per scacchisti',
     fallback: 'Se il pulsante non funziona, copia e incolla questo link nel browser:',
   },
   en: {
+    tagline: 'Chess tactics training',
     fallback: 'If the button doesn’t work, copy and paste this link into your browser:',
   },
   fr: {
+    tagline: 'Entraînement tactique aux échecs',
     fallback:
       'Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :',
   },
-  es: { fallback: 'Si el botón no funciona, copia y pega este enlace en tu navegador:' },
+  es: {
+    tagline: 'Entrenamiento táctico de ajedrez',
+    fallback: 'Si el botón no funciona, copia y pega este enlace en tu navegador:',
+  },
   de: {
+    tagline: 'Taktiktraining für Schach',
     fallback:
       'Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:',
   },
@@ -186,19 +193,37 @@ const TEMPLATES = {
   },
 }
 
+// Stile "Carta" (come le schede del sito, palette Salvia): fondo crema,
+// logo e nome sopra, scheda bianca con bordo sottile, pulsante salvia.
+const COLORS = {
+  page: '#F7F6EE',
+  card: '#FFFFFF',
+  border: '#E1E2D3',
+  divider: '#ECEEE2',
+  ink: '#262B22',
+  body: '#4A5143',
+  muted: '#5A6251',
+  faint: '#7C826F',
+  sage: '#5A6D43',
+}
+const FONT =
+  "'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+// PNG perche' Gmail e Outlook non mostrano gli SVG: e' public/email/logo.png.
+const LOGO_URL = 'https://chesshammer.com/email/logo.png'
+
 function block(lang, copy, { label }) {
   const heading = label
-    ? `\n          <p style="margin:0 0 16px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">${LANGUAGE_NAMES[lang]}</p>`
+    ? `\n          <p style="margin:0 0 14px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:${COLORS.sage};">${LANGUAGE_NAMES[lang]}</p>`
     : ''
   return `<div lang="${lang}">${heading}
-          <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#111827;">${copy.title}</h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">${copy.intro}</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;"><tr><td style="border-radius:8px;background:#111827;">
-            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">${copy.button}</a>
+          <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:${COLORS.ink};">${copy.title}</h1>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:${COLORS.body};">${copy.intro}</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;"><tr><td style="border-radius:8px;background:${COLORS.sage};">
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;">${copy.button}</a>
           </td></tr></table>
-          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#6b7280;">${COMMON[lang].fallback}</p>
-          <p style="margin:0 0 16px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#2563eb;">{{ .ConfirmationURL }}</a></p>
-          <p style="margin:0;font-size:13px;line-height:1.5;color:#6b7280;">${copy.ignore}</p>
+          <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:${COLORS.muted};">${COMMON[lang].fallback}</p>
+          <p style="margin:0 0 20px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:${COLORS.sage};">{{ .ConfirmationURL }}</a></p>
+          <p style="margin:0;padding-top:18px;border-top:1px solid ${COLORS.divider};font-size:13px;line-height:1.5;color:${COLORS.muted};">${copy.ignore}</p>
           </div>`
 }
 
@@ -213,7 +238,7 @@ function byLanguage(render, fallback) {
 
 function page(copies) {
   const bilingual = `${block('it', copies.it, { label: true })}
-          <hr style="border:0;border-top:1px solid #e5e7eb;margin:32px 0;">
+          <hr style="border:0;border-top:1px solid ${COLORS.divider};margin:32px 0;">
           ${block('en', copies.en, { label: true })}`
   const body = byLanguage(
     (lang) => block(lang, copies[lang], { label: false }),
@@ -223,6 +248,7 @@ function page(copies) {
     (lang) => copies[lang].subject,
     `${copies.it.subject} / ${copies.en.subject}`,
   )
+  const tagline = byLanguage((lang) => COMMON[lang].tagline, COMMON.it.tagline)
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -231,17 +257,23 @@ function page(copies) {
   <meta name="color-scheme" content="light">
   <meta name="supported-color-schemes" content="light">
   <title>Chess Hammer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<body style="margin:0;padding:0;background:${COLORS.page};font-family:${FONT};">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${preheader}</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLORS.page};">
     <tr><td align="center" style="padding:32px 16px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
-        <tr><td style="padding:0 0 16px;font-size:18px;font-weight:700;color:#111827;">&#9822; Chess Hammer</td></tr>
-        <tr><td style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:32px;">
+        <tr><td style="padding:0 4px 18px;">
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+            <td style="padding-right:10px;"><img src="${LOGO_URL}" width="32" height="32" alt="" style="display:block;border:0;border-radius:7px;"></td>
+            <td style="font-size:17px;font-weight:700;color:${COLORS.ink};letter-spacing:-.01em;">Chess Hammer</td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="background:${COLORS.card};border:1px solid ${COLORS.border};border-radius:12px;padding:32px;">
           ${body}
         </td></tr>
-        <tr><td style="padding:16px 0 0;font-size:12px;line-height:1.5;color:#9ca3af;">Chess Hammer &middot; chesshammer.com</td></tr>
+        <tr><td style="padding:18px 4px 0;font-size:12px;line-height:1.6;color:${COLORS.faint};">Chess Hammer &middot; ${tagline}<br><a href="https://chesshammer.com" style="color:${COLORS.faint};text-decoration:none;">chesshammer.com</a></td></tr>
       </table>
     </td></tr>
   </table>
