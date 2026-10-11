@@ -25,6 +25,7 @@ import {
   type MoveTreeNode,
 } from '@/lib/move-tree'
 import { DEFAULT_PIECE_SET, pieceSetById, type PieceSetId } from '@/lib/piece-sets'
+import { isAcceptedMove, needsPromotion } from '@/lib/puzzle-moves'
 import { playIllegalMoveSound, playMoveSound } from '@/lib/sound-effects'
 import { parseUci } from '@/lib/uci'
 import type { LichessPuzzle } from '@/types/training'
@@ -126,21 +127,6 @@ interface PendingPromotion {
   target: string
   color: 'w' | 'b'
   mode: 'puzzle' | 'free'
-}
-
-// Un pedone che arriva sull'ultima traversa del proprio colore ha sempre
-// bisogno di una scelta di promozione, indipendentemente da quale sia la
-// mossa "attesa" dalla soluzione del puzzle: prima si rileva la necessita',
-// poi si chiede all'utente, invece di dedurre il pezzo dalla soluzione (che
-// tra l'altro rivelerebbe la risposta corretta in anticipo).
-function needsPromotion(game: Chess, source: string, target: string): boolean {
-  const piece = game.get(source as Square)
-  if (!piece || piece.type !== 'p') return false
-  const targetRank = target[1]
-  return (
-    (piece.color === 'w' && targetRank === '8') ||
-    (piece.color === 'b' && targetRank === '1')
-  )
 }
 
 interface PuzzleBoardProps {
@@ -634,7 +620,7 @@ export function PuzzleBoard({
       return false
     }
 
-    const isCorrect = move.lan === expectedUci
+    const isCorrect = isAcceptedMove(move, expectedUci)
     if (!isCorrect) {
       // Il pezzo resta sulla casa sbagliata (evidenziata in rosso) invece di
       // tornare subito indietro: gameRef resta pero' "pulito" (undo) dato che
@@ -675,7 +661,9 @@ export function PuzzleBoard({
       setCurrentId(id)
     }
 
-    if (solutionIndexRef.current >= puzzle.moves.length) {
+    // Uno scacco matto alternativo chiude il puzzle anche prima della fine
+    // della soluzione (non ci sono piu' mosse da giocare).
+    if (solutionIndexRef.current >= puzzle.moves.length || game.isCheckmate()) {
       finish('solved')
       return true
     }
