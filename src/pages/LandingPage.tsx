@@ -1,6 +1,6 @@
 import { ArrowRight, BarChart3, Brain, Cpu, RotateCcw } from 'lucide-react'
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import { MarketingFaq, MarketingNav } from '@/components/marketing/marketing-nav'
 import { TryPuzzle } from '@/components/marketing/try-puzzle'
 import { SiteFooter } from '@/components/site-footer'
@@ -19,9 +19,14 @@ export default function LandingPage({ lang }: { lang: Language }) {
   const meta = useMemo(() => marketingMeta('home', lang), [lang])
   useDocumentMeta(meta)
   const { session } = useAuth()
-  const primaryCta = session
-    ? { to: '/dashboard', label: copy.nav.goToDashboard }
-    : { to: '/signup', label: copy.landing.ctaPrimary }
+  const justSignedOut = (useLocation().state as { signedOut?: boolean } | null)?.signedOut
+
+  // Chi ha gia' fatto l'accesso va dritto all'allenamento: la home serve a chi
+  // non conosce ancora il sito. L'HTML pre-generato (motori di ricerca,
+  // anteprime dei link) resta quello per i visitatori.
+  // Eccezione: chi arriva qui subito dopo aver eliminato l'account (l'uscita
+  // avviene un attimo dopo).
+  if (session && !justSignedOut) return <Navigate to="/dashboard" replace />
 
   return (
     <div className="bg-background text-foreground flex min-h-svh flex-col">
@@ -41,7 +46,7 @@ export default function LandingPage({ lang }: { lang: Language }) {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button asChild size="lg">
-                  <Link to={primaryCta.to}>{primaryCta.label}</Link>
+                  <Link to="/signup">{copy.landing.ctaPrimary}</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline">
                   <a href="#how-it-works">{copy.landing.ctaSecondary}</a>
@@ -135,9 +140,7 @@ export default function LandingPage({ lang }: { lang: Language }) {
             {copy.landing.finalTitle}
           </h2>
           <Button asChild size="lg" variant="secondary" className="mt-6">
-            <Link to={primaryCta.to}>
-              {session ? primaryCta.label : copy.landing.finalCta}
-            </Link>
+            <Link to="/signup">{copy.landing.finalCta}</Link>
           </Button>
         </section>
       </main>
