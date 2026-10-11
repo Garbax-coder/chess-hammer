@@ -21,6 +21,25 @@ cp .env.example .env.local   # compila VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KE
 npm run dev
 ```
 
+### Progetto Supabase di sviluppo
+
+`npm run dev` usa un progetto Supabase separato, **chess-hammer-dev** (stessa regione UE),
+così le prove non toccano i dati reali. Le sue impostazioni stanno in
+`.env.development.local` (non nel repo), che per `npm run dev` ha la precedenza su
+`.env.local`:
+
+```bash
+VITE_SUPABASE_URL=https://<ref di sviluppo>.supabase.co
+VITE_SUPABASE_ANON_KEY=<chiave anon del progetto di sviluppo>
+VITE_TURNSTILE_SITE_KEY=          # vuota: niente CAPTCHA in sviluppo
+DEV_SUPABASE_DB_URL=postgresql://postgres.<ref>:<password>@aws-0-eu-west-1.pooler.supabase.com:5432/postgres
+```
+
+Il progetto di sviluppo ha CAPTCHA e conferma email disattivati, `site_url`
+`http://localhost:5180`, tutte le migrazioni e un campione di ~17.000 puzzle Lichess
+(circa 600 per fascia di rating, copiati dalla produzione). I progetti gratuiti si
+mettono in pausa dopo una settimana senza uso: si riattivano dal pannello di Supabase.
+
 ## Script disponibili
 
 - `npm run dev` — dev server
@@ -46,7 +65,13 @@ supabase db push                                      # applica le migrazioni nu
 ```
 
 `link` e `db push` chiedono la password del database (o la leggono da
-`SUPABASE_DB_PASSWORD`). Le migrazioni 0001–0026 sono state applicate a mano dal SQL
+`SUPABASE_DB_PASSWORD`). Una migrazione nuova si prova prima sul progetto di
+sviluppo, poi si applica alla produzione:
+
+```bash
+supabase db push --db-url "$DEV_SUPABASE_DB_URL"      # sviluppo
+supabase db push                                      # produzione (progetto collegato)
+``` Le migrazioni 0001–0026 sono state applicate a mano dal SQL
 Editor e poi registrate con `supabase migration repair --status applied`: da qui in
 poi lo storico è tenuto dalla CLI.
 
