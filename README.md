@@ -32,6 +32,24 @@ npm run dev
 - `npm run test` — suite di test automatici (Vitest); deve passare prima di ogni rilascio
   in produzione, vedi [CLAUDE.md](CLAUDE.md)
 
+## Migrazioni del database
+
+Le migrazioni in `supabase/migrations/` si applicano con la
+[Supabase CLI](https://supabase.com/docs/guides/cli) (`brew install supabase/tap/supabase`):
+
+```bash
+supabase login                                        # una volta, apre il browser
+supabase link --project-ref <ref del progetto>         # una volta per checkout
+supabase migration list                               # cosa è applicato e cosa no
+supabase db push --dry-run                            # anteprima
+supabase db push                                      # applica le migrazioni nuove
+```
+
+`link` e `db push` chiedono la password del database (o la leggono da
+`SUPABASE_DB_PASSWORD`). Le migrazioni 0001–0026 sono state applicate a mano dal SQL
+Editor e poi registrate con `supabase migration repair --status applied`: da qui in
+poi lo storico è tenuto dalla CLI.
+
 ## Backup del database
 
 Il piano gratuito di Supabase non fa backup. Ne fa uno **ogni domenica alle 3:00** un
