@@ -120,6 +120,26 @@ describe('changePassword', () => {
   })
   afterEach(() => vi.clearAllMocks())
 
+  it('passes the captcha token to the sign-in that checks the current password', async () => {
+    signInWithPassword.mockResolvedValue({ error: null })
+    updateUser.mockResolvedValue({ error: null })
+
+    await changePassword(
+      'user@example.com',
+      'OldPassword123!',
+      'NewPassword123!',
+      'tok-9',
+    )
+
+    // Senza il token Supabase rifiuta l'accesso ("no captcha_token found").
+    expect(signInWithPassword).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      password: 'OldPassword123!',
+      options: { captchaToken: 'tok-9' },
+    })
+    expect(updateUser).toHaveBeenCalledWith({ password: 'NewPassword123!' })
+  })
+
   it('verifies the current password first, and never calls updateUser if it is wrong', async () => {
     signInWithPassword.mockResolvedValue({
       error: { code: 'invalid_credentials', message: 'Invalid login credentials' },
