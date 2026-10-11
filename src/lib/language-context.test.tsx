@@ -1,5 +1,5 @@
-import { render, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { fireEvent, render, waitFor } from '@testing-library/react'
+import { Link, MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const saveEmailLanguage = vi.fn(() => Promise.resolve({ error: null }))
@@ -13,7 +13,7 @@ vi.mock('@/hooks/use-user-stats', () => ({
   useUpdateLanguage: () => ({ mutate: vi.fn() }),
 }))
 
-const { LanguageProvider } = await import('./language-context')
+const { LanguageProvider, useLanguage } = await import('./language-context')
 
 function renderProvider() {
   return render(
@@ -27,6 +27,7 @@ function renderProvider() {
 
 describe('LanguageProvider email language', () => {
   beforeEach(() => {
+    localStorage.clear()
     saveEmailLanguage.mockClear()
     vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-US'])
   })
@@ -63,5 +64,62 @@ describe('LanguageProvider email language', () => {
     renderProvider()
     await new Promise((r) => setTimeout(r, 20))
     expect(saveEmailLanguage).not.toHaveBeenCalled()
+  })
+})
+
+function ShowLanguage() {
+  const { language, t } = useLanguage()
+  return (
+    <>
+      <p data-testid="lang">{language}</p>
+      <p>{t.login.title}</p>
+      <Link to="/login">login</Link>
+    </>
+  )
+}
+
+describe('LanguageProvider language of public pages', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-US'])
+  })
+
+  function visit(path: string) {
+    return render(
+      <MemoryRouter initialEntries={[path]}>
+        <LanguageProvider>
+          <ShowLanguage />
+        </LanguageProvider>
+      </MemoryRouter>,
+    )
+  }
+
+  it('keeps the language of the public page when moving on to login', async () => {
+    user = null
+    stats = undefined
+    const view = visit('/fr')
+    await waitFor(() => expect(view.getByTestId('lang').textContent).toBe('fr'))
+    fireEvent.click(view.getByText('login'))
+    await waitFor(() => expect(view.getByText('Connexion')).toBeInTheDocument())
+    expect(view.getByTestId('lang').textContent).toBe('fr')
+  })
+
+  it('remembers it for the next visit straight to login', async () => {
+    user = null
+    stats = undefined
+    const first = visit('/de')
+    await waitFor(() => expect(first.getByTestId('lang').textContent).toBe('de'))
+    first.unmount()
+    const second = visit('/login')
+    await waitFor(() => expect(second.getByTestId('lang').textContent).toBe('de'))
+  })
+
+  it('lets the language saved in the account win inside the app', async () => {
+    user = { id: 'u1', user_metadata: { language: 'it' } }
+    stats = { language: 'it' }
+    const view = visit('/es')
+    await waitFor(() => expect(view.getByTestId('lang').textContent).toBe('es'))
+    fireEvent.click(view.getByText('login'))
+    await waitFor(() => expect(view.getByTestId('lang').textContent).toBe('it'))
   })
 })
