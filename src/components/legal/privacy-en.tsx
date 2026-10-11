@@ -11,7 +11,7 @@ export default function PrivacyEn() {
   return (
     <>
       <p>
-        Last updated: October 10, 2026. This notice describes what personal data{' '}
+        Last updated: October 11, 2026. This notice describes what personal data{' '}
         {SITE_DOMAIN} ("Chess Hammer", "the Service") collects, why, and what rights you
         have over it, under Regulation (EU) 2016/679 (GDPR).
       </p>
@@ -133,7 +133,9 @@ export default function PrivacyEn() {
         backup copy of the database is saved every week on Google Cloud, in private
         storage in the European Union, and kept for at most 8 weeks: within that period a
         deleted account's data also disappears from the copies. Error reports are deleted
-        after 30 days.
+        after 30 days. If you don't use your account for 24 months we delete it, with all
+        its data: we email you 30 days before, and signing in is enough to keep it.
+        Accounts that are registered but never confirmed are deleted after 7 days.
       </p>
 
       <h2>Cookies and browser storage</h2>

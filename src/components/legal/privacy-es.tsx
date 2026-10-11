@@ -11,7 +11,7 @@ export default function PrivacyEs() {
   return (
     <>
       <p>
-        Última actualización: 10 de octubre de 2026. Esta política describe qué datos
+        Última actualización: 11 de octubre de 2026. Esta política describe qué datos
         personales recoge {SITE_DOMAIN} («Chess Hammer», «el Servicio»), con qué fines y
         qué derechos tienes sobre ellos, según el Reglamento (UE) 2016/679 (RGPD).
       </p>
@@ -140,7 +140,10 @@ export default function PrivacyEs() {
         ante fallos, cada semana se guarda una copia de seguridad de la base de datos en
         Google Cloud, en un almacenamiento privado en la Unión Europea, y se conserva como
         máximo 8 semanas: en ese plazo los datos de una cuenta eliminada desaparecen
-        también de las copias. Los informes de errores se eliminan a los 30 días.
+        también de las copias. Los informes de errores se eliminan a los 30 días. Si no
+        usas tu cuenta durante 24 meses, la eliminamos con todos sus datos: te avisamos
+        por correo 30 días antes, y basta con iniciar sesión para conservarla. Las cuentas
+        registradas pero nunca confirmadas se eliminan a los 7 días.
       </p>
 
       <h2>Cookies y almacenamiento del navegador</h2>

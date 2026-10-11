@@ -11,7 +11,7 @@ export default function PrivacyDe() {
   return (
     <>
       <p>
-        Zuletzt aktualisiert: 10. Oktober 2026. Diese Datenschutzerklärung beschreibt,
+        Zuletzt aktualisiert: 11. Oktober 2026. Diese Datenschutzerklärung beschreibt,
         welche personenbezogenen Daten {SITE_DOMAIN} („Chess Hammer“, „der Dienst“)
         erhebt, zu welchen Zwecken und welche Rechte du daran hast, gemäß der Verordnung
         (EU) 2016/679 (DSGVO).
@@ -143,7 +143,11 @@ export default function PrivacyDe() {
         Ausfällen wird jede Woche eine Sicherungskopie der Datenbank in einem privaten
         Speicher von Google Cloud in der Europäischen Union abgelegt und höchstens 8
         Wochen aufbewahrt: Innerhalb dieser Frist verschwinden die Daten eines gelöschten
-        Kontos auch aus den Kopien. Fehlerberichte werden nach 30 Tagen gelöscht.
+        Kontos auch aus den Kopien. Fehlerberichte werden nach 30 Tagen gelöscht. Wenn du
+        dein Konto 24 Monate lang nicht nutzt, löschen wir es mit allen Daten: Wir
+        benachrichtigen dich 30 Tage vorher per E-Mail, und eine Anmeldung genügt, um es
+        zu behalten. Registrierte, aber nie bestätigte Konten werden nach 7 Tagen
+        gelöscht.
       </p>
 
       <h2>Cookies und Browserspeicher</h2>
