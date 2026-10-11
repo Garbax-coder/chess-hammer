@@ -29,3 +29,7 @@ scripts/import-lichess-puzzles/*.csv.zst
 
 # Supabase CLI: dati locali del collegamento al progetto
 supabase/.temp/
+
+# Playwright (npm run test:e2e)
+test-results/
+playwright-report/

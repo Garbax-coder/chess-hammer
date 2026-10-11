@@ -50,6 +50,13 @@ mettono in pausa dopo una settimana senza uso: si riattivano dal pannello di Sup
 
 - `npm run test` — suite di test automatici (Vitest); deve passare prima di ogni rilascio
   in produzione, vedi [CLAUDE.md](CLAUDE.md)
+- `npm run test:e2e` — test end-to-end in Chrome (Playwright) dei flussi principali:
+  registrazione e accesso, nuova sessione e prima mossa, cambio lingua, download dei
+  dati, eliminazione dell'account. Avviano da soli `npm run dev` sulla porta 5190 e
+  girano **solo sul progetto Supabase di sviluppo** (si fermano se
+  `.env.development.local` manca o punta alla produzione); ogni esecuzione crea un
+  account `+e2e-…` e lo elimina alla fine, e all'avvio cancella quelli rimasti da
+  esecuzioni interrotte. Usano il Chrome già installato: nessun browser da scaricare.
 
 ## Migrazioni del database
 
