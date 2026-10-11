@@ -7,25 +7,30 @@ salva alla registrazione e la aggiorna quando l'utente cambia lingua. Se manca
 italiano. Supabase accetta oggetti di al massimo 255 caratteri: il generatore
 si ferma con un errore se un oggetto li supera.
 
-I file si generano con `node scripts/build-email-templates.mjs`: i testi vanno
-modificati lì, non negli HTML. Supabase **non** li legge dal repo, vanno
-incollati a mano nel pannello.
+I testi stanno in `scripts/build-email-templates.mjs` (non negli HTML). Per cambiarli:
 
-Dashboard → Authentication → Emails → Templates (o "Email Templates"):
+```bash
+npm run email:build     # rigenera HTML, oggetti e supabase/config.toml
+npm run email:push      # rigenera e invia i template al progetto collegato
+```
 
-| Template Supabase    | Subject (incolla il contenuto del file)  | Corpo (Message body)  |
-| -------------------- | ---------------------------------------- | --------------------- |
-| Confirm signup       | `confirm-signup.subject.txt`             | `confirm-signup.html` |
-| Reset password       | `reset-password.subject.txt`             | `reset-password.html` |
-| Change email address | `change-email.subject.txt`               | `change-email.html`   |
+`email:push` usa la Supabase CLI (`supabase config push`): prima di scrivere mostra
+le differenze e chiede conferma. `supabase/config.toml` dichiara **solo** i tre
+template, quindi le altre impostazioni del progetto (SMTP, CAPTCHA, login con
+Google) restano come sono. Per il progetto di sviluppo:
+`supabase config push --project-ref <ref di sviluppo>`.
 
-Per ciascuno: sostituisci Subject e corpo, Save.
-Magic link, Invite user e Reauthentication non sono usati dall'app: lasciali predefiniti.
+| Template Supabase    | Chiave in config.toml              | Corpo                 |
+| -------------------- | ---------------------------------- | --------------------- |
+| Confirm signup       | `auth.email.template.confirmation` | `confirm-signup.html` |
+| Reset password       | `auth.email.template.recovery`     | `reset-password.html` |
+| Change email address | `auth.email.template.email_change` | `change-email.html`   |
 
-Dopo averli salvati, prova una registrazione con un indirizzo `+prova` e una
-lingua diversa dall'italiano. Se l'oggetto arriva con le parentesi graffe
-(`{{ $lang := ...`), Supabase non interpreta le condizioni nell'oggetto: usa
-allora un oggetto fisso, ad es. `Chess Hammer · Conferma email / Confirm email`.
+Magic link, Invite user e Reauthentication non sono usati dall'app.
+
+L'email di avviso prima dell'eliminazione per inattività non passa da Supabase Auth:
+è in `account-deletion-warning.sql` (vedi la sezione "Conservazione degli account"
+del README principale).
 
 Stile "Carta" con la palette Salvia del sito. Il logo è `public/email/logo.png`,
 servito da https://chesshammer.com/email/logo.png: incolla i template dopo aver

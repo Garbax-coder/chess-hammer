@@ -310,6 +310,31 @@ for (const [name, copies] of Object.entries(TEMPLATES)) {
   console.log(`email-templates: ${name}.html, ${name}.subject.txt`)
 }
 
+// supabase/config.toml dichiara SOLO questi template: `supabase config push`
+// invia le impostazioni dichiarate e lascia invariate le altre (SMTP, CAPTCHA,
+// login con Google), quindi qui non va aggiunto altro senza volerlo cambiare.
+const AUTH_TEMPLATE_KEYS = {
+  'confirm-signup': 'confirmation',
+  'reset-password': 'recovery',
+  'change-email': 'email_change',
+}
+const configToml = [
+  '# Generato da scripts/build-email-templates.mjs: non modificare a mano.',
+  '# `npm run email:push` lo invia al progetto collegato con la Supabase CLI.',
+  '# Dichiara solo i template delle email: il resto della configurazione di',
+  '# Supabase non viene toccato.',
+  'project_id = "chess-hammer"',
+  ...Object.entries(TEMPLATES).flatMap(([name, copies]) => [
+    '',
+    `[auth.email.template.${AUTH_TEMPLATE_KEYS[name]}]`,
+    `subject = ${JSON.stringify(subject(copies))}`,
+    `content_path = "./supabase/email-templates/${name}.html"`,
+  ]),
+  '',
+].join('\n')
+writeFileSync(join(OUT, '..', 'config.toml'), configToml)
+console.log('email-templates: supabase/config.toml')
+
 // Avviso di eliminazione per inattivita' (24 mesi senza accessi, vedi la
 // migrazione 0027): non passa da Supabase Auth ma dalla funzione
 // run_account_retention(), che lo invia con Resend 30 giorni prima. Una pagina
