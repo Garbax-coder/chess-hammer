@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { SiteFooter } from '@/components/site-footer'
 import { SocialLoginButtons } from '@/components/social-login-buttons'
 import { captchaRequired, TurnstileWidget } from '@/components/turnstile-widget'
@@ -15,11 +15,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { signInWithEmail } from '@/lib/auth'
+import { useAuth } from '@/lib/auth-context'
 import { useTranslations } from '@/lib/language-context'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const t = useTranslations()
+  const { session } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
@@ -42,6 +44,9 @@ export default function LoginPage() {
     }
     navigate('/dashboard')
   }
+
+  // Gia' dentro (ad es. un vecchio link al login): si va alla dashboard.
+  if (session) return <Navigate to="/dashboard" replace />
 
   return (
     <main className="flex min-h-svh flex-col">

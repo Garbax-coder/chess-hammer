@@ -66,9 +66,19 @@ test('sign up and log in', async () => {
   await page.getByRole('checkbox').check()
   await page.locator('form button[type=submit]').click()
   await expect(page.getByText(t.signup.checkEmail)).toBeVisible()
+  // In sviluppo la conferma email e' spenta e la registrazione apre gia' la
+  // sessione: la si chiude, per provare l'accesso come in produzione.
+  await page.evaluate(() => localStorage.clear())
 
   await logIn()
   await expect(page).toHaveURL(/\/dashboard$/)
+
+  // Una volta dentro, la home e il login portano alla dashboard.
+  // (Solo pagine in italiano: aprire /en renderebbe l'inglese la lingua preferita.)
+  for (const path of ['/', '/login']) {
+    await page.goto(path)
+    await expect(page).toHaveURL(/\/dashboard$/)
+  }
 })
 
 test('create a session and record an attempt on the board', async () => {

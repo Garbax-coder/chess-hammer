@@ -29,7 +29,8 @@ export function DeleteAccountDialog() {
   const email = user?.email ?? ''
   // Riscrivere la propria email e' la conferma: evita che un click distratto
   // o un tocco accidentale su mobile basti a distruggere l'account.
-  const confirmed = email !== '' && confirmText.trim().toLowerCase() === email.toLowerCase()
+  const confirmed =
+    email !== '' && confirmText.trim().toLowerCase() === email.toLowerCase()
 
   function handleOpenChange(next: boolean) {
     if (deleting) return
@@ -45,7 +46,11 @@ export function DeleteAccountDialog() {
     setDeleting(true)
     setError(false)
     try {
-      await deleteOwnAccount(() => navigate('/', { replace: true }))
+      // signedOut: la home non deve rimandare alla dashboard nell'istante in cui
+      // la sessione e' ancora aperta, prima dell'uscita.
+      await deleteOwnAccount(() =>
+        navigate('/', { replace: true, state: { signedOut: true } }),
+      )
     } catch (e) {
       console.error('Eliminazione account fallita', e)
       setError(true)
