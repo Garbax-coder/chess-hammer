@@ -187,3 +187,23 @@ describe('changePassword', () => {
     expect(signOut).not.toHaveBeenCalled()
   })
 })
+
+describe('deleteOwnAccount', () => {
+  it('leaves the protected page before signing out, only after the account is gone', async () => {
+    const order: string[] = []
+    const rpc = vi.fn(async () => {
+      order.push('rpc')
+      return { error: null }
+    })
+    ;(await import('@/lib/supabase')).supabase.rpc = rpc as never
+    signOut.mockImplementation(async () => {
+      order.push('signOut')
+      return { error: null }
+    })
+    const { deleteOwnAccount } = await import('./auth')
+
+    await deleteOwnAccount(() => order.push('navigate'))
+
+    expect(order).toEqual(['rpc', 'navigate', 'signOut'])
+  })
+})

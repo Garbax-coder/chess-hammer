@@ -63,10 +63,13 @@ export function signOut() {
 // session_puzzles/puzzle_attempts) hanno on delete cascade (vedi
 // supabase/migrations/0018_delete_own_account.sql). Poi si chiude la
 // sessione locale, che a quel punto punterebbe a un utente inesistente.
-export async function deleteOwnAccount() {
+// beforeSignOut gira tra le due: chi e' su una pagina protetta deve prima
+// lasciarla, altrimenti l'uscita lo rimanda al login invece che alla home.
+export async function deleteOwnAccount(beforeSignOut?: () => void) {
   const { error } = await supabase.rpc('delete_own_account')
   if (error) throw error
   clearSnapshots()
+  beforeSignOut?.()
   await supabase.auth.signOut()
 }
 

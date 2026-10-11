@@ -45,8 +45,7 @@ export function DeleteAccountDialog() {
     setDeleting(true)
     setError(false)
     try {
-      await deleteOwnAccount()
-      navigate('/', { replace: true })
+      await deleteOwnAccount(() => navigate('/', { replace: true }))
     } catch (e) {
       console.error('Eliminazione account fallita', e)
       setError(true)
