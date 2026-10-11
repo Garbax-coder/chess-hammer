@@ -11,7 +11,7 @@ import { marketingPageForPath } from '@/lib/marketing'
 import { useUpdateLanguage, useUserStats } from '@/hooks/use-user-stats'
 import { saveEmailLanguage } from '@/lib/auth'
 import { useAuth } from '@/lib/auth-context'
-import { detectBrowserLanguage } from '@/lib/i18n/detect-language'
+import { preferredLanguage, storeLanguage } from '@/lib/i18n/detect-language'
 import { isLanguageLoaded, loadLanguage } from '@/lib/i18n/load-language'
 import { translations, type Language, type Translations } from '@/lib/i18n/translations'
 
@@ -24,15 +24,16 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null)
 
 /**
- * Lingua: italiano se il browser e' in italiano, inglese altrimenti, finche'
- * l'utente non ne sceglie una esplicitamente dal selettore — a quel punto
- * viene salvata su user_stats.language e resta costante su ogni dispositivo.
+ * Lingua, in ordine di priorita': quella salvata nell'account
+ * (user_stats.language, scelta dal profilo e uguale su ogni dispositivo);
+ * quella scelta in questo browser, anche solo leggendo le pagine pubbliche
+ * in una lingua; infine quella del browser.
  */
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const { data: stats } = useUserStats()
   const updateLanguage = useUpdateLanguage()
-  const [language, setLanguageState] = useState<Language>(() => detectBrowserLanguage())
+  const [language, setLanguageState] = useState<Language>(() => preferredLanguage())
   const [userOverride, setUserOverride] = useState(false)
 
   // Si passa a una lingua solo dopo averne caricato i testi (fr, es e de
@@ -42,6 +43,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const saved = stats?.language
     if (!saved) return
     let cancelled = false
+    storeLanguage(saved)
     void loadLanguage(saved).then(() => {
       if (!cancelled) setLanguageState(saved)
     })
@@ -63,6 +65,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   function setLanguage(lang: Language) {
     setUserOverride(true)
+    storeLanguage(lang)
     void loadLanguage(lang).then(() => setLanguageState(lang))
     if (user) {
       updateLanguage.mutate(lang)
@@ -73,7 +76,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // versione ha il suo indirizzo per i motori di ricerca, e l'HTML
   // pre-generato deve coincidere con quello mostrato nel browser.
   const { pathname } = useLocation()
-  const effectiveLanguage = marketingPageForPath(pathname)?.lang ?? language
+  const pageLanguage = marketingPageForPath(pathname)?.lang
+  const effectiveLanguage = pageLanguage ?? language
+
+  // E la lingua letta sulle pagine pubbliche diventa quella del resto del
+  // sito (login, registrazione, app), salvo una lingua salvata nell'account.
+  useEffect(() => {
+    if (!pageLanguage || stats?.language) return
+    storeLanguage(pageLanguage)
+    setLanguageState(pageLanguage)
+  }, [pageLanguage, stats?.language])
 
   // Una pagina pubblica in una lingua non ancora caricata (navigazione interna
   // verso /fr, /es, /de): si aspetta il caricamento prima di mostrarla.
