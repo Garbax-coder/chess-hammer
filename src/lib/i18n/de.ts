@@ -336,6 +336,7 @@ export const de: Translations = {
     deleteActiveSession: 'Aktive Session löschen',
     skipRest: 'Pause überspringen',
     addKnightPromotionPuzzle: 'Puzzle mit Springer-Umwandlung hinzufügen',
+    addDoubleMatePuzzle: 'Try double finish puzzle',
   },
   profile: {
     openLabel: 'Profil',

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useActiveSession } from '@/hooks/use-active-session'
 import { useAuth } from '@/lib/auth-context'
 import {
+  addDoubleMateDebugPuzzle,
   addKnightPromotionDebugPuzzle,
   deleteActiveSession,
   resetSession,
@@ -26,7 +27,7 @@ export function DevToolsPanel() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [busy, setBusy] = useState<
-    'quota' | 'session' | 'delete' | 'rest' | 'promotion' | null
+    'quota' | 'session' | 'delete' | 'rest' | 'promotion' | 'doubleMate' | null
   >(null)
 
   if (!session || !user) return null
@@ -76,6 +77,16 @@ export function DevToolsPanel() {
     setBusy('promotion')
     try {
       await addKnightPromotionDebugPuzzle(session!.id)
+      await queryClient.invalidateQueries()
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function handleAddDoubleMatePuzzle() {
+    setBusy('doubleMate')
+    try {
+      await addDoubleMateDebugPuzzle(session!.id)
       await queryClient.invalidateQueries()
     } finally {
       setBusy(null)
@@ -134,6 +145,15 @@ export function DevToolsPanel() {
           {busy === 'promotion'
             ? t.devTools.resetting
             : t.devTools.addKnightPromotionPuzzle}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={busy !== null}
+          onClick={handleAddDoubleMatePuzzle}
+        >
+          {busy === 'doubleMate' ? t.devTools.resetting : t.devTools.addDoubleMatePuzzle}
         </Button>
       </CardContent>
     </Card>

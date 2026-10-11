@@ -89,15 +89,27 @@ export async function skipRest(sessionId: string) {
 // promozione senza dover cercare a mano un puzzle adatto.
 const KNIGHT_PROMOTION_PUZZLE_ID = 'FEaBa'
 
+// Puzzle Lichess reale con due matti in una: la soluzione e' Dh1#, ma vale
+// anche Dh2# (vedi isAcceptedMove in puzzle-moves.ts).
+const DOUBLE_MATE_PUZZLE_ID = 'qdQBJ'
+
 /**
- * Inserisce il puzzle di test sopra nel pool della sessione attiva, in cima
+ * Inserisce un puzzle di test nel pool della sessione attiva, in cima
  * (order_index piu' basso di tutti) cosi' diventa subito il prossimo da
  * risolvere invece di dover prima finire quelli gia' in coda. Pensato per
  * il giro 1: in giro 2/3 il pool e' un replay fisso, quindi aggiungerne uno
  * a meta' rompe l'invariante "stesso pool del giro 1" (accettabile per uno
  * strumento di debug, non per l'uso normale).
  */
-export async function addKnightPromotionDebugPuzzle(sessionId: string) {
+export function addKnightPromotionDebugPuzzle(sessionId: string) {
+  return addDebugPuzzle(sessionId, KNIGHT_PROMOTION_PUZZLE_ID)
+}
+
+export function addDoubleMateDebugPuzzle(sessionId: string) {
+  return addDebugPuzzle(sessionId, DOUBLE_MATE_PUZZLE_ID)
+}
+
+async function addDebugPuzzle(sessionId: string, puzzleId: string) {
   const { data: existing, error: fetchError } = await supabase
     .from('session_puzzles')
     .select('order_index, puzzle_id')
@@ -105,12 +117,12 @@ export async function addKnightPromotionDebugPuzzle(sessionId: string) {
     .order('order_index', { ascending: true })
   if (fetchError) throw fetchError
 
-  if (existing.some((p) => p.puzzle_id === KNIGHT_PROMOTION_PUZZLE_ID)) return
+  if (existing.some((p) => p.puzzle_id === puzzleId)) return
 
   const minOrderIndex = existing[0]?.order_index ?? 1
   const { error } = await supabase.from('session_puzzles').insert({
     session_id: sessionId,
-    puzzle_id: KNIGHT_PROMOTION_PUZZLE_ID,
+    puzzle_id: puzzleId,
     order_index: minOrderIndex - 1,
   })
   if (error) throw error

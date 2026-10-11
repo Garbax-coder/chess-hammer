@@ -333,6 +333,7 @@ export const es: Translations = {
     deleteActiveSession: 'Eliminar la sesión activa',
     skipRest: 'Saltar descanso',
     addKnightPromotionPuzzle: 'Añadir puzzle de coronación a caballo',
+    addDoubleMatePuzzle: 'Try double finish puzzle',
   },
   profile: {
     openLabel: 'Perfil',
