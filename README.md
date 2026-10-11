@@ -86,6 +86,16 @@ al testo. Se un backup fallisce, o lo Scheduler non riesce ad avviarlo, Cloud Mo
 manda un'email: con la cancellazione automatica, un errore ignorato per 8 settimane
 lascerebbe il bucket vuoto.
 
+Lo stesso job misura anche la dimensione del database: oltre i **400 MB** (80% dei 500 MB
+del piano gratuito) scrive nei log la riga `DB_SIZE_ALERT` e arriva un'email (al massimo
+una al giorno). La soglia si cambia con la variabile `DB_SIZE_ALERT_MB`; per provare
+l'avviso senza aspettare la domenica:
+
+```bash
+gcloud run jobs execute db-backup --project=chess-hammer --region=europe-west1 --wait \
+  --update-env-vars=DB_SIZE_ALERT_MB=1
+```
+
 **Ripristino su un progetto Supabase nuovo** (da provare sul progetto di sviluppo).
 L'ordine conta: i vincoli che legano `session_puzzles` a `lichess_puzzles` si possono
 creare solo dopo aver caricato i puzzle.

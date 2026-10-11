@@ -98,5 +98,19 @@ post("alertPolicies", {
         "filter": 'resource.type="cloud_scheduler_job" AND resource.labels.job_id="db-backup-weekly" AND severity>=ERROR'}}],
     "notificationChannels": [channel],
     "alertStrategy": {"notificationRateLimit": {"period": "3600s"}, "autoClose": "604800s"}, "documentation": docs})
+# Spazio del database: job.sh scrive "DB_SIZE_ALERT" oltre i 400 MB (80% dei
+# 500 MB del piano gratuito Supabase). Al massimo un'email al giorno.
+post("alertPolicies", {
+    "displayName": "Database Supabase: oltre l'80% dello spazio gratuito", "combiner": "OR",
+    "conditions": [{"displayName": "Il job db-backup ha registrato DB_SIZE_ALERT", "conditionMatchedLog": {
+        "filter": 'resource.type="cloud_run_job" AND resource.labels.job_name="db-backup" AND '
+                  'severity="WARNING" AND jsonPayload.message:"DB_SIZE_ALERT"'}}],
+    "notificationChannels": [channel],
+    "alertStrategy": {"notificationRateLimit": {"period": "86400s"}, "autoClose": "604800s"},
+    "documentation": {"mimeType": "text/markdown", "content":
+        "Il database Supabase di Chess Hammer ha superato la soglia di avviso (80% dei 500 MB del piano "
+        "gratuito). La misura e' nei log del Cloud Run Job db-backup (europe-west1). Leve: alleggerire la "
+        "tabella dei puzzle Lichess, oppure passare a Supabase Pro (8 GB). Superati i 500 MB il database "
+        "passa in sola lettura."}})
 print("Avvisi creati")
 EOF
