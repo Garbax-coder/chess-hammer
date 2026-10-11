@@ -9,6 +9,7 @@ import {
   addDoubleMateDebugPuzzle,
   addKnightPromotionDebugPuzzle,
   deleteActiveSession,
+  type DebugPuzzle,
   resetSession,
   resetTodayQuota,
   skipRest,
@@ -20,7 +21,12 @@ import { useTranslations } from '@/lib/language-context'
  * di produzione) per resettare quota/sessione durante i test, senza dover
  * aspettare il giorno dopo o chiedere un reset manuale via SQL.
  */
-export function DevToolsPanel() {
+export function DevToolsPanel({
+  onOpenPuzzle,
+}: {
+  // Apre un puzzle della sessione in pratica libera (vedi TrainPage).
+  onOpenPuzzle?: (sessionPuzzleId: string, puzzleId: string) => void
+} = {}) {
   const { user } = useAuth()
   const t = useTranslations()
   const { data: session } = useActiveSession()
@@ -76,17 +82,23 @@ export function DevToolsPanel() {
   async function handleAddKnightPromotionPuzzle() {
     setBusy('promotion')
     try {
-      await addKnightPromotionDebugPuzzle(session!.id)
+      openIfAlreadyThere(await addKnightPromotionDebugPuzzle(session!.id))
       await queryClient.invalidateQueries()
     } finally {
       setBusy(null)
     }
   }
 
+  // Un puzzle nuovo diventa il prossimo della sessione; uno gia' presente si
+  // riapre in pratica libera invece di non fare nulla.
+  function openIfAlreadyThere(puzzle: DebugPuzzle) {
+    if (puzzle.alreadyInSession) onOpenPuzzle?.(puzzle.sessionPuzzleId, puzzle.puzzleId)
+  }
+
   async function handleAddDoubleMatePuzzle() {
     setBusy('doubleMate')
     try {
-      await addDoubleMateDebugPuzzle(session!.id)
+      openIfAlreadyThere(await addDoubleMateDebugPuzzle(session!.id))
       await queryClient.invalidateQueries()
     } finally {
       setBusy(null)

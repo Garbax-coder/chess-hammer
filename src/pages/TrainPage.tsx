@@ -495,7 +495,13 @@ export default function TrainPage() {
           </>
         )}
 
-        {import.meta.env.DEV && <DevToolsPanel />}
+        {import.meta.env.DEV && (
+          <DevToolsPanel
+            onOpenPuzzle={(sessionPuzzleId, puzzleId) =>
+              setPracticeSelection({ sessionPuzzleId, puzzleId })
+            }
+          />
+        )}
       </div>
     </main>
   )

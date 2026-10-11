@@ -109,21 +109,35 @@ export function addDoubleMateDebugPuzzle(sessionId: string) {
   return addDebugPuzzle(sessionId, DOUBLE_MATE_PUZZLE_ID)
 }
 
-async function addDebugPuzzle(sessionId: string, puzzleId: string) {
+export interface DebugPuzzle {
+  sessionPuzzleId: string
+  puzzleId: string
+  // Gia' nella sessione (ad es. pescato normalmente nel giro 1): un puzzle
+  // compare una sola volta per sessione, quindi si riapre in pratica libera.
+  alreadyInSession: boolean
+}
+
+async function addDebugPuzzle(sessionId: string, puzzleId: string): Promise<DebugPuzzle> {
   const { data: existing, error: fetchError } = await supabase
     .from('session_puzzles')
-    .select('order_index, puzzle_id')
+    .select('id, order_index, puzzle_id')
     .eq('session_id', sessionId)
     .order('order_index', { ascending: true })
   if (fetchError) throw fetchError
 
-  if (existing.some((p) => p.puzzle_id === puzzleId)) return
+  const found = existing.find((p) => p.puzzle_id === puzzleId)
+  if (found) return { sessionPuzzleId: found.id, puzzleId, alreadyInSession: true }
 
   const minOrderIndex = existing[0]?.order_index ?? 1
-  const { error } = await supabase.from('session_puzzles').insert({
-    session_id: sessionId,
-    puzzle_id: puzzleId,
-    order_index: minOrderIndex - 1,
-  })
+  const { data, error } = await supabase
+    .from('session_puzzles')
+    .insert({
+      session_id: sessionId,
+      puzzle_id: puzzleId,
+      order_index: minOrderIndex - 1,
+    })
+    .select('id')
+    .single()
   if (error) throw error
+  return { sessionPuzzleId: data.id, puzzleId, alreadyInSession: false }
 }
