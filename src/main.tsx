@@ -10,6 +10,7 @@ import { startErrorMonitoring } from '@/lib/error-monitoring'
 import { loadLanguage } from '@/lib/i18n/load-language'
 import { LanguageProvider } from '@/lib/language-context'
 import { marketingPageForPath } from '@/lib/marketing'
+import { installStaleChunkReload } from '@/lib/stale-chunk-reload'
 
 const queryClient = new QueryClient()
 
@@ -18,6 +19,7 @@ const queryClient = new QueryClient()
 // browser o, in mancanza, quella del browser):
 // cosi' l'HTML pre-generato non viene sostituito da una pagina vuota.
 startErrorMonitoring()
+installStaleChunkReload()
 
 const initialLanguage =
   marketingPageForPath(window.location.pathname)?.lang ?? preferredLanguage()
