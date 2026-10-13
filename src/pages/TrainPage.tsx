@@ -46,6 +46,8 @@ import {
 import type { NextPuzzleOutcome } from '@/lib/puzzle-engine'
 import type { SessionPuzzleResult } from '@/types/training'
 
+const PRACTICE_RETRY_DELAY_MS = 2000
+
 export default function TrainPage() {
   const t = useTranslations()
   const queryClient = useQueryClient()
@@ -142,7 +144,17 @@ export default function TrainPage() {
       timeSeconds,
       puzzleRating: outcome.data.puzzle.rating,
     }
-    pendingOutcomeRef.current = { promise: recordAttempt.mutateAsync(params), params }
+    pendingOutcomeRef.current = { promise: recordAttemptHandled(params), params }
+  }
+
+  // L'esito si legge solo al passaggio al puzzle successivo (handleAdvance),
+  // che gestisce anche l'errore e ritenta: un errore di rete che arriva prima
+  // (es. connessione persa su telefono) va comunque segnato come gestito,
+  // altrimenti finisce tra gli errori non gestiti (Sentry JAVASCRIPT-REACT-5).
+  function recordAttemptHandled(params: Parameters<typeof recordAttempt.mutateAsync>[0]) {
+    const promise = recordAttempt.mutateAsync(params)
+    promise.catch(() => {})
+    return promise
   }
 
   async function handleAdvance() {
@@ -160,19 +172,31 @@ export default function TrainPage() {
       // limitarsi a ri-osservare lo stesso fallimento.
       console.error('Registrazione tentativo fallita, verra\' ritentata', error)
       pendingOutcomeRef.current = {
-        promise: recordAttempt.mutateAsync(pending.params),
+        promise: recordAttemptHandled(pending.params),
         params: pending.params,
       }
     }
   }
 
+  // Nessuno aspetta questo salvataggio (si passa subito al puzzle dopo): con
+  // la rete instabile si ritenta una volta, e un errore residuo si registra
+  // nella console invece di restare non gestito. Un tentativo di pratica
+  // perso non tocca la sessione ufficiale ne' l'ELO.
   async function handlePracticeAttempt(result: 'solved' | 'failed', timeSeconds: number) {
     if (!practiceSelection) return
-    await recordPracticeAttempt.mutateAsync({
-      puzzleId: practiceSelection.puzzleId,
-      result,
-      timeSeconds,
-    })
+    const attempt = { puzzleId: practiceSelection.puzzleId, result, timeSeconds }
+    for (let tries = 1; ; tries++) {
+      try {
+        await recordPracticeAttempt.mutateAsync(attempt)
+        return
+      } catch (error) {
+        if (tries >= 2) {
+          console.warn('Tentativo di pratica non salvato', error)
+          return
+        }
+        await new Promise((resolve) => setTimeout(resolve, PRACTICE_RETRY_DELAY_MS))
+      }
+    }
   }
 
   function handlePracticeAdvance() {
