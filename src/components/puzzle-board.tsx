@@ -49,7 +49,10 @@ const BEST_MOVE_ARROW_COLOR = 'rgba(37, 99, 235, 0.8)'
 // secondo non e' un problema.
 // Esportata per riuso nello skeleton di caricamento (stessa dimensione,
 // niente "scatto" quando il puzzle vero arriva).
-export const BOARD_SIZE = 'min(calc(100vw - 2rem), calc(100vh - 117px))'
+// svh invece di vh: su iPhone 100vh e' l'altezza con le barre di Safari
+// nascoste, piu' grande di quella visibile, e la scacchiera usciva dallo
+// schermo (soprattutto in orizzontale).
+export const BOARD_SIZE = 'min(calc(100vw - 2rem), calc(100svh - 117px))'
 
 // A lg: la scacchiera condivide la riga con la sidebar dei puzzle (w-64 =
 // 256px) e la colonna di analisi (w-72 = 288px), separate da gap (gap-3 =
@@ -789,7 +792,12 @@ export function PuzzleBoard({
             quadrato affiancato da colonne di larghezza fissa: non c'e'
             altezza in piu' da guadagnare senza prima liberare larghezza
             (sidebar/colonna di analisi piu' strette). */}
-        <div className="flex w-[var(--board-size)] items-stretch gap-2 lg:w-[var(--board-size-lg)]">
+        {/* --square: lato della scacchiera, dato in modo esplicito (larghezza E
+            altezza). Con solo aspect-ratio dentro questa riga flessibile
+            Safari su iPhone calcolava un'altezza maggiore della larghezza e le
+            traverse restavano distanziate. Sotto lg: tutta la riga; a lg: la
+            riga meno le due colonnine (2 x w-5 + 2 x gap-2 = 56px). */}
+        <div className="flex w-[var(--board-size)] items-stretch gap-2 [--square:var(--board-size)] lg:w-[var(--board-size-lg)] lg:[--square:calc(var(--board-size-lg)-56px)]">
           {/* Colonna riservata SEMPRE (anche vuota) cosi' la comparsa della
               barra di valutazione a fine puzzle non fa "scattare" la
               scacchiera (ne' in larghezza ne' in altezza, dato che non sta
@@ -811,7 +819,7 @@ export function PuzzleBoard({
           </div>
 
           <div
-            className={`relative min-w-0 flex-1 rounded-lg ring-2 transition-all duration-300 ${
+            className={`relative h-[var(--square)] w-[var(--square)] shrink-0 rounded-lg ring-2 transition-all duration-300 ${
               feedback === 'wrong'
                 ? 'ring-destructive'
                 : feedback === 'solved' || feedback === 'correct'
