@@ -8,7 +8,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 export function PuzzleBoardSkeleton() {
   return (
     <div
-      style={{ '--board-size': BOARD_SIZE, '--board-size-lg': BOARD_SIZE_LG } as CSSProperties}
+      style={
+        { '--board-size': BOARD_SIZE, '--board-size-lg': BOARD_SIZE_LG } as CSSProperties
+      }
       className="flex w-full flex-col items-center gap-4 lg:flex-row lg:items-start lg:justify-center"
     >
       <div className="flex flex-col items-center gap-4">
@@ -21,9 +23,9 @@ export function PuzzleBoardSkeleton() {
           <Skeleton className="h-4 w-8" />
         </div>
 
-        <div className="flex w-[var(--board-size)] items-stretch gap-2 lg:w-[var(--board-size-lg)]">
+        <div className="flex w-[var(--board-size)] items-stretch gap-2 [--square:var(--board-size)] lg:w-[var(--board-size-lg)] lg:[--square:calc(var(--board-size-lg)-56px)]">
           <div className="hidden w-5 shrink-0 lg:block" />
-          <Skeleton className="min-w-0 flex-1 rounded-lg" style={{ aspectRatio: '1 / 1' }} />
+          <Skeleton className="h-[var(--square)] w-[var(--square)] shrink-0 rounded-lg" />
           <div className="hidden w-5 shrink-0 lg:block" />
         </div>
 
