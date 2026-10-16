@@ -144,6 +144,7 @@ function PuzzleRow({
 
   return (
     <div
+      data-puzzle-row
       className={`flex w-full flex-col gap-1.5 rounded-md border px-2.5 py-2 transition-colors ${
         isActive
           ? 'border-primary bg-primary/10'
@@ -345,9 +346,11 @@ export function SessionPuzzleList({
   useEffect(() => {
     if (!activeSessionPuzzleId || !listRef.current) return
     const container = listRef.current
-    const row = container.querySelector<HTMLElement>(
-      `[data-session-puzzle-id="${activeSessionPuzzleId}"]`,
-    )
+    // Si porta in cima il riquadro intero della riga (bordo compreso), non il
+    // pulsante al suo interno: altrimenti bordo e margine restavano tagliati.
+    const row = container
+      .querySelector<HTMLElement>(`[data-session-puzzle-id="${activeSessionPuzzleId}"]`)
+      ?.closest<HTMLElement>('[data-puzzle-row]')
     if (!row) return
     const offset =
       row.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop

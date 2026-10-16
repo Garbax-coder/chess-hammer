@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/protected-route'
+import { ScrollToTopOnNavigate } from '@/components/scroll-to-top'
 import { useApplyAppStyle } from '@/hooks/use-app-style'
 import { MARKETING_PAGES } from '@/lib/marketing'
 import GuidePage from '@/pages/GuidePage'
@@ -35,6 +36,7 @@ function App() {
 
   return (
     <Suspense fallback={null}>
+      <ScrollToTopOnNavigate />
       <Routes>
         {MARKETING_PAGES.map(({ id, lang, path }) => (
           <Route
