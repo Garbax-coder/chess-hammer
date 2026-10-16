@@ -105,8 +105,23 @@ describe('SessionPuzzleList', () => {
 
     const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
     HTMLElement.prototype.getBoundingClientRect = vi.fn(function (this: HTMLElement) {
-      const top = this.hasAttribute('data-session-puzzle-id') ? 500 : 0
-      return { top, left: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON() {} }
+      // Riga a 500, il suo pulsante qualche pixel piu' in basso (bordo e margine).
+      const top = this.hasAttribute('data-puzzle-row')
+        ? 500
+        : this.hasAttribute('data-session-puzzle-id')
+          ? 509
+          : 0
+      return {
+        top,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: 0,
+        height: 0,
+        x: 0,
+        y: 0,
+        toJSON() {},
+      }
     })
 
     try {
@@ -122,6 +137,8 @@ describe('SessionPuzzleList', () => {
       )
 
       const scrollContainer = container.querySelector('.overflow-y-auto') as HTMLElement
+      // In cima va il riquadro intero della riga, non il pulsante (509):
+      // altrimenti bordo e margine restano tagliati sopra.
       expect(scrollContainer.scrollTop).toBe(500)
     } finally {
       HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect
