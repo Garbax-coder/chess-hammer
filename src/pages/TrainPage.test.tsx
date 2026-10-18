@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { it as itTranslations } from '@/lib/i18n/translations'
 import type { NextPuzzleOutcome } from '@/lib/puzzle-engine'
@@ -34,6 +34,8 @@ vi.mock('@/hooks/use-active-session', () => ({
 }))
 vi.mock('@/hooks/use-puzzle-session', () => ({
   nextPuzzleQueryKey: (id: string) => ['next-puzzle', id],
+  outcomeRound: (o: NextPuzzleOutcome) =>
+    o.status === 'next' ? o.data.round : o.status === 'session_complete' ? null : o.round,
   useNextPuzzle: () => ({ data: outcome, isLoading: false }),
   useRecordAttempt: () => ({ mutateAsync: recordAttempt, isPending: false }),
 }))
@@ -80,6 +82,31 @@ vi.mock(import('@/components/puzzle-board'), async (importOriginal) => ({
   ),
 }))
 vi.mock('@/components/dev-tools-panel', () => ({ DevToolsPanel: () => null }))
+// Statistiche del giro 1 appena concluso (riepilogo di fine giro).
+vi.mock('@/hooks/use-session-stats', () => ({
+  sessionRoundStatsKey: (userId: string) => ['session-round-stats', userId],
+  useSessionRoundStats: () => ({
+    data: [
+      {
+        session_id: session.id,
+        session_name: null,
+        status: 'in_progress',
+        total_puzzles: 2,
+        created_at: session.created_at,
+        completed_at: null,
+        pool_size: 2,
+        round: 1,
+        attempted: 2,
+        solved: 1,
+        total_seconds: 50,
+        first_attempt_at: '2026-10-18T10:00:00Z',
+        last_attempt_at: '2026-10-18T10:05:00Z',
+        elo_start: 1500,
+        elo_end: 1510,
+      },
+    ],
+  }),
+}))
 
 function renderPage() {
   render(
@@ -203,5 +230,72 @@ describe('TrainPage when the network drops while saving', () => {
     expect(warn).toHaveBeenCalled()
     warn.mockRestore()
     vi.useRealTimers()
+  })
+})
+
+describe('TrainPage at the end of a round or of the session', () => {
+  const nextPuzzle = (round: 1 | 2 | 3, id: string): NextPuzzleOutcome => ({
+    status: 'next',
+    data: {
+      sessionPuzzleId: `sp-${id}`,
+      round,
+      puzzle: makeLichessPuzzle({ puzzle_id: id }),
+    },
+  })
+
+  beforeEach(() => {
+    recordAttempt.mockReset()
+    practiceAttempts = new Map()
+    sessionPuzzles = [makePuzzleResult({ puzzleId: 'first', orderIndex: 1 })]
+  })
+
+  function renderWithSummaryRoute() {
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter initialEntries={['/train']}>
+          <Routes>
+            <Route path="/train" element={<TrainPage />} />
+            <Route path="/sessions/:id/summary" element={<p>riepilogo sessione</p>} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+  }
+
+  it('shows the round summary before the next round when there is no rest', async () => {
+    outcome = nextPuzzle(1, 'last-of-round-1')
+    recordAttempt.mockResolvedValue(nextPuzzle(2, 'first-of-round-2'))
+    renderWithSummaryRoute()
+
+    await act(async () =>
+      fireEvent.click(screen.getByRole('button', { name: 'concludi' })),
+    )
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'avanti' })))
+
+    expect(
+      screen.getByText(itTranslations.summary.roundCompleteTitle(1)),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(itTranslations.summary.roundLine(1, 1, '0:50', '25 s')),
+    ).toBeInTheDocument()
+    expect(screen.queryByTestId('puzzle-board')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: itTranslations.summary.continue }))
+    expect(screen.getByTestId('puzzle-board')).toBeInTheDocument()
+  })
+
+  it('opens the session summary after the last puzzle of the session', async () => {
+    outcome = nextPuzzle(3, 'last-of-session')
+    recordAttempt.mockResolvedValue({ status: 'session_complete' })
+    renderWithSummaryRoute()
+
+    await act(async () =>
+      fireEvent.click(screen.getByRole('button', { name: 'concludi' })),
+    )
+    // Il puzzle appena risolto resta visibile fino al passaggio successivo.
+    expect(screen.getByTestId('puzzle-board')).toBeInTheDocument()
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'avanti' })))
+
+    expect(screen.getByText('riepilogo sessione')).toBeInTheDocument()
   })
 })

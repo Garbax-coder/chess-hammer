@@ -66,16 +66,14 @@ const MINUTE = 60_000
 const DAY = 24 * 60 * MINUTE
 
 /**
- * Inizio di "oggi" per la quota giornaliera. Il client conta da mezzanotte
- * locale, il database (record_attempt_and_get_next_puzzle) da mezzanotte UTC:
- * si prende la piu' vecchia delle due, cosi' un tentativo retrodatato prima di
- * questo istante non conta come "oggi" per nessuno dei due.
+ * Inizio di "oggi" per la quota giornaliera: mezzanotte locale, come contano
+ * sia l'app sia il database (record_attempt_and_get_next_puzzle riceve il
+ * fuso orario del browser, migrazione 0030).
  */
 export function startOfQuotaDay(now: Date): number {
   const local = new Date(now)
   local.setHours(0, 0, 0, 0)
-  const utc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
-  return Math.min(local.getTime(), utc)
+  return local.getTime()
 }
 
 export function planScenario(

@@ -241,6 +241,43 @@ export const de: Translations = {
     empty: 'An diesem Tag keine Versuche.',
     backToSession: 'Zurück zur Session',
   },
+  summary: {
+    roundCompleteTitle: (round) => `Durchgang ${round} abgeschlossen`,
+    roundLine: (solved, failed, total, average) =>
+      `${solved} gelöst, ${failed} falsch · ${total} insgesamt · ${average} pro Puzzle`,
+    continue: 'Weiter',
+    compareTitle: 'Vergleich mit deinen früheren Sessions',
+    noPrevious:
+      'Das ist deine erste Session, die so weit kommt: Ab der nächsten siehst du den Vergleich.',
+    columns: {
+      current: 'Diese Session',
+      previous: 'Vorherige',
+      average: (sessions) =>
+        sessions === 1
+          ? 'Durchschnitt (1 Session)'
+          : `Durchschnitt (${sessions} Sessions)`,
+    },
+    metrics: {
+      solved: 'Gelöst',
+      failed: 'Falsch',
+      totalTime: 'Gesamtzeit',
+      averageTime: 'Durchschnittszeit pro Puzzle',
+    },
+    sessionCompleteTitle: 'Session abgeschlossen 🎉',
+    sessionSummaryTitle: 'Session-Übersicht',
+    sessionDates: (from, to) => `Vom ${from} bis ${to}`,
+    roundsTitle: 'Durchgang für Durchgang',
+    roundColumn: 'Durchgang',
+    speedChange: (from, to, percent) =>
+      `Durchschnittszeit pro Puzzle: ${from} in Durchgang 1, ${to} im letzten Durchgang (${percent > 0 ? '+' : ''}${percent} %)`,
+    elo: (from, to) =>
+      `ELO in Durchgang 1: ${from} → ${to} (${to - from >= 0 ? '+' : ''}${to - from})`,
+    noData: 'In dieser Session wurde noch kein Puzzle gespielt.',
+    newSession: 'Neue Session erstellen',
+    details: 'Session-Details',
+    dashboard: 'Zurück zum Dashboard',
+    viewSummary: 'Übersicht',
+  },
   sessionStatus: {
     in_progress: 'Läuft',
     completed: 'Abgeschlossen',

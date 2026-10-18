@@ -269,10 +269,9 @@ describe('debug scenario: last puzzle of the session', () => {
 })
 
 describe('startOfQuotaDay', () => {
-  it('is the earlier of local and UTC midnight', () => {
+  it('is local midnight', () => {
     const local = new Date(NOW)
     local.setHours(0, 0, 0, 0)
-    const utc = Date.UTC(2026, 9, 18)
-    expect(startOfQuotaDay(NOW)).toBe(Math.min(local.getTime(), utc))
+    expect(startOfQuotaDay(NOW)).toBe(local.getTime())
   })
 })

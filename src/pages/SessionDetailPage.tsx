@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { EditableSessionName } from '@/components/editable-session-name'
 import { PuzzleBoard } from '@/components/puzzle-board'
 import { PuzzleBoardSkeleton } from '@/components/puzzle-board-skeleton'
@@ -120,6 +120,12 @@ export default function SessionDetailPage() {
               t.sessionStatus[session.status],
             )}
           </p>
+          <Link
+            to={`/sessions/${session.id}/summary`}
+            className="text-primary text-sm underline-offset-4 hover:underline"
+          >
+            {t.summary.viewSummary}
+          </Link>
         </div>
 
         <div className="flex flex-col gap-3">

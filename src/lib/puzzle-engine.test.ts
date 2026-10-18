@@ -10,6 +10,7 @@ const {
   countAttemptedToday,
   dailyTargetForRound,
   getNextPuzzle,
+  restingUntilFrom,
 } = await import('./puzzle-engine')
 
 function sessionPuzzleRow(id: string, puzzleId: string, orderIndex: number) {
@@ -151,6 +152,9 @@ describe('getNextPuzzle', () => {
     if (outcome.status === 'resting') {
       expect(outcome.round).toBe(2)
       expect(new Date(outcome.restingUntil).getTime()).toBeGreaterThan(Date.now())
+      // La pausa finisce a mezzanotte locale, non a ore esatte dalla fine del giro.
+      expect(new Date(outcome.restingUntil).getHours()).toBe(0)
+      expect(new Date(outcome.restingUntil).getMinutes()).toBe(0)
     }
   })
 
@@ -206,5 +210,24 @@ describe('getNextPuzzle', () => {
       data: { sessionPuzzleId: 'sp2', puzzle, round: 2 },
     })
     expect(supabase.rpc).not.toHaveBeenCalled()
+  })
+})
+
+describe('restingUntilFrom', () => {
+  it('ends the rest at local midnight, restDays days later', () => {
+    const lateEvening = new Date(2026, 9, 18, 22, 30)
+    expect(restingUntilFrom(lateEvening, 2)).toBe(new Date(2026, 9, 20).toISOString())
+    const earlyMorning = new Date(2026, 9, 18, 0, 5)
+    expect(restingUntilFrom(earlyMorning, 1)).toBe(new Date(2026, 9, 19).toISOString())
+  })
+
+  it('crosses month ends', () => {
+    expect(restingUntilFrom(new Date(2026, 9, 31, 12), 2)).toBe(
+      new Date(2026, 10, 2).toISOString(),
+    )
+  })
+
+  it('means no rest with 0 days', () => {
+    expect(restingUntilFrom(new Date(2026, 9, 18, 12), 0)).toBeNull()
   })
 })

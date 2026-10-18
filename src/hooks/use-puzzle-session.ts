@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
+import { sessionRoundStatsKey } from '@/hooks/use-session-stats'
 import { syncSessionPuzzles } from '@/lib/session-puzzles-cache'
 import {
   getNextPuzzle,
@@ -11,7 +12,7 @@ import type { AttemptResult, TrainingSession } from '@/types/training'
 
 // Il giro a cui si riferisce un esito, o null per 'session_complete' (che
 // implica sempre un cambio di status della sessione da segnalare).
-function outcomeRound(outcome: NextPuzzleOutcome): 1 | 2 | 3 | null {
+export function outcomeRound(outcome: NextPuzzleOutcome): 1 | 2 | 3 | null {
   if (outcome.status === 'next') return outcome.data.round
   if (outcome.status === 'quota_reached' || outcome.status === 'resting')
     return outcome.round
@@ -87,11 +88,20 @@ export function useRecordAttempt(session: TrainingSession | null | undefined) {
       // completa (raro: una volta ogni round, non ad ogni puzzle) — negli
       // altri casi rileggerla sarebbe un round trip sprecato, dato che
       // tornerebbe la stessa identica riga.
+      //
+      // A fine sessione no: la sessione conclusa non e' piu' "attiva", e
+      // rileggerla adesso farebbe sparire il puzzle appena risolto per
+      // mostrare "nessuna sessione attiva". Ci pensa TrainPage.handleAdvance,
+      // che apre il riepilogo della sessione.
       const roundChanged =
         outcome.status === 'session_complete' ||
         outcomeRound(outcome) !== session?.current_round
-      if (roundChanged) {
+      if (roundChanged && outcome.status !== 'session_complete') {
         queryClient.invalidateQueries({ queryKey: ['active-session', user?.id] })
+      }
+      // I riepiloghi di fine giro leggono statistiche aggiornate.
+      if (roundChanged) {
+        queryClient.invalidateQueries({ queryKey: sessionRoundStatsKey(user?.id) })
       }
 
       // 'session-progress' non e' piu' una query separata in TrainPage (si

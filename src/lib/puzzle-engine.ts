@@ -12,6 +12,25 @@ export function dailyTargetForRound(session: TrainingSession, round: 1 | 2 | 3):
   return session.daily_target_round3
 }
 
+/** Fuso orario del browser: la quota e la pausa tra i giri si contano dalla sua mezzanotte. */
+export function currentTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+}
+
+/**
+ * Fine della pausa tra i giri: l'inizio (mezzanotte locale) del giorno che
+ * cade `restDays` giorni dopo `now`. Con 2 giorni, chi chiude il giro il 18
+ * alle 22 riprende il 20 da mezzanotte. Stessa regola del database
+ * (record_attempt_and_get_next_puzzle, migrazione 0030).
+ */
+export function restingUntilFrom(now: Date, restDays: number): string | null {
+  if (restDays <= 0) return null
+  const d = new Date(now)
+  d.setHours(0, 0, 0, 0)
+  d.setDate(d.getDate() + restDays)
+  return d.toISOString()
+}
+
 export function startOfTodayIso(): string {
   const d = new Date()
   d.setHours(0, 0, 0, 0)
@@ -185,10 +204,7 @@ export async function getNextPuzzle(
       return { status: 'session_complete' }
     }
     const nextRound = (round + 1) as 2 | 3
-    restingUntil =
-      session.rest_days > 0
-        ? new Date(Date.now() + session.rest_days * 24 * 60 * 60 * 1000).toISOString()
-        : null
+    restingUntil = restingUntilFrom(new Date(), session.rest_days)
     await advanceRound(session.id, nextRound, restingUntil)
     round = nextRound
     roundAttempts = await fetchRoundAttempts(
@@ -254,6 +270,7 @@ export async function recordAttemptAndGetNextPuzzle(params: {
     p_result: result,
     p_time_seconds: timeSeconds,
     p_puzzle_rating: puzzleRating,
+    p_tz: currentTimeZone(),
   })
   if (error) throw error
   return data as NextPuzzleOutcome
