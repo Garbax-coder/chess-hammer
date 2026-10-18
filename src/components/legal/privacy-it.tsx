@@ -11,7 +11,7 @@ export default function PrivacyIt() {
   return (
     <>
       <p>
-        Ultimo aggiornamento: 11 ottobre 2026. Questa informativa descrive quali dati
+        Ultimo aggiornamento: 18 ottobre 2026. Questa informativa descrive quali dati
         personali raccoglie {SITE_DOMAIN} ("Chess Hammer", "il Servizio"), per quali
         finalità e con quali diritti puoi gestirli, in base al Regolamento (UE) 2016/679
         (GDPR).
@@ -83,6 +83,15 @@ export default function PrivacyIt() {
           tornano), ricavate dai dati del Servizio senza strumenti di tracciamento, per
           migliorarlo e decidere come svilupparlo: legittimo interesse. Si usano solo
           numeri complessivi, mai profili dei singoli utenti.
+        </li>
+        <li>
+          <b>Assistenza e gestione del Servizio</b> (rispondere alle tue richieste,
+          risolvere problemi del tuo account, verificare che il Servizio funzioni): il
+          titolare può consultare, in sola lettura e senza modificarli, i dati del tuo
+          account (email, date di registrazione e di ultimo accesso, allenamenti,
+          statistiche e preferenze) da un'area riservata accessibile solo a lui. Base
+          giuridica: esecuzione del contratto d'uso e legittimo interesse a gestire il
+          Servizio.
         </li>
       </ul>
       <p>

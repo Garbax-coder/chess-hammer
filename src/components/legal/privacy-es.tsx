@@ -11,7 +11,7 @@ export default function PrivacyEs() {
   return (
     <>
       <p>
-        Última actualización: 11 de octubre de 2026. Esta política describe qué datos
+        Última actualización: 18 de octubre de 2026. Esta política describe qué datos
         personales recoge {SITE_DOMAIN} («Chess Hammer», «el Servicio»), con qué fines y
         qué derechos tienes sobre ellos, según el Reglamento (UE) 2016/679 (RGPD).
       </p>
@@ -81,6 +81,15 @@ export default function PrivacyEs() {
           frecuencia vuelven), obtenidas de los datos del Servicio sin herramientas de
           seguimiento, para mejorarlo y decidir cómo desarrollarlo: interés legítimo. Solo
           se usan cifras globales, nunca perfiles de usuarios concretos.
+        </li>
+        <li>
+          <b>Asistencia y gestión del Servicio</b> (responder a tus solicitudes, resolver
+          problemas de tu cuenta, comprobar que el Servicio funciona): el responsable
+          puede consultar los datos de tu cuenta (email, fechas de registro y del último
+          acceso, entrenamientos, estadísticas y preferencias) en modo de solo lectura,
+          sin modificarlos, desde un área reservada a la que solo él tiene acceso. Base
+          jurídica: ejecución de las condiciones de uso e interés legítimo en gestionar el
+          Servicio.
         </li>
       </ul>
       <p>

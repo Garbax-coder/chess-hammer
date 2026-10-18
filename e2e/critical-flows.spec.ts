@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { expect, test, type Page } from '@playwright/test'
 import { Chess } from 'chess.js'
 import { it as t } from '../src/lib/i18n/translations'
-import { E2E_EMAIL_PREFIX } from './dev-env'
+import { E2E_EMAIL_PREFIX, readEnv } from './dev-env'
 
 // I flussi principali, nell'ordine in cui li vive un utente: registrazione,
 // allenamento, preferenze, esportazione dei dati, eliminazione dell'account.
@@ -126,6 +126,34 @@ test('download your data as JSON', async () => {
   const data = JSON.parse(readFileSync(await (await download).path(), 'utf8'))
   expect(data.puzzleAttempts).toHaveLength(1)
   expect(data.sessions).toHaveLength(1)
+})
+
+test('regular users cannot reach the admin area or its data', async () => {
+  await page.goto('/admin')
+  await expect(page).toHaveURL(/\/dashboard$/)
+  await expect(page.getByRole('link', { name: 'Admin' })).toHaveCount(0)
+
+  // Anche chiamando direttamente il database, le funzioni admin rifiutano.
+  const supabaseUrl = readEnv('.env.development.local', 'VITE_SUPABASE_URL')!
+  const anonKey = readEnv('.env.development.local', 'VITE_SUPABASE_ANON_KEY')!
+  const status = await page.evaluate(
+    async ({ supabaseUrl, anonKey }) => {
+      const key = Object.keys(localStorage).find((k) => k.endsWith('-auth-token'))!
+      const token = JSON.parse(localStorage.getItem(key)!).access_token
+      const res = await fetch(`${supabaseUrl}/rest/v1/rpc/admin_list_users`, {
+        method: 'POST',
+        headers: {
+          apikey: anonKey,
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: '{}',
+      })
+      return res.status
+    },
+    { supabaseUrl, anonKey },
+  )
+  expect(status).toBe(403)
 })
 
 test('delete the account', async () => {

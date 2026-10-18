@@ -107,6 +107,32 @@ Prova sul progetto di sviluppo (transazione annullata alla fine, non lascia trac
 psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/account-retention.sql
 ```
 
+## Amministrazione
+
+`/admin` mostra l'andamento della piattaforma (registrazioni, tentativi sui puzzle
+delle sessioni e in pratica libera, giri e sessioni conclusi: ultime 24 ore, 7 e 30
+giorni) e l'elenco degli utenti con l'ultimo login; da lì si apre la scheda di un
+utente in sola lettura. Il link "Admin" compare nell'intestazione solo agli
+amministratori.
+
+Sono amministratori gli account con `app_metadata.admin = true`, che si imposta solo
+lato server (SQL Editor di Supabase); i dati arrivano da funzioni `admin_*`
+([0029](supabase/migrations/0029_admin_dashboard.sql)) che rifiutano chiunque altro.
+Per aggiungere o togliere un amministratore (vale dal login successivo):
+
+```sql
+update auth.users set raw_app_meta_data = raw_app_meta_data || '{"admin": true}'
+ where email = 'nome@example.com';
+update auth.users set raw_app_meta_data = raw_app_meta_data - 'admin'
+ where email = 'nome@example.com';
+```
+
+Prova sul progetto di sviluppo (transazione annullata alla fine):
+
+```bash
+psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/admin-dashboard.sql
+```
+
 ## Backup del database
 
 Il piano gratuito di Supabase non fa backup. Ne fa uno **ogni domenica alle 3:00** un

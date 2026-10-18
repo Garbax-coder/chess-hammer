@@ -11,7 +11,7 @@ export default function PrivacyEn() {
   return (
     <>
       <p>
-        Last updated: October 11, 2026. This notice describes what personal data{' '}
+        Last updated: October 18, 2026. This notice describes what personal data{' '}
         {SITE_DOMAIN} ("Chess Hammer", "the Service") collects, why, and what rights you
         have over it, under Regulation (EU) 2016/679 (GDPR).
       </p>
@@ -78,6 +78,14 @@ export default function PrivacyEn() {
           back), derived from the Service's own data without any tracking tools, to
           improve it and decide how to develop it: legitimate interest. Only overall
           numbers are used, never profiles of individual users.
+        </li>
+        <li>
+          <b>Support and running the Service</b> (answering your requests, fixing problems
+          with your account, checking that the Service works): the controller can view
+          your account data (email, sign-up and last sign-in dates, training, statistics
+          and preferences) in read-only mode, without changing it, from a restricted area
+          that only the controller can access. Legal basis: performance of the terms of
+          use and legitimate interest in running the Service.
         </li>
       </ul>
       <p>

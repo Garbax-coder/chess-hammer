@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ReactNode } from 'react'
 import { Route, Routes } from 'react-router-dom'
+import { AdminRoute } from '@/components/admin/admin-route'
 import { ProtectedRoute } from '@/components/protected-route'
 import { ScrollToTopOnNavigate } from '@/components/scroll-to-top'
 import { useApplyAppStyle } from '@/hooks/use-app-style'
@@ -26,6 +27,8 @@ const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
 const TermsPage = lazy(() => import('@/pages/TermsPage'))
 const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'))
 const CreditsPage = lazy(() => import('@/pages/CreditsPage'))
+const AdminPage = lazy(() => import('@/pages/AdminPage'))
+const AdminUserPage = lazy(() => import('@/pages/AdminUserPage'))
 
 function Protected({ children }: { children: ReactNode }) {
   return <ProtectedRoute>{children}</ProtectedRoute>
@@ -113,6 +116,22 @@ function App() {
             <Protected>
               <ProfilePage />
             </Protected>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/users/:id"
+          element={
+            <AdminRoute>
+              <AdminUserPage />
+            </AdminRoute>
           }
         />
         <Route path="/terms" element={<TermsPage />} />

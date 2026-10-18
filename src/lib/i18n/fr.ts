@@ -391,11 +391,7 @@ export const fr: Translations = {
       'Nous avons mis à jour nos conditions et notre politique de confidentialité',
     updatedIntro: 'Voici ce qui change :',
     changes: [
-      'L’âge minimum pour utiliser Chess Hammer est désormais de 16 ans.',
-      'Les rapports d’erreur de l’application passent par Sentry (données dans l’UE, sans e-mail ni adresse IP).',
-      'La liste des prestataires inclut désormais Cloudflare (vérification anti-robot) et Have I Been Pwned (contrôle des mots de passe divulgués).',
-      'Les comptes inutilisés pendant 24 mois sont supprimés, avec un e-mail d’avertissement 30 jours avant ; les comptes jamais confirmés, après 7 jours.',
-      'Les conditions et la politique de confidentialité sont disponibles en cinq langues ; en cas de différence, le texte italien prévaut.',
+      'Le responsable du traitement peut consulter en lecture seule les données de votre compte, depuis un espace qui lui est réservé, pour l’assistance et la gestion du Service.',
     ],
     continuing:
       'En continuant à utiliser Chess Hammer, vous acceptez les textes mis à jour.',
