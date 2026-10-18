@@ -11,7 +11,7 @@ export default function PrivacyDe() {
   return (
     <>
       <p>
-        Zuletzt aktualisiert: 11. Oktober 2026. Diese Datenschutzerklärung beschreibt,
+        Zuletzt aktualisiert: 18. Oktober 2026. Diese Datenschutzerklärung beschreibt,
         welche personenbezogenen Daten {SITE_DOMAIN} („Chess Hammer“, „der Dienst“)
         erhebt, zu welchen Zwecken und welche Rechte du daran hast, gemäß der Verordnung
         (EU) 2016/679 (DSGVO).
@@ -84,6 +84,15 @@ export default function PrivacyDe() {
           gewonnen, um ihn zu verbessern und seine Weiterentwicklung zu planen:
           berechtigtes Interesse. Es werden nur Gesamtzahlen verwendet, nie Profile
           einzelner Nutzer.
+        </li>
+        <li>
+          <b>Support und Betrieb des Dienstes</b> (deine Anfragen beantworten, Probleme
+          mit deinem Konto lösen, prüfen, ob der Dienst funktioniert): Der Verantwortliche
+          kann die Daten deines Kontos (E-Mail, Registrierungs- und letztes Anmeldedatum,
+          Trainings, Statistiken und Einstellungen) schreibgeschützt und ohne sie zu
+          ändern in einem geschützten Bereich einsehen, auf den nur er Zugriff hat.
+          Rechtsgrundlage: Erfüllung der Nutzungsbedingungen und berechtigtes Interesse am
+          Betrieb des Dienstes.
         </li>
       </ul>
       <p>
