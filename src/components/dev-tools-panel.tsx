@@ -1,10 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useActiveSession } from '@/hooks/use-active-session'
 import { useAuth } from '@/lib/auth-context'
+import { applyScenario, type DebugScenario } from '@/lib/dev-scenarios'
 import {
   addDoubleMateDebugPuzzle,
   addKnightPromotionDebugPuzzle,
@@ -15,6 +16,35 @@ import {
   skipRest,
 } from '@/lib/dev-tools'
 import { useTranslations } from '@/lib/language-context'
+
+const SCENARIOS: DebugScenario[] = ['lastOfDay', 'lastOfRound1', 'lastOfSession']
+const NOTICE_KEY = 'chess-hammer-dev-notice'
+
+function storeNotice(text: string) {
+  try {
+    sessionStorage.setItem(NOTICE_KEY, text)
+  } catch {
+    // Memoria del browser non disponibile: l'avviso si perde, nient'altro.
+  }
+}
+
+// Letto all'avvio e cancellato in un effetto: in StrictMode l'inizializzatore
+// di useState gira due volte, e cancellarlo li' lo farebbe sparire.
+function readNotice(): string | null {
+  try {
+    return sessionStorage.getItem(NOTICE_KEY)
+  } catch {
+    return null
+  }
+}
+
+function clearNotice() {
+  try {
+    sessionStorage.removeItem(NOTICE_KEY)
+  } catch {
+    // Niente da cancellare.
+  }
+}
 
 /**
  * Pannello visibile solo in sviluppo (`import.meta.env.DEV`, mai nella build
@@ -33,8 +63,18 @@ export function DevToolsPanel({
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [busy, setBusy] = useState<
-    'quota' | 'session' | 'delete' | 'rest' | 'promotion' | 'doubleMate' | null
+    | 'quota'
+    | 'session'
+    | 'delete'
+    | 'rest'
+    | 'promotion'
+    | 'doubleMate'
+    | DebugScenario
+    | null
   >(null)
+  // Avviso dello scenario appena applicato, sopravvissuto alla ricarica.
+  const [notice] = useState(readNotice)
+  useEffect(clearNotice, [])
 
   if (!session || !user) return null
 
@@ -93,6 +133,24 @@ export function DevToolsPanel({
   // riapre in pratica libera invece di non fare nulla.
   function openIfAlreadyThere(puzzle: DebugPuzzle) {
     if (puzzle.alreadyInSession) onOpenPuzzle?.(puzzle.sessionPuzzleId, puzzle.puzzleId)
+  }
+
+  // Porta la sessione a un solo puzzle da un traguardo e ricarica /train,
+  // dove quel puzzle e' il prossimo da risolvere. Ricarica completa, non
+  // invalidateQueries: il prossimo puzzle verrebbe ricalcolato con la
+  // sessione ancora in cache (giro e pausa di prima) prima che arrivi quella
+  // aggiornata, e getNextPuzzle potrebbe riscrivere un cambio di giro o una
+  // pausa sopra quelli appena impostati.
+  async function handleScenario(scenario: DebugScenario) {
+    setBusy(scenario)
+    try {
+      const { quotaEndsRound } = await applyScenario(scenario, session!, user!.id)
+      if (quotaEndsRound) storeNotice(t.devTools.quotaEndsRound)
+      window.location.assign('/train')
+    } catch (error) {
+      setBusy(null)
+      throw error
+    }
   }
 
   async function handleAddDoubleMatePuzzle() {
@@ -167,6 +225,19 @@ export function DevToolsPanel({
         >
           {busy === 'doubleMate' ? t.devTools.resetting : t.devTools.addDoubleMatePuzzle}
         </Button>
+        {SCENARIOS.map((scenario) => (
+          <Button
+            key={scenario}
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={busy !== null}
+            onClick={() => handleScenario(scenario)}
+          >
+            {busy === scenario ? t.devTools.resetting : t.devTools[scenario]}
+          </Button>
+        ))}
+        {notice && <p className="text-muted-foreground w-full text-xs">{notice}</p>}
       </CardContent>
     </Card>
   )

@@ -337,6 +337,11 @@ export const fr: Translations = {
     skipRest: 'Passer la pause',
     addKnightPromotionPuzzle: 'Ajouter un puzzle de promotion en cavalier',
     addDoubleMatePuzzle: 'Try double finish puzzle',
+    lastOfDay: 'Dernier puzzle du jour',
+    lastOfRound1: 'Dernier puzzle du cycle 1',
+    lastOfSession: 'Dernier puzzle de la session',
+    quotaEndsRound:
+      'Le quota du jour couvre tous les puzzles restants de ce cycle : le dernier puzzle du jour termine aussi le cycle.',
   },
   profile: {
     openLabel: 'Profil',
