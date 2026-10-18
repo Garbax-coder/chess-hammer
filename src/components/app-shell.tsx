@@ -13,13 +13,16 @@ import {
 } from '@/components/ui/dialog'
 import { useAppStyle } from '@/hooks/use-app-style'
 import { useTheme } from '@/hooks/use-theme'
+import { isAdminUser } from '@/lib/admin'
 import { useAuth } from '@/lib/auth-context'
+import { useAdminTranslations } from '@/lib/i18n/admin'
 import { useLanguage } from '@/lib/language-context'
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { theme, toggleTheme } = useTheme()
   const { t } = useLanguage()
   const { user } = useAuth()
+  const adminT = useAdminTranslations()
   const appStyle = useAppStyle()
   // Il menu mobile va chiuso a mano al click su una voce, altrimenti resta
   // aperto sopra la pagina di destinazione.
@@ -43,6 +46,16 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Button asChild variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
         <Link to="/faq">{t.nav.faq}</Link>
       </Button>
+      {isAdminUser(user) && (
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <Link to="/admin">{adminT.navLabel}</Link>
+        </Button>
+      )}
     </>
   )
 
