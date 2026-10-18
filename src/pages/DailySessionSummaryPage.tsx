@@ -28,9 +28,14 @@ export default function DailySessionSummaryPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8">
-      <Button asChild variant="outline" size="sm" className="w-fit">
-        <Link to={`/sessions/${id}`}>{t.dailySummary.backToSession}</Link>
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild variant="outline" size="sm" className="w-fit">
+          <Link to={`/sessions/${id}`}>{t.dailySummary.backToSession}</Link>
+        </Button>
+        <Button asChild variant="ghost" size="sm" className="w-fit">
+          <Link to={`/sessions/${id}/summary`}>{t.summary.sessionSummaryTitle}</Link>
+        </Button>
+      </div>
 
       <DailySessionSummary day={date} entries={entries} boardTheme={boardTheme} />
     </main>

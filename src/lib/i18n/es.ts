@@ -273,6 +273,17 @@ export const es: Translations = {
     details: 'Detalle de la sesión',
     dashboard: 'Volver al panel',
     viewSummary: 'Resumen',
+    linksLabel: 'Resúmenes',
+    linkSession: 'Sesión',
+    dayPicker: 'Resumen de un día',
+    dayOption: (date, attempted) =>
+      attempted === 1 ? `${date} · 1 puzzle` : `${date} · ${attempted} puzzles`,
+    roundTitle: (round) => `Resumen de la ronda ${round}`,
+    roundInProgress: (attempted, of) =>
+      `Ronda en curso: ${attempted} de ${of} puzzles. La comparación usa las rondas terminadas de las sesiones anteriores.`,
+    daysTitle: 'Día por día',
+    dayRow: (solved, failed, total) =>
+      `${solved} resueltos, ${failed} fallados · ${total}`,
   },
   sessionStatus: {
     in_progress: 'En curso',

@@ -277,6 +277,16 @@ export const de: Translations = {
     details: 'Session-Details',
     dashboard: 'Zurück zum Dashboard',
     viewSummary: 'Übersicht',
+    linksLabel: 'Übersichten',
+    linkSession: 'Session',
+    dayPicker: 'Übersicht eines Tages',
+    dayOption: (date, attempted) =>
+      attempted === 1 ? `${date} · 1 Puzzle` : `${date} · ${attempted} Puzzles`,
+    roundTitle: (round) => `Übersicht von Durchgang ${round}`,
+    roundInProgress: (attempted, of) =>
+      `Durchgang läuft: ${attempted} von ${of} Puzzles. Der Vergleich nutzt abgeschlossene Durchgänge früherer Sessions.`,
+    daysTitle: 'Tag für Tag',
+    dayRow: (solved, failed, total) => `${solved} gelöst, ${failed} falsch · ${total}`,
   },
   sessionStatus: {
     in_progress: 'Läuft',

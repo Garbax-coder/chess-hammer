@@ -183,6 +183,14 @@ export interface Translations {
     details: string
     dashboard: string
     viewSummary: string
+    linksLabel: string
+    linkSession: string
+    dayPicker: string
+    dayOption: (date: string, attempted: number) => string
+    roundTitle: (round: number) => string
+    roundInProgress: (attempted: number, of: number) => string
+    daysTitle: string
+    dayRow: (solved: number, failed: number, total: string) => string
   }
   sessionStatus: {
     in_progress: string
@@ -655,6 +663,16 @@ export const it: Translations = {
     details: 'Dettaglio della sessione',
     dashboard: 'Torna alla dashboard',
     viewSummary: 'Riepilogo',
+    linksLabel: 'Riepiloghi',
+    linkSession: 'Sessione',
+    dayPicker: 'Riepilogo di un giorno',
+    dayOption: (date, attempted) =>
+      attempted === 1 ? `${date} · 1 puzzle` : `${date} · ${attempted} puzzle`,
+    roundTitle: (round) => `Riepilogo del giro ${round}`,
+    roundInProgress: (attempted, of) =>
+      `Giro in corso: ${attempted} puzzle su ${of}. Il confronto usa i giri conclusi delle sessioni precedenti.`,
+    daysTitle: 'Giorno per giorno',
+    dayRow: (solved, failed, total) => `${solved} risolti, ${failed} sbagliati · ${total}`,
   },
   sessionStatus: {
     in_progress: 'In corso',
@@ -1189,6 +1207,16 @@ export const en: Translations = {
     details: 'Session details',
     dashboard: 'Back to dashboard',
     viewSummary: 'Summary',
+    linksLabel: 'Summaries',
+    linkSession: 'Session',
+    dayPicker: 'Summary of a day',
+    dayOption: (date, attempted) =>
+      attempted === 1 ? `${date} · 1 puzzle` : `${date} · ${attempted} puzzles`,
+    roundTitle: (round) => `Round ${round} summary`,
+    roundInProgress: (attempted, of) =>
+      `Round in progress: ${attempted} of ${of} puzzles. The comparison uses completed rounds of previous sessions.`,
+    daysTitle: 'Day by day',
+    dayRow: (solved, failed, total) => `${solved} solved, ${failed} failed · ${total}`,
   },
   sessionStatus: {
     in_progress: 'In progress',

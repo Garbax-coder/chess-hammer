@@ -108,3 +108,45 @@ export function entriesForDay(puzzles: SessionPuzzleResult[], day: string): DayE
   entries.sort((a, b) => a.attempt.attempted_at.localeCompare(b.attempt.attempted_at))
   return entries
 }
+
+export interface DayTotals {
+  day: string
+  attempted: number
+  solved: number
+  failed: number
+  totalSeconds: number
+  rounds: Round[]
+}
+
+/**
+ * I giorni con almeno un tentativo, dal piu' vecchio, con i totali del
+ * giorno. Con `round` solo i tentativi di quel giro (giorni di un giro),
+ * senza tutti i giri.
+ */
+export function attemptDays(puzzles: SessionPuzzleResult[], round?: Round): DayTotals[] {
+  const byDay = new Map<string, DayTotals>()
+  for (const puzzle of puzzles) {
+    for (const r of round ? [round] : ROUNDS) {
+      const attempt = puzzle.attempts[r]
+      if (!attempt) continue
+      const day = dayKeyOf(attempt.attempted_at)
+      const totals = byDay.get(day) ?? {
+        day,
+        attempted: 0,
+        solved: 0,
+        failed: 0,
+        totalSeconds: 0,
+        rounds: [],
+      }
+      totals.attempted += 1
+      if (attempt.result === 'solved') totals.solved += 1
+      else totals.failed += 1
+      totals.totalSeconds += attempt.time_seconds
+      if (!totals.rounds.includes(r)) totals.rounds.push(r)
+      byDay.set(day, totals)
+    }
+  }
+  return [...byDay.values()]
+    .map((d) => ({ ...d, rounds: [...d.rounds].sort((a, b) => a - b) }))
+    .sort((a, b) => a.day.localeCompare(b.day))
+}

@@ -275,6 +275,16 @@ export const fr: Translations = {
     details: 'Détail de la session',
     dashboard: 'Retour au tableau de bord',
     viewSummary: 'Récapitulatif',
+    linksLabel: 'Récapitulatifs',
+    linkSession: 'Session',
+    dayPicker: 'Récapitulatif d’un jour',
+    dayOption: (date, attempted) =>
+      attempted === 1 ? `${date} · 1 puzzle` : `${date} · ${attempted} puzzles`,
+    roundTitle: (round) => `Récapitulatif du cycle ${round}`,
+    roundInProgress: (attempted, of) =>
+      `Cycle en cours : ${attempted} puzzles sur ${of}. La comparaison utilise les cycles terminés des sessions précédentes.`,
+    daysTitle: 'Jour par jour',
+    dayRow: (solved, failed, total) => `${solved} résolus, ${failed} ratés · ${total}`,
   },
   sessionStatus: {
     in_progress: 'En cours',
