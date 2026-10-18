@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { makePuzzleResult, withAttempt } from '@/test/fixtures'
 import {
+  attemptDays,
   dayGroupsForRound,
   dayKeyOf,
   dayKeyToLocalDate,
@@ -139,5 +140,34 @@ describe('entriesForDay', () => {
 
   it('returns an empty list for a day with no attempts', () => {
     expect(entriesForDay([makePuzzleResult()], '2026-01-01')).toEqual([])
+  })
+})
+
+describe('attemptDays', () => {
+  // Ore 12 locali: lo stesso giorno di calendario in qualunque fuso orario.
+  const at = (day: string) => new Date(`${day}T12:00:00`).toISOString()
+  const puzzles = [
+    withAttempt(
+      withAttempt(makePuzzleResult({ orderIndex: 1 }), 1, 'solved', at('2026-09-20'), 30),
+      2,
+      'solved',
+      at('2026-09-25'),
+      12,
+    ),
+    withAttempt(makePuzzleResult({ orderIndex: 2 }), 1, 'failed', at('2026-09-20'), 50),
+    withAttempt(makePuzzleResult({ orderIndex: 3 }), 1, 'solved', at('2026-09-21'), 20),
+  ]
+
+  it('lists every day with attempts, oldest first, with its totals and rounds', () => {
+    expect(attemptDays(puzzles)).toEqual([
+      { day: '2026-09-20', attempted: 2, solved: 1, failed: 1, totalSeconds: 80, rounds: [1] },
+      { day: '2026-09-21', attempted: 1, solved: 1, failed: 0, totalSeconds: 20, rounds: [1] },
+      { day: '2026-09-25', attempted: 1, solved: 1, failed: 0, totalSeconds: 12, rounds: [2] },
+    ])
+  })
+
+  it('keeps only the days of one round when asked', () => {
+    expect(attemptDays(puzzles, 2).map((d) => d.day)).toEqual(['2026-09-25'])
+    expect(attemptDays(puzzles, 3)).toEqual([])
   })
 })

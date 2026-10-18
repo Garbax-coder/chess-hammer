@@ -241,6 +241,51 @@ export const fr: Translations = {
     empty: 'Aucune tentative ce jour-là.',
     backToSession: 'Retour à la session',
   },
+  summary: {
+    roundCompleteTitle: (round) => `Cycle ${round} terminé`,
+    roundLine: (solved, failed, total, average) =>
+      `${solved} résolus, ${failed} ratés · ${total} au total · ${average} par puzzle`,
+    continue: 'Continuer',
+    compareTitle: 'Comparaison avec vos sessions précédentes',
+    noPrevious:
+      'C’est votre première session à arriver jusqu’ici : dès la prochaine, vous verrez la comparaison.',
+    columns: {
+      current: 'Cette session',
+      previous: 'Précédente',
+      average: (sessions) =>
+        sessions === 1 ? 'Moyenne (1 session)' : `Moyenne (${sessions} sessions)`,
+    },
+    metrics: {
+      solved: 'Résolus',
+      failed: 'Ratés',
+      totalTime: 'Temps total',
+      averageTime: 'Temps moyen par puzzle',
+    },
+    sessionCompleteTitle: 'Session terminée 🎉',
+    sessionSummaryTitle: 'Récapitulatif de la session',
+    sessionDates: (from, to) => `Du ${from} au ${to}`,
+    roundsTitle: 'Cycle par cycle',
+    roundColumn: 'Cycle',
+    speedChange: (from, to, percent) =>
+      `Temps moyen par puzzle : ${from} au cycle 1, ${to} au dernier cycle (${percent > 0 ? '+' : ''}${percent} %)`,
+    elo: (from, to) =>
+      `ELO au cycle 1 : ${from} → ${to} (${to - from >= 0 ? '+' : ''}${to - from})`,
+    noData: 'Aucun puzzle joué dans cette session.',
+    newSession: 'Créer une nouvelle session',
+    details: 'Détail de la session',
+    dashboard: 'Retour au tableau de bord',
+    viewSummary: 'Récapitulatif',
+    linksLabel: 'Récapitulatifs',
+    linkSession: 'Session',
+    dayPicker: 'Récapitulatif d’un jour',
+    dayOption: (date, attempted) =>
+      attempted === 1 ? `${date} · 1 puzzle` : `${date} · ${attempted} puzzles`,
+    roundTitle: (round) => `Récapitulatif du cycle ${round}`,
+    roundInProgress: (attempted, of) =>
+      `Cycle en cours : ${attempted} puzzles sur ${of}. La comparaison utilise les cycles terminés des sessions précédentes.`,
+    daysTitle: 'Jour par jour',
+    dayRow: (solved, failed, total) => `${solved} résolus, ${failed} ratés · ${total}`,
+  },
   sessionStatus: {
     in_progress: 'En cours',
     completed: 'Terminée',

@@ -162,6 +162,36 @@ export interface Translations {
     empty: string
     backToSession: string
   }
+  // Riepiloghi di fine giro e di fine sessione (vedi session-stats.ts).
+  summary: {
+    roundCompleteTitle: (round: number) => string
+    roundLine: (solved: number, failed: number, total: string, average: string) => string
+    continue: string
+    compareTitle: string
+    noPrevious: string
+    columns: { current: string; previous: string; average: (sessions: number) => string }
+    metrics: { solved: string; failed: string; totalTime: string; averageTime: string }
+    sessionCompleteTitle: string
+    sessionSummaryTitle: string
+    sessionDates: (from: string, to: string) => string
+    roundsTitle: string
+    roundColumn: string
+    speedChange: (from: string, to: string, percent: number) => string
+    elo: (from: number, to: number) => string
+    noData: string
+    newSession: string
+    details: string
+    dashboard: string
+    viewSummary: string
+    linksLabel: string
+    linkSession: string
+    dayPicker: string
+    dayOption: (date: string, attempted: number) => string
+    roundTitle: (round: number) => string
+    roundInProgress: (attempted: number, of: number) => string
+    daysTitle: string
+    dayRow: (solved: number, failed: number, total: string) => string
+  }
   sessionStatus: {
     in_progress: string
     completed: string
@@ -600,6 +630,49 @@ export const it: Translations = {
       `${solved} risolti, ${failed} falliti · ${totalTime} totali`,
     empty: 'Nessun tentativo in questo giorno.',
     backToSession: 'Torna alla sessione',
+  },
+  summary: {
+    roundCompleteTitle: (round) => `Giro ${round} concluso`,
+    roundLine: (solved, failed, total, average) =>
+      `${solved} risolti, ${failed} sbagliati · ${total} in tutto · ${average} a puzzle`,
+    continue: 'Continua',
+    compareTitle: 'Confronto con le sessioni precedenti',
+    noPrevious: 'È la tua prima sessione arrivata fin qui: dalla prossima vedrai il confronto.',
+    columns: {
+      current: 'Questa sessione',
+      previous: 'Precedente',
+      average: (sessions) =>
+        sessions === 1 ? 'Media (1 sessione)' : `Media (${sessions} sessioni)`,
+    },
+    metrics: {
+      solved: 'Risolti',
+      failed: 'Sbagliati',
+      totalTime: 'Tempo totale',
+      averageTime: 'Tempo medio a puzzle',
+    },
+    sessionCompleteTitle: 'Sessione conclusa 🎉',
+    sessionSummaryTitle: 'Riepilogo della sessione',
+    sessionDates: (from, to) => `Dal ${from} al ${to}`,
+    roundsTitle: 'Giro per giro',
+    roundColumn: 'Giro',
+    speedChange: (from, to, percent) =>
+      `Tempo medio a puzzle: ${from} al giro 1, ${to} all’ultimo giro (${percent > 0 ? '+' : ''}${percent}%)`,
+    elo: (from, to) => `ELO nel giro 1: ${from} → ${to} (${to - from >= 0 ? '+' : ''}${to - from})`,
+    noData: 'Nessun puzzle giocato in questa sessione.',
+    newSession: 'Crea una nuova sessione',
+    details: 'Dettaglio della sessione',
+    dashboard: 'Torna alla dashboard',
+    viewSummary: 'Riepilogo',
+    linksLabel: 'Riepiloghi',
+    linkSession: 'Sessione',
+    dayPicker: 'Riepilogo di un giorno',
+    dayOption: (date, attempted) =>
+      attempted === 1 ? `${date} · 1 puzzle` : `${date} · ${attempted} puzzle`,
+    roundTitle: (round) => `Riepilogo del giro ${round}`,
+    roundInProgress: (attempted, of) =>
+      `Giro in corso: ${attempted} puzzle su ${of}. Il confronto usa i giri conclusi delle sessioni precedenti.`,
+    daysTitle: 'Giorno per giorno',
+    dayRow: (solved, failed, total) => `${solved} risolti, ${failed} sbagliati · ${total}`,
   },
   sessionStatus: {
     in_progress: 'In corso',
@@ -1101,6 +1174,49 @@ export const en: Translations = {
       `${solved} solved, ${failed} failed · ${totalTime} total`,
     empty: 'No attempts on this day.',
     backToSession: 'Back to session',
+  },
+  summary: {
+    roundCompleteTitle: (round) => `Round ${round} completed`,
+    roundLine: (solved, failed, total, average) =>
+      `${solved} solved, ${failed} failed · ${total} in total · ${average} per puzzle`,
+    continue: 'Continue',
+    compareTitle: 'Compared with your previous sessions',
+    noPrevious: 'This is your first session to get this far: from the next one you’ll see the comparison.',
+    columns: {
+      current: 'This session',
+      previous: 'Previous',
+      average: (sessions) =>
+        sessions === 1 ? 'Average (1 session)' : `Average (${sessions} sessions)`,
+    },
+    metrics: {
+      solved: 'Solved',
+      failed: 'Failed',
+      totalTime: 'Total time',
+      averageTime: 'Average time per puzzle',
+    },
+    sessionCompleteTitle: 'Session completed 🎉',
+    sessionSummaryTitle: 'Session summary',
+    sessionDates: (from, to) => `From ${from} to ${to}`,
+    roundsTitle: 'Round by round',
+    roundColumn: 'Round',
+    speedChange: (from, to, percent) =>
+      `Average time per puzzle: ${from} in round 1, ${to} in the last round (${percent > 0 ? '+' : ''}${percent}%)`,
+    elo: (from, to) => `ELO in round 1: ${from} → ${to} (${to - from >= 0 ? '+' : ''}${to - from})`,
+    noData: 'No puzzles played in this session.',
+    newSession: 'Create a new session',
+    details: 'Session details',
+    dashboard: 'Back to dashboard',
+    viewSummary: 'Summary',
+    linksLabel: 'Summaries',
+    linkSession: 'Session',
+    dayPicker: 'Summary of a day',
+    dayOption: (date, attempted) =>
+      attempted === 1 ? `${date} · 1 puzzle` : `${date} · ${attempted} puzzles`,
+    roundTitle: (round) => `Round ${round} summary`,
+    roundInProgress: (attempted, of) =>
+      `Round in progress: ${attempted} of ${of} puzzles. The comparison uses completed rounds of previous sessions.`,
+    daysTitle: 'Day by day',
+    dayRow: (solved, failed, total) => `${solved} solved, ${failed} failed · ${total}`,
   },
   sessionStatus: {
     in_progress: 'In progress',

@@ -21,6 +21,8 @@ const NewSessionPage = lazy(() => import('@/pages/NewSessionPage'))
 const TrainPage = lazy(() => import('@/pages/TrainPage'))
 const SessionsHistoryPage = lazy(() => import('@/pages/SessionsHistoryPage'))
 const SessionDetailPage = lazy(() => import('@/pages/SessionDetailPage'))
+const SessionSummaryPage = lazy(() => import('@/pages/SessionSummaryPage'))
+const RoundSummaryPage = lazy(() => import('@/pages/RoundSummaryPage'))
 const DailySessionSummaryPage = lazy(() => import('@/pages/DailySessionSummaryPage'))
 const FaqPage = lazy(() => import('@/pages/FaqPage'))
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
@@ -91,6 +93,22 @@ function App() {
           element={
             <Protected>
               <SessionDetailPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/sessions/:id/summary"
+          element={
+            <Protected>
+              <SessionSummaryPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/sessions/:id/rounds/:round"
+          element={
+            <Protected>
+              <RoundSummaryPage />
             </Protected>
           }
         />

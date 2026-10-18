@@ -239,6 +239,52 @@ export const es: Translations = {
     empty: 'Ningún intento este día.',
     backToSession: 'Volver a la sesión',
   },
+  summary: {
+    roundCompleteTitle: (round) => `Ronda ${round} terminada`,
+    roundLine: (solved, failed, total, average) =>
+      `${solved} resueltos, ${failed} fallados · ${total} en total · ${average} por puzzle`,
+    continue: 'Continuar',
+    compareTitle: 'Comparación con tus sesiones anteriores',
+    noPrevious:
+      'Es tu primera sesión que llega hasta aquí: a partir de la próxima verás la comparación.',
+    columns: {
+      current: 'Esta sesión',
+      previous: 'Anterior',
+      average: (sessions) =>
+        sessions === 1 ? 'Media (1 sesión)' : `Media (${sessions} sesiones)`,
+    },
+    metrics: {
+      solved: 'Resueltos',
+      failed: 'Fallados',
+      totalTime: 'Tiempo total',
+      averageTime: 'Tiempo medio por puzzle',
+    },
+    sessionCompleteTitle: 'Sesión terminada 🎉',
+    sessionSummaryTitle: 'Resumen de la sesión',
+    sessionDates: (from, to) => `Del ${from} al ${to}`,
+    roundsTitle: 'Ronda por ronda',
+    roundColumn: 'Ronda',
+    speedChange: (from, to, percent) =>
+      `Tiempo medio por puzzle: ${from} en la ronda 1, ${to} en la última ronda (${percent > 0 ? '+' : ''}${percent} %)`,
+    elo: (from, to) =>
+      `ELO en la ronda 1: ${from} → ${to} (${to - from >= 0 ? '+' : ''}${to - from})`,
+    noData: 'Ningún puzzle jugado en esta sesión.',
+    newSession: 'Crear una nueva sesión',
+    details: 'Detalle de la sesión',
+    dashboard: 'Volver al panel',
+    viewSummary: 'Resumen',
+    linksLabel: 'Resúmenes',
+    linkSession: 'Sesión',
+    dayPicker: 'Resumen de un día',
+    dayOption: (date, attempted) =>
+      attempted === 1 ? `${date} · 1 puzzle` : `${date} · ${attempted} puzzles`,
+    roundTitle: (round) => `Resumen de la ronda ${round}`,
+    roundInProgress: (attempted, of) =>
+      `Ronda en curso: ${attempted} de ${of} puzzles. La comparación usa las rondas terminadas de las sesiones anteriores.`,
+    daysTitle: 'Día por día',
+    dayRow: (solved, failed, total) =>
+      `${solved} resueltos, ${failed} fallados · ${total}`,
+  },
   sessionStatus: {
     in_progress: 'En curso',
     completed: 'Completada',

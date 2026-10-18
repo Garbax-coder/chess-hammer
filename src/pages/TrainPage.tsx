@@ -1,11 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { DailySessionSummary } from '@/components/daily-session-summary'
 import { DevToolsPanel } from '@/components/dev-tools-panel'
 import { EditableSessionName } from '@/components/editable-session-name'
 import { PuzzleBoard } from '@/components/puzzle-board'
 import { PuzzleBoardSkeleton } from '@/components/puzzle-board-skeleton'
+import { RoundSummary } from '@/components/round-summary'
 import { SessionPuzzleList } from '@/components/session-puzzle-list'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,9 +21,11 @@ import { Switch } from '@/components/ui/switch'
 import { useActiveSession } from '@/hooks/use-active-session'
 import {
   nextPuzzleQueryKey,
+  outcomeRound,
   useNextPuzzle,
   useRecordAttempt,
 } from '@/hooks/use-puzzle-session'
+import { sessionRoundStatsKey } from '@/hooks/use-session-stats'
 import {
   usePuzzleById,
   useRecordPracticeAttempt,
@@ -51,6 +54,7 @@ const PRACTICE_RETRY_DELAY_MS = 2000
 export default function TrainPage() {
   const t = useTranslations()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const { data: session, isLoading: loadingSession } = useActiveSession()
   const { data: outcome, isLoading: loadingPuzzle } = useNextPuzzle(session)
   const recordAttempt = useRecordAttempt(session)
@@ -118,6 +122,11 @@ export default function TrainPage() {
     params: Parameters<typeof recordAttempt.mutateAsync>[0]
   } | null>(null)
 
+  // Giro appena concluso senza pausa (0 giorni di riposo): prima del giro
+  // successivo si mostra il suo riepilogo. Con la pausa ci pensa gia' la
+  // schermata "Pausa tra i giri".
+  const [completedRound, setCompletedRound] = useState<1 | 2 | null>(null)
+
   if (loadingSession) return null
 
   if (!session) {
@@ -163,6 +172,23 @@ export default function TrainPage() {
     try {
       const nextOutcome = await pending.promise
       pendingOutcomeRef.current = null
+      // Ultimo puzzle della sessione: si apre il suo riepilogo, e solo ora
+      // si rilegge la sessione attiva (vedi useRecordAttempt).
+      if (nextOutcome.status === 'session_complete') {
+        navigate(`/sessions/${session.id}/summary`)
+        void queryClient.invalidateQueries({ queryKey: ['active-session'] })
+        void queryClient.invalidateQueries({ queryKey: ['sessions-list'] })
+        void queryClient.invalidateQueries({ queryKey: sessionRoundStatsKey(session.user_id) })
+        return
+      }
+      const finishedRound = pending.params.round
+      if (
+        nextOutcome.status !== 'resting' &&
+        finishedRound !== 3 &&
+        outcomeRound(nextOutcome) !== finishedRound
+      ) {
+        setCompletedRound(finishedRound)
+      }
       queryClient.setQueryData(nextPuzzleQueryKey(session.id), nextOutcome)
     } catch (error) {
       // Se la registrazione e' fallita (es. rete instabile), il bottone
@@ -407,7 +433,21 @@ export default function TrainPage() {
           <>
             {loadingPuzzle && <PuzzleBoardSkeleton />}
 
-            {outcome?.status === 'quota_reached' && (
+            {completedRound !== null && (
+              <Card className="w-full max-w-md">
+                <CardHeader>
+                  <CardTitle>{t.summary.roundCompleteTitle(completedRound)}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-4">
+                  <RoundSummary session={session} round={completedRound} />
+                  <Button className="w-full" onClick={() => setCompletedRound(null)}>
+                    {t.summary.continue}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {completedRound === null && outcome?.status === 'quota_reached' && (
               <Card className="w-full max-w-md">
                 <CardHeader>
                   <CardTitle>{t.train.quotaTitle}</CardTitle>
@@ -444,6 +484,17 @@ export default function TrainPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
+                  {outcome.round > 1 && (
+                    <div className="flex flex-col gap-2">
+                      <h3 className="text-foreground text-sm font-semibold">
+                        {t.summary.roundCompleteTitle(outcome.round - 1)}
+                      </h3>
+                      <RoundSummary
+                        session={session}
+                        round={(outcome.round - 1) as 1 | 2}
+                      />
+                    </div>
+                  )}
                   <DailySessionSummary
                     day={today}
                     entries={todayEntries}
@@ -485,6 +536,11 @@ export default function TrainPage() {
                     showTitle={false}
                   />
                   <div className="flex flex-col gap-2">
+                    <Button asChild className="w-full">
+                      <Link to={`/sessions/${session.id}/summary`}>
+                        {t.summary.viewSummary}
+                      </Link>
+                    </Button>
                     {startPracticeButton}
                     <Button asChild variant="outline" className="w-full">
                       <Link to="/dashboard">{t.train.backToDashboard}</Link>
@@ -494,7 +550,7 @@ export default function TrainPage() {
               </Card>
             )}
 
-            {outcome?.status === 'next' && (
+            {completedRound === null && outcome?.status === 'next' && (
               <PuzzleBoard
                 puzzle={outcome.data.puzzle}
                 autoAdvance={autoAdvance}

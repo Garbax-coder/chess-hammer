@@ -78,9 +78,20 @@ sviluppo, poi si applica alla produzione:
 ```bash
 supabase db push --db-url "$DEV_SUPABASE_DB_URL"      # sviluppo
 supabase db push                                      # produzione (progetto collegato)
-``` Le migrazioni 0001–0026 sono state applicate a mano dal SQL
+```
+
+Le migrazioni 0001–0026 sono state applicate a mano dal SQL
 Editor e poi registrate con `supabase migration repair --status applied`: da qui in
 poi lo storico è tenuto dalla CLI.
+
+Le prove SQL in `supabase/tests/` girano solo sul progetto di sviluppo, dentro una
+transazione annullata alla fine (non lasciano tracce). Ad esempio, per la pausa tra
+i giri che finisce a mezzanotte e la quota contata nel fuso orario di chi gioca
+([0030](supabase/migrations/0030_rest_until_start_of_day.sql)):
+
+```bash
+psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/rest-start-of-day.sql
+```
 
 ## Conservazione degli account
 
@@ -206,6 +217,12 @@ rm -f *.dump   # contengono dati personali
 Dopo il ripristino vanno riapplicati i permessi di `anon`/`authenticated` sullo schema
 `public` (il backup è fatto con `--no-privileges`): sono quelli predefiniti di un progetto
 Supabase nuovo, ma vanno verificati al primo ripristino di prova.
+
+## Flusso funzionale
+
+Il diagramma delle pagine e dei passaggi tra una pagina e l'altra è in
+[`docs/functional-flow.drawio`](docs/functional-flow.drawio) (si apre con
+[draw.io](https://www.drawio.com/)). Va aggiornato quando cambia il flusso.
 
 ## Stato del progetto
 

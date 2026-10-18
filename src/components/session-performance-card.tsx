@@ -9,8 +9,9 @@ import { useSessionDetail, useSessionsList } from '@/hooks/use-session-history'
 import { useUserStats } from '@/hooks/use-user-stats'
 import { DEFAULT_BOARD_THEME, type BoardThemeId } from '@/lib/board-themes'
 import { useTranslations } from '@/lib/language-context'
+import { attemptDays, dayKeyToLocalDate } from '@/lib/session-days'
 import { sessionStatusVariant } from '@/lib/session-status'
-import type { TrainingSession } from '@/types/training'
+import type { SessionPuzzleResult, TrainingSession } from '@/types/training'
 
 // Il dettaglio (puzzle + tentativi) di una sessione passata viene richiesto
 // solo quando la riga si espande (enabled: !!sessionId in useSessionDetail),
@@ -91,17 +92,76 @@ function SessionRow({
           {isLoading || !data ? (
             <p className="text-muted-foreground text-sm">{t.common.loading}</p>
           ) : (
-            <SessionPerformanceChart
-              puzzles={data.puzzles}
-              boardTheme={boardTheme}
-              onSelectPuzzle={(sessionPuzzleId) =>
-                navigate(`/sessions/${session.id}?puzzle=${sessionPuzzleId}`)
-              }
-              onSelectDay={(day) => navigate(`/sessions/${session.id}/day/${day}`)}
-            />
+            <div className="flex flex-col gap-3">
+              <SessionPerformanceChart
+                puzzles={data.puzzles}
+                boardTheme={boardTheme}
+                onSelectPuzzle={(sessionPuzzleId) =>
+                  navigate(`/sessions/${session.id}?puzzle=${sessionPuzzleId}`)
+                }
+                onSelectDay={(day) => navigate(`/sessions/${session.id}/day/${day}`)}
+              />
+              <SummaryLinks sessionId={session.id} puzzles={data.puzzles} />
+            </div>
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+// Riepiloghi della sessione: intera sessione, ciascun giro con almeno un
+// tentativo e, a scelta, un giorno (lo stesso riepilogo che si apre
+// cliccando un raggruppamento giornaliero del grafico).
+function SummaryLinks({
+  sessionId,
+  puzzles,
+}: {
+  sessionId: string
+  puzzles: SessionPuzzleResult[]
+}) {
+  const t = useTranslations()
+  const navigate = useNavigate()
+  const days = attemptDays(puzzles)
+  if (days.length === 0) return null
+  const rounds = [...new Set(days.flatMap((d) => d.rounds))].sort((a, b) => a - b)
+  const linkClass =
+    'border-border bg-muted/50 hover:bg-muted text-foreground rounded-md border px-2 py-1 text-xs font-medium transition-colors'
+
+  return (
+    <div className="border-border/60 flex flex-wrap items-center gap-2 border-t pt-3">
+      <span className="text-muted-foreground text-xs">{t.summary.linksLabel}</span>
+      <Link to={`/sessions/${sessionId}/summary`} className={linkClass}>
+        {t.summary.linkSession}
+      </Link>
+      {rounds.map((round) => (
+        <Link
+          key={round}
+          to={`/sessions/${sessionId}/rounds/${round}`}
+          className={linkClass}
+        >
+          {t.dashboard.puzzlePerformance.roundLabel(round)}
+        </Link>
+      ))}
+      <select
+        id={`day-summary-${sessionId}`}
+        aria-label={t.summary.dayPicker}
+        value=""
+        onChange={(e) =>
+          e.target.value && navigate(`/sessions/${sessionId}/day/${e.target.value}`)
+        }
+        className="border-border bg-muted/50 text-foreground hover:bg-muted h-7 rounded-md border px-2 text-xs"
+      >
+        <option value="">{t.summary.dayPicker}</option>
+        {[...days].reverse().map((d) => (
+          <option key={d.day} value={d.day}>
+            {t.summary.dayOption(
+              dayKeyToLocalDate(d.day).toLocaleDateString(t.meta.locale),
+              d.attempted,
+            )}
+          </option>
+        ))}
+      </select>
     </div>
   )
 }
