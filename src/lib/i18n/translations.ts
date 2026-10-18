@@ -257,6 +257,10 @@ export interface Translations {
     skipRest: string
     addKnightPromotionPuzzle: string
     addDoubleMatePuzzle: string
+    lastOfDay: string
+    lastOfRound1: string
+    lastOfSession: string
+    quotaEndsRound: string
   }
   profile: {
     openLabel: string
@@ -692,6 +696,11 @@ export const it: Translations = {
     skipRest: 'Salta pausa',
     addKnightPromotionPuzzle: 'Aggiungi puzzle promozione a cavallo',
     addDoubleMatePuzzle: 'Try double finish puzzle',
+    lastOfDay: 'Ultimo puzzle di oggi',
+    lastOfRound1: 'Ultimo puzzle del giro 1',
+    lastOfSession: 'Ultimo puzzle della sessione',
+    quotaEndsRound:
+      "La quota di oggi copre tutti i puzzle rimasti del giro: l'ultimo di oggi chiude anche il giro.",
   },
   profile: {
     openLabel: 'Profilo',
@@ -1188,6 +1197,11 @@ export const en: Translations = {
     skipRest: 'Skip rest',
     addKnightPromotionPuzzle: 'Add knight promotion puzzle',
     addDoubleMatePuzzle: 'Try double finish puzzle',
+    lastOfDay: 'Last puzzle of today',
+    lastOfRound1: 'Last puzzle of round 1',
+    lastOfSession: 'Last puzzle of the session',
+    quotaEndsRound:
+      "Today's quota covers every puzzle left in this round: the last puzzle of today also ends the round.",
   },
   profile: {
     openLabel: 'Profile',

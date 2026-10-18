@@ -337,6 +337,11 @@ export const de: Translations = {
     skipRest: 'Pause überspringen',
     addKnightPromotionPuzzle: 'Puzzle mit Springer-Umwandlung hinzufügen',
     addDoubleMatePuzzle: 'Try double finish puzzle',
+    lastOfDay: 'Letztes Puzzle für heute',
+    lastOfRound1: 'Letztes Puzzle von Durchgang 1',
+    lastOfSession: 'Letztes Puzzle der Session',
+    quotaEndsRound:
+      'Das Tagesziel umfasst alle restlichen Puzzles dieses Durchgangs: Das letzte Puzzle von heute beendet auch den Durchgang.',
   },
   profile: {
     openLabel: 'Profil',

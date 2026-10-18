@@ -334,6 +334,11 @@ export const es: Translations = {
     skipRest: 'Saltar descanso',
     addKnightPromotionPuzzle: 'Añadir puzzle de coronación a caballo',
     addDoubleMatePuzzle: 'Try double finish puzzle',
+    lastOfDay: 'Último puzzle de hoy',
+    lastOfRound1: 'Último puzzle de la ronda 1',
+    lastOfSession: 'Último puzzle de la sesión',
+    quotaEndsRound:
+      'La cuota de hoy cubre todos los puzzles que quedan en esta ronda: el último de hoy también cierra la ronda.',
   },
   profile: {
     openLabel: 'Perfil',
