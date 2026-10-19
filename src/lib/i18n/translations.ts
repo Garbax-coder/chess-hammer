@@ -208,7 +208,10 @@ export interface Translations {
     todayPuzzle: (current: number, target: number) => string
     autoAdvance: string
     soundEnabled: string
-    onlyFailedPuzzles: string
+    practiceOnlyTitle: string
+    failedPuzzles: string
+    savedPuzzles: string
+    noSavedPuzzles: string
     failedScopeAll: string
     failedScopeLastRound: string
     backToList: string
@@ -220,6 +223,13 @@ export interface Translations {
     sessionCompleteTitle: string
     sessionCompleteDescription: string
     backToDashboard: string
+  }
+  // Puzzle "problematici" salvati per la pratica libera (saved_puzzles).
+  savedPuzzle: {
+    save: string
+    saved: string
+    saveRow: (order: number) => string
+    unsaveRow: (order: number) => string
   }
   puzzleBoard: {
     progress: (current: number, total: number) => string
@@ -690,7 +700,11 @@ export const it: Translations = {
     todayPuzzle: (current, target) => `Puzzle di oggi: ${current}/${target}`,
     autoAdvance: 'Avanzamento automatico',
     soundEnabled: 'Suoni',
-    onlyFailedPuzzles: 'Solo puzzle falliti',
+    practiceOnlyTitle: 'Pratica libera solo su',
+    failedPuzzles: 'Puzzle falliti',
+    savedPuzzles: 'Puzzle problematici',
+    noSavedPuzzles:
+      'Nessun puzzle problematico in questa sessione: salvane uno con il segnalibro.',
     failedScopeAll: 'Tutti i falliti',
     failedScopeLastRound: 'Falliti nell’ultimo giro',
     backToList: 'Torna alla lista',
@@ -705,6 +719,12 @@ export const it: Translations = {
     sessionCompleteDescription:
       'Hai finito tutti e 3 i giri di questa sessione. Puoi continuare a esercitarti liberamente selezionando un puzzle dalla lista a sinistra.',
     backToDashboard: 'Torna alla dashboard',
+  },
+  savedPuzzle: {
+    save: 'Salva tra i problematici',
+    saved: 'Tra i problematici',
+    saveRow: (order) => `Salva il puzzle ${order} tra i problematici`,
+    unsaveRow: (order) => `Togli il puzzle ${order} dai problematici`,
   },
   puzzleBoard: {
     progress: (current, total) => `Puzzle ${current}/${total}`,
@@ -1234,7 +1254,11 @@ export const en: Translations = {
     todayPuzzle: (current, target) => `Today's puzzle: ${current}/${target}`,
     autoAdvance: 'Auto-advance',
     soundEnabled: 'Sounds',
-    onlyFailedPuzzles: 'Only failed puzzles',
+    practiceOnlyTitle: 'Free practice only on',
+    failedPuzzles: 'Failed puzzles',
+    savedPuzzles: 'Problem puzzles',
+    noSavedPuzzles:
+      'No problem puzzles in this session: save one with the bookmark.',
     failedScopeAll: 'All failed',
     failedScopeLastRound: 'Failed in the last run',
     backToList: 'Back to list',
@@ -1249,6 +1273,12 @@ export const en: Translations = {
     sessionCompleteDescription:
       "You've finished all 3 rounds of this session. You can keep practicing freely by picking a puzzle from the list on the left.",
     backToDashboard: 'Back to dashboard',
+  },
+  savedPuzzle: {
+    save: 'Save to problem puzzles',
+    saved: 'In problem puzzles',
+    saveRow: (order) => `Save puzzle ${order} to problem puzzles`,
+    unsaveRow: (order) => `Remove puzzle ${order} from problem puzzles`,
   },
   puzzleBoard: {
     progress: (current, total) => `Puzzle ${current}/${total}`,

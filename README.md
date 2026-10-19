@@ -91,6 +91,7 @@ i giri che finisce a mezzanotte e la quota contata nel fuso orario di chi gioca
 
 ```bash
 psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/rest-start-of-day.sql
+psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/saved-puzzles.sql       # puzzle problematici (0031)
 ```
 
 ## Conservazione degli account

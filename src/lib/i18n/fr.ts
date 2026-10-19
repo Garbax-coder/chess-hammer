@@ -302,7 +302,11 @@ export const fr: Translations = {
     todayPuzzle: (current, target) => `Puzzle du jour : ${current}/${target}`,
     autoAdvance: 'Passage automatique',
     soundEnabled: 'Sons',
-    onlyFailedPuzzles: 'Seulement les puzzles ratés',
+    practiceOnlyTitle: 'Entraînement libre seulement sur',
+    failedPuzzles: 'Puzzles ratés',
+    savedPuzzles: 'Puzzles difficiles',
+    noSavedPuzzles:
+      'Aucun puzzle difficile dans cette session : ajoutez-en un avec le signet.',
     failedScopeAll: 'Tous les ratés',
     failedScopeLastRound: 'Ratés au dernier passage',
     backToList: 'Retour à la liste',
@@ -317,6 +321,12 @@ export const fr: Translations = {
     sessionCompleteDescription:
       'Vous avez terminé les 3 cycles de cette session. Vous pouvez continuer à vous entraîner librement en choisissant un puzzle dans la liste à gauche.',
     backToDashboard: 'Retour au tableau de bord',
+  },
+  savedPuzzle: {
+    save: 'Ajouter aux puzzles difficiles',
+    saved: 'Dans les puzzles difficiles',
+    saveRow: (order) => `Ajouter le puzzle ${order} aux puzzles difficiles`,
+    unsaveRow: (order) => `Retirer le puzzle ${order} des puzzles difficiles`,
   },
   puzzleBoard: {
     progress: (current, total) => `Puzzle ${current}/${total}`,

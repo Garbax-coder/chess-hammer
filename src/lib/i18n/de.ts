@@ -304,7 +304,11 @@ export const de: Translations = {
     todayPuzzle: (current, target) => `Heutiges Puzzle: ${current}/${target}`,
     autoAdvance: 'Automatisch weiter',
     soundEnabled: 'Töne',
-    onlyFailedPuzzles: 'Nur verfehlte Puzzles',
+    practiceOnlyTitle: 'Freies Üben nur mit',
+    failedPuzzles: 'Verfehlte Puzzles',
+    savedPuzzles: 'Problem-Puzzles',
+    noSavedPuzzles:
+      'Keine Problem-Puzzles in dieser Session: Speichere eins mit dem Lesezeichen.',
     failedScopeAll: 'Alle verfehlten',
     failedScopeLastRound: 'Im letzten Durchlauf verfehlt',
     backToList: 'Zurück zur Liste',
@@ -319,6 +323,12 @@ export const de: Translations = {
     sessionCompleteDescription:
       'Du hast alle 3 Durchgänge dieser Session abgeschlossen. Du kannst weiter frei üben, indem du links ein Puzzle aus der Liste wählst.',
     backToDashboard: 'Zurück zum Dashboard',
+  },
+  savedPuzzle: {
+    save: 'Zu den Problem-Puzzles',
+    saved: 'Bei den Problem-Puzzles',
+    saveRow: (order) => `Puzzle ${order} zu den Problem-Puzzles hinzufügen`,
+    unsaveRow: (order) => `Puzzle ${order} aus den Problem-Puzzles entfernen`,
   },
   puzzleBoard: {
     progress: (current, total) => `Puzzle ${current}/${total}`,

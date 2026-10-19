@@ -109,6 +109,18 @@ test('create a session and record an attempt on the board', async () => {
   await expect(page.getByText(t.dashboard.todayProgress(1, 10))).toBeVisible()
 })
 
+test('save the puzzle on the board to the problem puzzles', async () => {
+  await page.goto('/train')
+  await page.getByRole('button', { name: t.savedPuzzle.save, exact: true }).click()
+  await expect(
+    page.getByRole('button', { name: t.savedPuzzle.saved, exact: true }),
+  ).toBeVisible()
+  await page.reload()
+  await expect(
+    page.getByRole('button', { name: t.savedPuzzle.saved, exact: true }),
+  ).toBeVisible()
+})
+
 test('change the language from the profile', async () => {
   await page.goto('/profile')
   await page.getByRole('button', { name: 'English' }).click()
@@ -126,6 +138,7 @@ test('download your data as JSON', async () => {
   const data = JSON.parse(readFileSync(await (await download).path(), 'utf8'))
   expect(data.puzzleAttempts).toHaveLength(1)
   expect(data.sessions).toHaveLength(1)
+  expect(data.savedPuzzles).toHaveLength(1)
 })
 
 test('regular users cannot reach the admin area or its data', async () => {

@@ -80,15 +80,24 @@ export function isFailedPuzzle(
 export interface PracticeFilter {
   onlyFailed: boolean
   scope: FailedPuzzleScope
+  /** Puzzle salvati tra i "problematici" (vedi saved_puzzles). */
+  onlySaved?: boolean
+  savedPuzzleIds?: ReadonlySet<string>
 }
 
+// Con "sbagliati" e "problematici" entrambi attivi la pratica comprende gli
+// uni e gli altri; con nessuno dei due, tutti i puzzle della sessione.
 export function practicePool(
   puzzles: SessionPuzzleResult[],
   filter: PracticeFilter,
 ): SessionPuzzleResult[] {
-  return filter.onlyFailed
-    ? puzzles.filter((p) => isFailedPuzzle(p, filter.scope))
-    : puzzles
+  const onlySaved = filter.onlySaved ?? false
+  if (!filter.onlyFailed && !onlySaved) return puzzles
+  return puzzles.filter(
+    (p) =>
+      (filter.onlyFailed && isFailedPuzzle(p, filter.scope)) ||
+      (onlySaved && (filter.savedPuzzleIds?.has(p.puzzleId) ?? false)),
+  )
 }
 
 // Da dove riprende "Continua in pratica libera": il primo puzzle ammesso dal

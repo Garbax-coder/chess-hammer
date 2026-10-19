@@ -12,6 +12,7 @@ export interface UserExportData {
   sessions: Row[]
   puzzleAttempts: Row[]
   practiceAttempts: Row[]
+  savedPuzzles: Row[]
 }
 
 // PostgREST restituisce al massimo 1000 righe per richiesta: un utente con
@@ -69,7 +70,7 @@ export async function fetchUserExportData(
 ): Promise<UserExportData> {
   const since = sinceIsoFor(range)
 
-  const [statsResult, sessions, puzzleAttempts, practiceAttempts] = await Promise.all([
+  const [statsResult, sessions, puzzleAttempts, practiceAttempts, savedPuzzles] = await Promise.all([
     supabase.from('user_stats').select('*').eq('user_id', userId).maybeSingle(),
     fetchAllPages<Row>((from, to) =>
       supabase
@@ -105,6 +106,14 @@ export async function fetchUserExportData(
         error: { message: string } | null
       }>
     }),
+    // Tutti, qualunque sia il periodo: e' una lista, non uno storico.
+    fetchAllPages<Row>((from, to) =>
+      supabase
+        .from('saved_puzzles')
+        .select('puzzle_id, created_at')
+        .order('created_at', { ascending: false })
+        .range(from, to),
+    ),
   ])
   if (statsResult.error) throw new Error(statsResult.error.message)
 
@@ -136,6 +145,7 @@ export async function fetchUserExportData(
       result: a.result,
       time_seconds: a.time_seconds,
     })),
+    savedPuzzles,
   }
 }
 
@@ -187,6 +197,7 @@ export async function downloadUserData(
     ['sessions', data.sessions],
     ['puzzle_attempts', data.puzzleAttempts],
     ['practice_attempts', data.practiceAttempts],
+    ['saved_puzzles', data.savedPuzzles],
   ]
   for (const [name, rows] of sheets) {
     XLSX.utils.book_append_sheet(
