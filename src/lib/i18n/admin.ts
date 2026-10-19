@@ -49,6 +49,7 @@ export interface AdminTranslations {
     practiceFilter: string
     practiceOnlyFailed: (scope: string) => string
     practiceAll: string
+    practiceSaved: string
     legalVersion: string
     yes: string
     no: string
@@ -139,6 +140,7 @@ const it: AdminTranslations = {
     practiceFilter: 'Pratica libera',
     practiceOnlyFailed: (scope) => `solo i puzzle sbagliati (${scope})`,
     practiceAll: 'tutti i puzzle',
+    practiceSaved: 'i puzzle problematici',
     legalVersion: 'Termini accettati',
     yes: 'Sì',
     no: 'No',
@@ -225,6 +227,7 @@ const en: AdminTranslations = {
     practiceFilter: 'Free practice',
     practiceOnlyFailed: (scope) => `failed puzzles only (${scope})`,
     practiceAll: 'all puzzles',
+    practiceSaved: 'problem puzzles',
     legalVersion: 'Terms accepted',
     yes: 'Yes',
     no: 'No',

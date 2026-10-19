@@ -4,9 +4,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { DailySessionSummary } from '@/components/daily-session-summary'
 import { DevToolsPanel } from '@/components/dev-tools-panel'
 import { EditableSessionName } from '@/components/editable-session-name'
+import { PracticeFilterControls } from '@/components/practice-filter-controls'
 import { PuzzleBoard } from '@/components/puzzle-board'
 import { PuzzleBoardSkeleton } from '@/components/puzzle-board-skeleton'
 import { RoundSummary } from '@/components/round-summary'
+import { SavePuzzleToggle } from '@/components/save-puzzle-toggle'
 import { SessionPuzzleList } from '@/components/session-puzzle-list'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,6 +33,7 @@ import {
   useRecordPracticeAttempt,
   usePracticeAttempts,
 } from '@/hooks/use-practice'
+import { useSavedPuzzles, useToggleSavedPuzzle } from '@/hooks/use-saved-puzzles'
 import { useSessionPuzzles } from '@/hooks/use-session-history'
 import { useSoundEnabled } from '@/hooks/use-sound-enabled'
 import { entriesForDay, todayKey } from '@/lib/session-days'
@@ -78,9 +81,13 @@ export default function TrainPage() {
   const { data: practicePuzzle } = usePuzzleById(practiceSelection?.puzzleId)
 
   const updatePracticeFilter = useUpdatePracticeFilter()
+  const { data: savedPuzzleIds } = useSavedPuzzles()
+  const toggleSavedPuzzle = useToggleSavedPuzzle()
   const practiceFilter: PracticeFilter = {
     onlyFailed: stats?.practice_only_failed ?? false,
     scope: stats?.practice_failed_scope ?? 'all',
+    onlySaved: stats?.practice_only_saved ?? false,
+    savedPuzzleIds,
   }
 
   const puzzleIds = useMemo(() => puzzles?.map((p) => p.puzzleId) ?? [], [puzzles])
@@ -262,6 +269,10 @@ export default function TrainPage() {
     outcome?.status === 'quota_reached' ||
     outcome?.status === 'resting' ||
     outcome?.status === 'session_complete'
+  // Il puzzle sulla scacchiera, per il segnalibro dei "problematici".
+  const currentPuzzleId =
+    practiceSelection?.puzzleId ??
+    (completedRound === null && outcome?.status === 'next' ? outcome.data.puzzle.puzzle_id : null)
   const activeSessionPuzzleId =
     practiceSelection?.sessionPuzzleId ??
     (outcome?.status === 'next' ? outcome.data.sessionPuzzleId : null)
@@ -320,6 +331,8 @@ export default function TrainPage() {
             </div>
           )}
 
+          {currentPuzzleId && <SavePuzzleToggle puzzleId={currentPuzzleId} />}
+
           <div className="flex items-center gap-2">
             <Switch
               id="auto-advance"
@@ -346,47 +359,16 @@ export default function TrainPage() {
               "Puzzle successivo" in pratica sia da dove riprende "Continua in
               pratica libera" nelle schermate di riepilogo. */}
           {(practiceSelection || canPractice) && (
-            <div className="flex flex-col gap-2 pl-1">
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="only-failed-practice"
-                  checked={practiceFilter.onlyFailed}
-                  onCheckedChange={(checked) =>
-                    updatePracticeFilter.mutate({ practice_only_failed: checked })
-                  }
-                />
-                <Label
-                  htmlFor="only-failed-practice"
-                  className="text-muted-foreground text-sm"
-                >
-                  {t.train.onlyFailedPuzzles}
-                </Label>
-              </div>
-
-              {practiceFilter.onlyFailed && (
-                <div className="flex gap-1 pl-9">
-                  {(['all', 'lastRound'] as const).map((scope) => (
-                    <button
-                      key={scope}
-                      type="button"
-                      onClick={() =>
-                        updatePracticeFilter.mutate({ practice_failed_scope: scope })
-                      }
-                      aria-pressed={practiceFilter.scope === scope}
-                      className={`rounded-md px-2 py-1 text-xs font-medium transition-colors ${
-                        practiceFilter.scope === scope
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-muted-foreground hover:bg-muted'
-                      }`}
-                    >
-                      {scope === 'all'
-                        ? t.train.failedScopeAll
-                        : t.train.failedScopeLastRound}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <PracticeFilterControls
+              filter={practiceFilter}
+              update={updatePracticeFilter.mutate}
+              showNoSavedHint={
+                practiceFilter.onlySaved === true &&
+                !practiceFilter.onlyFailed &&
+                !!savedPuzzleIds &&
+                !(puzzles ?? []).some((p) => savedPuzzleIds.has(p.puzzleId))
+              }
+            />
           )}
         </div>
 
@@ -403,6 +385,8 @@ export default function TrainPage() {
           currentRound={session.current_round}
           practiceAttemptsByPuzzle={practiceAttemptsByPuzzle ?? new Map()}
           canPractice={canPractice}
+          savedPuzzleIds={savedPuzzleIds}
+          onToggleSaved={(puzzleId, saved) => toggleSavedPuzzle.mutate({ puzzleId, saved })}
           onSelectPuzzle={handleSelectPuzzle}
           boardTheme={boardTheme}
         />

@@ -205,9 +205,13 @@ function UserDetail({ detail }: { detail: AdminUserDetail }) {
               <Field label={a.user.pieceSet}>{stats.piece_set}</Field>
               <Field label={a.user.autoAdvance}>{yesNo(stats.auto_advance)}</Field>
               <Field label={a.user.practiceFilter}>
-                {stats.practice_only_failed
-                  ? a.user.practiceOnlyFailed(stats.practice_failed_scope)
-                  : a.user.practiceAll}
+                {[
+                  stats.practice_only_failed &&
+                    a.user.practiceOnlyFailed(stats.practice_failed_scope),
+                  stats.practice_only_saved && a.user.practiceSaved,
+                ]
+                  .filter(Boolean)
+                  .join(' + ') || a.user.practiceAll}
               </Field>
               <Field label={a.user.legalVersion}>
                 {stats.legal_version

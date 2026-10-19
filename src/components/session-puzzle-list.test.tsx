@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { makePuzzleResult, withAttempt } from '@/test/fixtures'
 import { it as itTranslations } from '@/lib/i18n/translations'
@@ -158,5 +158,58 @@ describe('SessionPuzzleList', () => {
     )
 
     expect(screen.getByText(itTranslations.sessionPuzzleList.empty)).toBeInTheDocument()
+  })
+})
+
+describe('SessionPuzzleList problem puzzles', () => {
+  const puzzles = [
+    makePuzzleResult({ sessionPuzzleId: 'sp-1', puzzleId: 'p-1', orderIndex: 1 }),
+    makePuzzleResult({ sessionPuzzleId: 'sp-2', puzzleId: 'p-2', orderIndex: 2 }),
+  ]
+
+  it('saves and removes a puzzle with the bookmark on its row', () => {
+    const onToggleSaved = vi.fn()
+    render(
+      <SessionPuzzleList
+        puzzles={puzzles}
+        activeSessionPuzzleId={null}
+        currentRound={1}
+        practiceAttemptsByPuzzle={new Map()}
+        canPractice={false}
+        onSelectPuzzle={() => {}}
+        savedPuzzleIds={new Set(['p-2'])}
+        onToggleSaved={onToggleSaved}
+      />,
+    )
+
+    const save = screen.getByRole('button', {
+      name: itTranslations.savedPuzzle.saveRow(1),
+    })
+    const remove = screen.getByRole('button', {
+      name: itTranslations.savedPuzzle.unsaveRow(2),
+    })
+    expect(save).toHaveAttribute('aria-pressed', 'false')
+    expect(remove).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(save)
+    expect(onToggleSaved).toHaveBeenLastCalledWith('p-1', true)
+    fireEvent.click(remove)
+    expect(onToggleSaved).toHaveBeenLastCalledWith('p-2', false)
+  })
+
+  it('shows no bookmark where saving is not offered', () => {
+    render(
+      <SessionPuzzleList
+        puzzles={puzzles}
+        activeSessionPuzzleId={null}
+        currentRound={1}
+        practiceAttemptsByPuzzle={new Map()}
+        canPractice={false}
+        onSelectPuzzle={() => {}}
+      />,
+    )
+    expect(
+      screen.queryByRole('button', { name: itTranslations.savedPuzzle.saveRow(1) }),
+    ).not.toBeInTheDocument()
   })
 })

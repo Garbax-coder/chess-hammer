@@ -17,6 +17,7 @@ interface UserStats {
   piece_set: PieceSetId
   practice_only_failed: boolean
   practice_failed_scope: FailedPuzzleScope
+  practice_only_saved: boolean
   app_style: AppStyleId
   // Versione di Termini/Privacy accettata (null: mai accettata, ad es. chi
   // si e' registrato con Google): vedi LegalUpdateBanner.
@@ -32,7 +33,7 @@ export function useUserStats() {
       const { data, error } = await supabase
         .from('user_stats')
         .select(
-          'current_elo, puzzles_solved, puzzles_failed, auto_advance, language, board_theme, piece_set, practice_only_failed, practice_failed_scope, app_style, legal_version',
+          'current_elo, puzzles_solved, puzzles_failed, auto_advance, language, board_theme, piece_set, practice_only_failed, practice_failed_scope, practice_only_saved, app_style, legal_version',
         )
         .eq('user_id', user!.id)
         .single()
@@ -62,7 +63,10 @@ export function useUpdateAutoAdvance() {
 }
 
 type PracticeFilterPatch = Partial<
-  Pick<UserStats, 'practice_only_failed' | 'practice_failed_scope'>
+  Pick<
+    UserStats,
+    'practice_only_failed' | 'practice_failed_scope' | 'practice_only_saved'
+  >
 >
 
 // Ottimistico (a differenza degli altri): il filtro decide subito il puzzle

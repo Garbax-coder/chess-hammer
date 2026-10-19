@@ -52,6 +52,14 @@ vi.mock('@/hooks/use-practice', () => ({
 vi.mock('@/hooks/use-session-history', () => ({
   useSessionPuzzles: () => ({ data: sessionPuzzles, isLoading: false }),
 }))
+// Puzzle "problematici" salvati e filtro della pratica libera.
+let savedPuzzleIds = new Set<string>()
+let practiceOnlySaved = false
+const toggleSaved = vi.fn()
+vi.mock('@/hooks/use-saved-puzzles', () => ({
+  useSavedPuzzles: () => ({ data: savedPuzzleIds }),
+  useToggleSavedPuzzle: () => ({ mutate: toggleSaved }),
+}))
 vi.mock('@/hooks/use-sound-enabled', () => ({
   useSoundEnabled: () => ({ enabled: false, setEnabled: () => {} }),
 }))
@@ -61,6 +69,7 @@ vi.mock('@/hooks/use-user-stats', () => ({
       auto_advance: true,
       practice_only_failed: false,
       practice_failed_scope: 'all',
+      practice_only_saved: practiceOnlySaved,
     },
   }),
   useUpdateAutoAdvance: () => ({ mutate: () => {} }),
@@ -297,5 +306,41 @@ describe('TrainPage at the end of a round or of the session', () => {
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'avanti' })))
 
     expect(screen.getByText('riepilogo sessione')).toBeInTheDocument()
+  })
+})
+
+describe('TrainPage problem puzzles', () => {
+  beforeEach(() => {
+    outcome = { status: 'quota_reached', round: 1 }
+    practiceAttempts = new Map()
+    sessionPuzzles = [
+      makePuzzleResult({ puzzleId: 'first', orderIndex: 1 }),
+      makePuzzleResult({ puzzleId: 'second', orderIndex: 2 }),
+    ]
+    toggleSaved.mockReset()
+  })
+
+  it('starts free practice from the saved puzzles when only those are selected', () => {
+    savedPuzzleIds = new Set(['second'])
+    practiceOnlySaved = true
+    renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: startLabel }))
+
+    expect(screen.getByTestId('puzzle-board')).toHaveTextContent('second')
+    // Il puzzle sulla scacchiera risulta gia' tra i problematici.
+    expect(
+      screen.getByRole('button', { name: itTranslations.savedPuzzle.saved }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    savedPuzzleIds = new Set()
+    practiceOnlySaved = false
+  })
+
+  it('saves the puzzle on the board with the bookmark button', () => {
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: startLabel }))
+
+    fireEvent.click(screen.getByRole('button', { name: itTranslations.savedPuzzle.save }))
+    expect(toggleSaved).toHaveBeenCalledWith({ puzzleId: 'first', saved: true })
   })
 })

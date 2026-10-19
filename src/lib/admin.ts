@@ -145,6 +145,7 @@ export interface AdminUserDetail {
     app_style: string
     practice_only_failed: boolean
     practice_failed_scope: string
+    practice_only_saved?: boolean
     legal_version: string | null
     legal_accepted_at: string | null
     updated_at: string

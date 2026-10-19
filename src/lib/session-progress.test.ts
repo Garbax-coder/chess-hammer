@@ -4,6 +4,7 @@ import type { PracticeAttempt } from '@/types/training'
 import {
   deriveSessionProgress,
   isFailedPuzzle,
+  practicePool,
   practiceResumePuzzle,
 } from './session-progress'
 
@@ -165,5 +166,67 @@ describe('practiceResumePuzzle', () => {
     expect(
       practiceResumePuzzle(allSolved, new Map(), onlyFailed, sessionCreatedAt),
     ).toBeUndefined()
+  })
+})
+
+describe('practicePool with problem puzzles', () => {
+  const failed = withAttempt(
+    makePuzzleResult({ puzzleId: 'failed', orderIndex: 1 }),
+    1,
+    'failed',
+    '2026-09-20T10:00:00Z',
+  )
+  const savedAndSolved = withAttempt(
+    makePuzzleResult({ puzzleId: 'saved', orderIndex: 2 }),
+    1,
+    'solved',
+    '2026-09-20T10:01:00Z',
+  )
+  const plain = withAttempt(
+    makePuzzleResult({ puzzleId: 'plain', orderIndex: 3 }),
+    1,
+    'solved',
+    '2026-09-20T10:02:00Z',
+  )
+  const puzzles = [failed, savedAndSolved, plain]
+  const savedPuzzleIds = new Set(['saved'])
+  const ids = (list: { puzzleId: string }[]) => list.map((p) => p.puzzleId)
+
+  it('keeps every puzzle when no filter is on', () => {
+    expect(
+      ids(practicePool(puzzles, { onlyFailed: false, scope: 'all', savedPuzzleIds })),
+    ).toEqual(['failed', 'saved', 'plain'])
+  })
+
+  it('keeps only the saved puzzles', () => {
+    expect(
+      ids(
+        practicePool(puzzles, {
+          onlyFailed: false,
+          scope: 'all',
+          onlySaved: true,
+          savedPuzzleIds,
+        }),
+      ),
+    ).toEqual(['saved'])
+  })
+
+  it('keeps failed and saved puzzles together when both are on', () => {
+    expect(
+      ids(
+        practicePool(puzzles, {
+          onlyFailed: true,
+          scope: 'all',
+          onlySaved: true,
+          savedPuzzleIds,
+        }),
+      ),
+    ).toEqual(['failed', 'saved'])
+  })
+
+  it('has nothing to practice when the saved list is not loaded yet', () => {
+    expect(
+      practicePool(puzzles, { onlyFailed: false, scope: 'all', onlySaved: true }),
+    ).toEqual([])
   })
 })

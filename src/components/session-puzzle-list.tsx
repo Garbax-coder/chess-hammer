@@ -1,4 +1,4 @@
-import { Check, Copy } from 'lucide-react'
+import { Bookmark, BookmarkCheck, Check, Copy } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PuzzleMiniBoard } from '@/components/puzzle-mini-board'
@@ -120,6 +120,8 @@ interface PuzzleRowProps {
   onSelect: (result: SessionPuzzleResult) => void
   boardTheme: BoardThemeId | undefined
   t: Translations
+  isSaved: boolean
+  onToggleSaved?: (puzzleId: string, saved: boolean) => void
 }
 
 function PuzzleRow({
@@ -132,6 +134,8 @@ function PuzzleRow({
   onSelect,
   boardTheme,
   t,
+  isSaved,
+  onToggleSaved,
 }: PuzzleRowProps) {
   const lastAttempt = lastAttemptOf(result)
   // Chiusa di default: con 200 puzzle in lista, mostrare subito i temi di
@@ -206,6 +210,7 @@ function PuzzleRow({
         </div>
       </button>
 
+      <div className="flex items-center justify-between gap-2">
       <button
         type="button"
         aria-expanded={themesOpen}
@@ -221,6 +226,32 @@ function PuzzleRow({
         <span className={`transition-transform ${themesOpen ? 'rotate-90' : ''}`}>▸</span>
         {t.sessionPuzzleList.themesToggle}
       </button>
+      {/* Segnalibro dei puzzle "problematici", da rigiocare in pratica libera. */}
+      {onToggleSaved && (
+        <button
+          type="button"
+          aria-pressed={isSaved}
+          aria-label={
+            isSaved
+              ? t.savedPuzzle.unsaveRow(result.orderIndex)
+              : t.savedPuzzle.saveRow(result.orderIndex)
+          }
+          title={isSaved ? t.savedPuzzle.saved : t.savedPuzzle.save}
+          onClick={() => onToggleSaved(result.puzzleId, !isSaved)}
+          className={`-m-1 rounded-md p-1 transition-colors ${
+            isSaved
+              ? 'text-primary hover:bg-primary/10'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+          }`}
+        >
+          {isSaved ? (
+            <BookmarkCheck className="size-3.5" />
+          ) : (
+            <Bookmark className="size-3.5" />
+          )}
+        </button>
+      )}
+      </div>
       {themesOpen && !isPending && (
         <div className="flex flex-col gap-1.5 pl-3.5">
           <div className="flex flex-wrap gap-1">
@@ -303,6 +334,8 @@ interface SessionPuzzleListProps {
   canPractice: boolean
   onSelectPuzzle: (result: SessionPuzzleResult) => void
   boardTheme?: BoardThemeId
+  savedPuzzleIds?: ReadonlySet<string>
+  onToggleSaved?: (puzzleId: string, saved: boolean) => void
 }
 
 export function SessionPuzzleList({
@@ -314,6 +347,8 @@ export function SessionPuzzleList({
   canPractice,
   onSelectPuzzle,
   boardTheme,
+  savedPuzzleIds,
+  onToggleSaved,
 }: SessionPuzzleListProps) {
   const t = useTranslations()
   const listRef = useRef<HTMLDivElement>(null)
@@ -390,6 +425,8 @@ export function SessionPuzzleList({
               onSelect={onSelectPuzzle}
               boardTheme={boardTheme}
               t={t}
+              isSaved={savedPuzzleIds?.has(result.puzzleId) ?? false}
+              onToggleSaved={onToggleSaved}
             />
           ))}
         </div>
