@@ -20,8 +20,27 @@ export interface EngineLine {
 
 export type EngineListener = (lines: EngineLine[], done: boolean) => void
 
-interface PendingRequest {
+/**
+ * Posizione da analizzare: la posizione di partenza e le mosse (UCI) giocate
+ * da li'. Con le mosse Stockfish conosce le posizioni gia' viste e conta le
+ * ripetizioni come in una partita: chi e' in vantaggio non torna su una
+ * posizione gia' ripetuta (sarebbe patta), mentre con la sola posizione
+ * finale ogni posizione gli sembrerebbe nuova.
+ */
+export interface EnginePosition {
   fen: string
+  moves: string[]
+}
+
+/** Comando UCI "position" per una posizione con la sua cronologia. */
+export function positionCommand({ fen, moves }: EnginePosition): string {
+  return moves.length > 0
+    ? `position fen ${fen} moves ${moves.join(' ')}`
+    : `position fen ${fen}`
+}
+
+interface PendingRequest {
+  position: EnginePosition
   multiPv: number
   depth: number
 }
@@ -91,7 +110,7 @@ class StockfishEngine {
       if (this.pendingRequest) {
         const req = this.pendingRequest
         this.pendingRequest = null
-        this.startAnalysis(req.fen, req.multiPv, req.depth)
+        this.startAnalysis(req.position, req.multiPv, req.depth)
       } else {
         this.listener?.(this.sortedLines(), true)
       }
@@ -102,17 +121,20 @@ class StockfishEngine {
     return Array.from(this.currentLines.values()).sort((a, b) => a.multiPv - b.multiPv)
   }
 
-  private startAnalysis(fen: string, multiPv: number, depth: number) {
+  private startAnalysis(position: EnginePosition, multiPv: number, depth: number) {
     this.busy = true
     const worker = this.ensureWorker()
     worker.postMessage(`setoption name MultiPV value ${multiPv}`)
-    worker.postMessage(`position fen ${fen}`)
+    worker.postMessage(positionCommand(position))
     worker.postMessage(`go depth ${depth}`)
   }
 
-  /** Avvia (o riavvia) l'analisi sulla FEN indicata; onUpdate riceve le linee correnti ad ogni aggiornamento. */
+  /**
+   * Avvia (o riavvia) l'analisi della posizione raggiunta giocando `moves`
+   * da `fen`; onUpdate riceve le linee correnti ad ogni aggiornamento.
+   */
   async analyze(
-    fen: string,
+    position: EnginePosition,
     options: { multiPv: number; depth: number },
     onUpdate: EngineListener,
   ) {
@@ -120,10 +142,10 @@ class StockfishEngine {
     this.currentLines.clear()
     await this.waitUntilReady()
     if (this.busy) {
-      this.pendingRequest = { fen, ...options }
+      this.pendingRequest = { position, ...options }
       this.ensureWorker().postMessage('stop')
     } else {
-      this.startAnalysis(fen, options.multiPv, options.depth)
+      this.startAnalysis(position, options.multiPv, options.depth)
     }
   }
 
@@ -143,4 +165,5 @@ class StockfishEngine {
   }
 }
 
+export { StockfishEngine }
 export const stockfishEngine = new StockfishEngine()

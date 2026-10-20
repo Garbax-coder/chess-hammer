@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react'
-import { stockfishEngine, type EngineLine } from '@/lib/stockfish-engine'
+import {
+  stockfishEngine,
+  type EngineLine,
+  type EnginePosition,
+} from '@/lib/stockfish-engine'
 
 export function useStockfishAnalysis(
-  fen: string | null,
+  position: EnginePosition | null,
   options: { multiPv: number; depth: number; enabled: boolean },
 ) {
   const [lines, setLines] = useState<EngineLine[]>([])
   const [analyzing, setAnalyzing] = useState(false)
+
+  // L'analisi riparte solo quando cambia davvero la posizione (partenza o
+  // mosse), non a ogni nuovo oggetto creato dal chiamante a ogni render.
+  const fen = position?.fen ?? null
+  const moves = position?.moves.join(' ') ?? ''
 
   useEffect(() => {
     if (!fen || !options.enabled) {
@@ -20,7 +29,7 @@ export function useStockfishAnalysis(
     setAnalyzing(true)
 
     stockfishEngine.analyze(
-      fen,
+      { fen, moves: moves ? moves.split(' ') : [] },
       { multiPv: options.multiPv, depth: options.depth },
       (nextLines, done) => {
         if (cancelled) return
@@ -33,7 +42,7 @@ export function useStockfishAnalysis(
       cancelled = true
       stockfishEngine.stopListening()
     }
-  }, [fen, options.multiPv, options.depth, options.enabled])
+  }, [fen, moves, options.multiPv, options.depth, options.enabled])
 
   return { lines, analyzing }
 }
