@@ -370,8 +370,20 @@ export function PuzzleBoard({
   // cronologia con le frecce/i bottoni qui sotto.
   const { settings: engineSettings, update: updateEngineSettings } = useEngineSettings()
   const analysisEnabled = pendingCompletion !== null
+  // Al motore va la partenza del puzzle con tutte le mosse fino alla
+  // posizione mostrata, non solo la posizione: cosi' conta le ripetizioni
+  // (vedi EnginePosition) e chi e' in vantaggio non suggerisce una linea che
+  // porta alla patta per triplice ripetizione. La mossa sbagliata dal vivo e'
+  // un ramo a parte, fuori dall'albero: per quella resta la sola posizione.
+  const enginePosition = useMemo(
+    () =>
+      isLive && effectiveWrongMove
+        ? { fen: effectiveWrongMove.fen, moves: [] }
+        : { fen: puzzle.fen, moves: timelinePath.map((node) => node.uci as string) },
+    [isLive, effectiveWrongMove, puzzle, timelinePath],
+  )
   const { lines: engineLines, analyzing } = useStockfishAnalysis(
-    analysisEnabled ? displayFen : null,
+    analysisEnabled ? enginePosition : null,
     {
       multiPv: engineSettings.multiPv,
       depth: engineSettings.depth,
