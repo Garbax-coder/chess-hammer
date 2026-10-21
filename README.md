@@ -84,6 +84,10 @@ Le migrazioni 0001–0026 sono state applicate a mano dal SQL
 Editor e poi registrate con `supabase migration repair --status applied`: da qui in
 poi lo storico è tenuto dalla CLI.
 
+Ogni tabella nuova in `public` va creata insieme ai suoi `GRANT` (dal 30 ottobre 2026
+Supabase non li dà più in automatico): vedi `CLAUDE.md` e la migrazione
+[0032](supabase/migrations/0032_explicit_table_grants.sql).
+
 Le prove SQL in `supabase/tests/` girano solo sul progetto di sviluppo, dentro una
 transazione annullata alla fine (non lasciano tracce). Ad esempio, per la pausa tra
 i giri che finisce a mezzanotte e la quota contata nel fuso orario di chi gioca
@@ -92,6 +96,7 @@ i giri che finisce a mezzanotte e la quota contata nel fuso orario di chi gioca
 ```bash
 psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/rest-start-of-day.sql
 psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/saved-puzzles.sql       # puzzle problematici (0031)
+psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/table-grants.sql        # permessi delle tabelle (0032)
 ```
 
 ## Conservazione degli account

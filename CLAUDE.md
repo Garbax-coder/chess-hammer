@@ -56,6 +56,30 @@ below for where things go and how to mock Supabase.
   regression. Those still need a manual pass in the browser (see the
   project's own verification workflow) before a release that touches them.
 
+## Database migrations
+
+Migrations live in `supabase/migrations/` (numbered `NNNN_name.sql`) and are
+applied to the dev project first, then to production (see README).
+
+**Every new table in `public` must get its GRANTs in the same migration
+that creates it.** Since 2026-10-30 Supabase no longer grants Data API
+(PostgREST / supabase-js) access to new tables automatically: without
+GRANTs the app gets "permission denied", and so does any database rebuilt
+from the migrations. Follow the least-privilege pattern of
+`0032_explicit_table_grants.sql`:
+
+```sql
+alter table public.my_table enable row level security;
+-- + RLS policies for the rows each role may touch
+grant select, insert, update, delete on table public.my_table to authenticated;
+grant all on table public.my_table to service_role;
+-- anon only if the table has an RLS policy for anon (today: lichess_puzzles)
+```
+
+Tables used only by `security definer` functions get no grants for `anon` /
+`authenticated`. Add every new table to `supabase/tests/table-grants.sql`,
+which fails on any public table it doesn't know about.
+
 ## Workflow
 
 - Work on feature branches; merge and push to `main` only on explicit user
