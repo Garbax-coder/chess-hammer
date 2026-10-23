@@ -83,6 +83,10 @@ const MOVE_HINT_STYLE = {
   backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.22) 22%, transparent 24%)',
 }
 const CAPTURE_HINT_STYLE = { boxShadow: 'inset 0 0 0 3px rgba(0,0,0,0.22)' }
+// Casa segnata col tasto destro (come su Lichess): arancione, sopra gli
+// altri colori della casa.
+const MARKED_SQUARE_STYLE = { backgroundColor: 'rgba(249, 115, 22, 0.7)' }
+const EMPTY_MARKS: string[] = []
 
 // Posizione (riga/colonna, 0-7 dall'alto a sinistra) di una casa sulla
 // scacchiera COSI' COM'E' VISUALIZZATA (tiene conto dell'orientamento), per
@@ -207,6 +211,13 @@ export function PuzzleBoard({
     null,
   )
   const [selection, setSelection] = useState<SquareSelection | null>(null)
+  // Case segnate col tasto destro, legate alla posizione in cui sono state
+  // segnate: con una mossa (o un puzzle nuovo) la posizione cambia e i segni
+  // spariscono da soli, come su Lichess.
+  const [marks, setMarks] = useState<{ fen: string; squares: string[] }>({
+    fen: '',
+    squares: [],
+  })
   // Mossa di promozione in attesa della scelta del pezzo da parte
   // dell'utente: la mossa non viene giocata su gameRef/displayFen finche'
   // non arriva la scelta (vedi attemptMove/attemptFreeMove).
@@ -441,6 +452,23 @@ export function PuzzleBoard({
       ? lastMoveSquares?.to
       : undefined
 
+  const markedSquares = marks.fen === displayFen ? marks.squares : EMPTY_MARKS
+
+  // Tasto destro su una casa: la segna in arancione, o la libera se era
+  // gia' segnata. (Un trascinamento col tasto destro disegna invece una
+  // freccia, e non arriva qui: lo gestisce react-chessboard.)
+  function handleSquareRightClick({ square }: { square: string }) {
+    setMarks((current) => {
+      const squares = current.fen === displayFen ? current.squares : []
+      return {
+        fen: displayFen,
+        squares: squares.includes(square)
+          ? squares.filter((s) => s !== square)
+          : [...squares, square],
+      }
+    })
+  }
+
   const squareStyles = useMemo(() => {
     const styles: Record<string, CSSProperties> = {}
     const merge = (square: string, style: CSSProperties) => {
@@ -460,9 +488,12 @@ export function PuzzleBoard({
         merge(target.to, target.capture ? CAPTURE_HINT_STYLE : MOVE_HINT_STYLE)
       }
     }
+    for (const square of markedSquares) {
+      merge(square, MARKED_SQUARE_STYLE)
+    }
 
     return Object.keys(styles).length > 0 ? styles : undefined
-  }, [lastMoveSquares, effectiveWrongMove, effectiveSelection])
+  }, [lastMoveSquares, effectiveWrongMove, effectiveSelection, markedSquares])
 
   // Calcolate qui (in un event handler, non durante il render) cosi'
   // gameRef puo' essere letto liberamente senza toccare la logica di
@@ -474,6 +505,10 @@ export function PuzzleBoard({
     piece: { pieceType: string } | null
     square: string
   }) {
+    // Un click sinistro cancella le case segnate col tasto destro (come le
+    // frecce, che react-chessboard cancella da se').
+    if (markedSquares.length > 0) setMarks({ fen: displayFen, squares: [] })
+
     // Mentre si sceglie il pezzo di promozione la scacchiera e' bloccata:
     // il click va al backdrop del selettore (che annulla), non qui.
     if (pendingPromotion) return
@@ -853,6 +888,7 @@ export function PuzzleBoard({
                 position: displayFen,
                 onPieceDrop: handlePieceDrop,
                 onSquareClick: handleSquareClick,
+                onSquareRightClick: handleSquareRightClick,
                 boardOrientation: orientation,
                 canDragPiece: ({ piece }) =>
                   !pendingPromotion &&

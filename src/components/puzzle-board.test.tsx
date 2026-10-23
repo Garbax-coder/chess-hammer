@@ -71,6 +71,67 @@ describe('PuzzleBoard', () => {
     expect(animatedPieces(container).map((el) => el.dataset.piece)).toEqual(['wQ'])
   })
 
+  describe('marking squares with the right mouse button', () => {
+    const puzzle = makeLichessPuzzle({
+      fen: '6k1/p4ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1',
+      moves: ['a7a6', 'd1d8'],
+    })
+    const ORANGE = 'rgba(249, 115, 22, 0.7)'
+
+    // react-chessboard applica squareStyles a un livello dentro la casa
+    // (sopra il colore della scacchiera), non alla casa stessa.
+    function renderBoard() {
+      const { container } = render(
+        <PuzzleBoard
+          puzzle={puzzle}
+          autoAdvance={false}
+          onComplete={() => {}}
+          onAdvance={() => {}}
+        />,
+      )
+      act(() => vi.advanceTimersByTime(2000))
+      const square = (name: string) =>
+        container.querySelector<HTMLElement>(`[data-square="${name}"]`)!
+      const color = (name: string) =>
+        square(name).querySelector<HTMLElement>(':scope > div')?.style.backgroundColor
+      return { square, color }
+    }
+
+    it('turns a square orange and back with a second right click', () => {
+      const { square, color } = renderBoard()
+
+      act(() => {
+        fireEvent.contextMenu(square('e4'))
+      })
+      expect(color('e4')).toBe(ORANGE)
+      expect(color('d4')).not.toBe(ORANGE)
+
+      act(() => {
+        fireEvent.contextMenu(square('e4'))
+      })
+      expect(color('e4')).not.toBe(ORANGE)
+    })
+
+    it('marks several squares and clears them all with a left click', () => {
+      const { square, color } = renderBoard()
+
+      act(() => {
+        fireEvent.contextMenu(square('e4'))
+      })
+      act(() => {
+        fireEvent.contextMenu(square('c6'))
+      })
+      expect(color('e4')).toBe(ORANGE)
+      expect(color('c6')).toBe(ORANGE)
+
+      act(() => {
+        fireEvent.click(square('h4'))
+      })
+      expect(color('e4')).not.toBe(ORANGE)
+      expect(color('c6')).not.toBe(ORANGE)
+    })
+  })
+
   describe('solving by clicking squares', () => {
     // Il nero apre con a7-a6, poi il bianco ha due matti: Td8# (soluzione) e Te8#.
     const puzzle = makeLichessPuzzle({
