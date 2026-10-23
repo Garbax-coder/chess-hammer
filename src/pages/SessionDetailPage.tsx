@@ -23,7 +23,11 @@ import {
   useUserStats,
 } from '@/hooks/use-user-stats'
 import { useTranslations } from '@/lib/language-context'
-import { practicePool, type PracticeFilter } from '@/lib/session-progress'
+import {
+  practicePool,
+  practiceResumePuzzle,
+  type PracticeFilter,
+} from '@/lib/session-progress'
 
 // Stessa modalita' "pratica libera" di TrainPage (PuzzleBoard + tentativi
 // che non toccano la sessione/ELO ufficiali), ma qui utilizzabile per
@@ -69,6 +73,17 @@ export default function SessionDetailPage() {
   }
 
   const { session, puzzles } = data
+  // "Continua in pratica libera": dopo l'ultimo puzzle praticato in questa
+  // sessione, col filtro attivo (stessa regola di allenamento e riepilogo).
+  const practiceStart = practiceAttemptsByPuzzle
+    ? practiceResumePuzzle(
+        puzzles,
+        practiceAttemptsByPuzzle,
+        practiceFilter,
+        session.created_at,
+        session.id,
+      )
+    : undefined
   const autoAdvance = stats?.auto_advance ?? true
   const boardTheme = stats?.board_theme
   const pieceSet = stats?.piece_set
@@ -161,20 +176,19 @@ export default function SessionDetailPage() {
             </Label>
           </div>
 
-          {/* Vedi TrainPage: ha senso solo in pratica (qui sempre il caso,
-              questa pagina e' solo pratica libera). */}
-          {selectedPuzzle && (
-            <PracticeFilterControls
-              filter={practiceFilter}
-              update={updatePracticeFilter.mutate}
-              showNoSavedHint={
-                practiceFilter.onlySaved === true &&
-                !practiceFilter.onlyFailed &&
-                !!savedPuzzleIds &&
-                !puzzles.some((p) => savedPuzzleIds.has(p.puzzleId))
-              }
-            />
-          )}
+          {/* Sempre visibile: questa pagina e' solo pratica libera, e il
+              filtro decide anche da dove riparte "Continua in pratica libera"
+              prima di aver scelto un puzzle. */}
+          <PracticeFilterControls
+            filter={practiceFilter}
+            update={updatePracticeFilter.mutate}
+            showNoSavedHint={
+              practiceFilter.onlySaved === true &&
+              !practiceFilter.onlyFailed &&
+              !!savedPuzzleIds &&
+              !puzzles.some((p) => savedPuzzleIds.has(p.puzzleId))
+            }
+          />
         </div>
 
         {selectedPuzzle && (
@@ -214,9 +228,17 @@ export default function SessionDetailPage() {
             <PuzzleBoardSkeleton />
           )
         ) : (
-          <p className="text-muted-foreground max-w-sm text-center text-sm">
-            {t.sessionDetail.selectPrompt}
-          </p>
+          <div className="flex max-w-sm flex-col items-center gap-3">
+            <p className="text-muted-foreground text-center text-sm">
+              {t.sessionDetail.selectPrompt}
+            </p>
+            <Button
+              disabled={!practiceStart}
+              onClick={() => practiceStart && selectPuzzle(practiceStart.sessionPuzzleId)}
+            >
+              {t.train.startPractice}
+            </Button>
+          </div>
         )}
       </div>
     </main>
