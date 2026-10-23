@@ -3,6 +3,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { it as itTranslations } from '@/lib/i18n/translations'
 import type { RoundStatsRow } from '@/lib/session-stats'
+import { makePuzzleResult, makeSession } from '@/test/fixtures'
+import type { PracticeAttempt } from '@/types/training'
 import SessionSummaryPage from './SessionSummaryPage'
 
 const t = itTranslations
@@ -14,6 +16,48 @@ vi.mock('@/lib/language-context', () => ({
 vi.mock('@/hooks/use-session-stats', () => ({
   useSessionRoundStats: () => ({ data: rows, isLoading: false }),
 }))
+
+// Pratica libera della sessione s1 (pulsante "Continua in pratica libera").
+const sessionPuzzles = ['p1', 'p2', 'p3'].map((puzzleId, i) =>
+  makePuzzleResult({ sessionPuzzleId: `sp-${i + 1}`, puzzleId, orderIndex: i + 1 }),
+)
+let practiceAttempts = new Map<string, PracticeAttempt[]>()
+vi.mock('@/hooks/use-session-history', () => ({
+  useSessionDetail: () => ({
+    data: { session: makeSession({ id: 's1' }), puzzles: sessionPuzzles },
+  }),
+}))
+vi.mock('@/hooks/use-practice', () => ({
+  usePracticeAttempts: () => ({ data: practiceAttempts }),
+}))
+vi.mock('@/hooks/use-user-stats', () => ({
+  useUserStats: () => ({
+    data: {
+      practice_only_failed: false,
+      practice_failed_scope: 'all',
+      practice_only_saved: false,
+    },
+  }),
+}))
+vi.mock('@/hooks/use-saved-puzzles', () => ({
+  useSavedPuzzles: () => ({ data: new Set<string>() }),
+}))
+
+function practice(
+  puzzleId: string,
+  sessionId: string | null,
+  at: string,
+): PracticeAttempt {
+  return {
+    id: `${puzzleId}-${at}`,
+    user_id: 'user-1',
+    puzzle_id: puzzleId,
+    result: 'solved',
+    time_seconds: 10,
+    attempted_at: at,
+    session_id: sessionId,
+  }
+}
 
 function row(
   sessionId: string,
@@ -126,5 +170,46 @@ describe('SessionSummaryPage', () => {
     rows = []
     renderSummary('empty')
     expect(screen.getByText(t.summary.noData)).toBeInTheDocument()
+  })
+})
+
+describe('SessionSummaryPage free practice', () => {
+  const completed = () =>
+    ([1, 2, 3] as const).map((r) => row('s1', '2026-10-01T10:00:00Z', r))
+
+  it('continues after the last puzzle practiced in this session', () => {
+    rows = completed()
+    practiceAttempts = new Map([
+      ['p2', [practice('p2', 's1', '2026-10-20T10:00:00Z')]],
+      // Lo stesso puzzle praticato in un'altra sessione non conta.
+      ['p3', [practice('p3', 'other-session', '2026-10-21T10:00:00Z')]],
+    ])
+    renderSummary('s1')
+
+    expect(screen.getByRole('link', { name: t.train.startPractice })).toHaveAttribute(
+      'href',
+      '/sessions/s1?puzzle=sp-3',
+    )
+  })
+
+  it('starts from the first puzzle when nothing was practiced yet', () => {
+    rows = completed()
+    practiceAttempts = new Map()
+    renderSummary('s1')
+
+    expect(screen.getByRole('link', { name: t.train.startPractice })).toHaveAttribute(
+      'href',
+      '/sessions/s1?puzzle=sp-1',
+    )
+  })
+
+  it('is not offered for a session still in progress', () => {
+    rows = [row('s1', '2026-10-01T10:00:00Z', 1, { status: 'in_progress', attempted: 3 })]
+    practiceAttempts = new Map()
+    renderSummary('s1')
+
+    expect(
+      screen.queryByRole('link', { name: t.train.startPractice }),
+    ).not.toBeInTheDocument()
   })
 })

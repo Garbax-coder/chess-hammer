@@ -32,8 +32,12 @@ export function useRecordPracticeAttempt() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (params: { puzzleId: string; result: AttemptResult; timeSeconds: number }) =>
-      recordPracticeAttempt({ userId: user!.id, ...params }),
+    mutationFn: (params: {
+      puzzleId: string
+      result: AttemptResult
+      timeSeconds: number
+      sessionId?: string
+    }) => recordPracticeAttempt({ userId: user!.id, ...params }),
     onSuccess: (attempt) => {
       // Aggiunge la riga appena inserita a tutte le mappe in cache (una per
       // ogni insieme di puzzle gia' interrogato) invece di invalidarle e
@@ -45,7 +49,10 @@ export function useRecordPracticeAttempt() {
         (current) => {
           if (!current) return current
           const next = new Map(current)
-          next.set(attempt.puzzle_id, [...(current.get(attempt.puzzle_id) ?? []), attempt])
+          next.set(attempt.puzzle_id, [
+            ...(current.get(attempt.puzzle_id) ?? []),
+            attempt,
+          ])
           return next
         },
       )

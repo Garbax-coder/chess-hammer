@@ -217,7 +217,12 @@ export default function TrainPage() {
   // perso non tocca la sessione ufficiale ne' l'ELO.
   async function handlePracticeAttempt(result: 'solved' | 'failed', timeSeconds: number) {
     if (!practiceSelection) return
-    const attempt = { puzzleId: practiceSelection.puzzleId, result, timeSeconds }
+    const attempt = {
+      puzzleId: practiceSelection.puzzleId,
+      result,
+      timeSeconds,
+      sessionId: session!.id,
+    }
     for (let tries = 1; ; tries++) {
       try {
         await recordPracticeAttempt.mutateAsync(attempt)
@@ -285,6 +290,7 @@ export default function TrainPage() {
           practiceAttemptsByPuzzle,
           practiceFilter,
           session.created_at,
+          session.id,
         )
       : undefined
   const startPracticeButton = (

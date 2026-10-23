@@ -230,3 +230,41 @@ describe('practicePool with problem puzzles', () => {
     ).toEqual([])
   })
 })
+
+describe('practiceResumePuzzle with the session of each attempt', () => {
+  const pool = ['p1', 'p2', 'p3'].map((puzzleId, i) =>
+    makePuzzleResult({ puzzleId, orderIndex: i + 1 }),
+  )
+  const filter = { onlyFailed: false, scope: 'all' as const }
+  const createdAt = '2026-09-01T00:00:00Z'
+  const attempt = (
+    puzzleId: string,
+    sessionId: string | null,
+    at: string,
+  ): PracticeAttempt => ({
+    id: `${puzzleId}-${at}`,
+    user_id: 'user-1',
+    puzzle_id: puzzleId,
+    result: 'solved',
+    time_seconds: 10,
+    attempted_at: at,
+    session_id: sessionId,
+  })
+
+  it('ignores attempts made in another session, even if more recent', () => {
+    const attempts = new Map([
+      ['p1', [attempt('p1', 's1', '2026-09-10T00:00:00Z')]],
+      ['p2', [attempt('p2', 's2', '2026-09-20T00:00:00Z')]],
+    ])
+    expect(practiceResumePuzzle(pool, attempts, filter, createdAt, 's1')?.puzzleId).toBe(
+      'p2',
+    )
+  })
+
+  it('still counts older attempts without a session by their date', () => {
+    const attempts = new Map([['p2', [attempt('p2', null, '2026-09-10T00:00:00Z')]]])
+    expect(practiceResumePuzzle(pool, attempts, filter, createdAt, 's1')?.puzzleId).toBe(
+      'p3',
+    )
+  })
+})

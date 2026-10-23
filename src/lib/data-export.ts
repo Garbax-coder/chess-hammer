@@ -54,6 +54,7 @@ interface RawPuzzleAttempt {
 
 interface RawPracticeAttempt {
   puzzle_id: string
+  session_id: string | null
   result: string
   time_seconds: number
   attempted_at: string
@@ -97,7 +98,9 @@ export async function fetchUserExportData(
     fetchAllPages<RawPracticeAttempt>((from, to) => {
       let query = supabase
         .from('practice_attempts')
-        .select('puzzle_id, result, time_seconds, attempted_at, lichess_puzzles(rating, themes)')
+        .select(
+          'puzzle_id, session_id, result, time_seconds, attempted_at, lichess_puzzles(rating, themes)',
+        )
         .order('attempted_at', { ascending: false })
         .order('id', { ascending: true })
       if (since) query = query.gte('attempted_at', since)
@@ -139,6 +142,7 @@ export async function fetchUserExportData(
     })),
     practiceAttempts: practiceAttempts.map((a) => ({
       attempted_at: a.attempted_at,
+      session_id: a.session_id,
       puzzle_id: a.puzzle_id,
       puzzle_rating: a.lichess_puzzles?.rating ?? null,
       puzzle_themes: a.lichess_puzzles?.themes ?? [],

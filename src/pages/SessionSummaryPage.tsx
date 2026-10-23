@@ -1,9 +1,15 @@
+import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { StatsComparison } from '@/components/stats-comparison'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { usePracticeAttempts } from '@/hooks/use-practice'
+import { useSavedPuzzles } from '@/hooks/use-saved-puzzles'
+import { useSessionDetail } from '@/hooks/use-session-history'
 import { useSessionRoundStats } from '@/hooks/use-session-stats'
+import { useUserStats } from '@/hooks/use-user-stats'
 import { useTranslations } from '@/lib/language-context'
+import { practiceResumePuzzle, type PracticeFilter } from '@/lib/session-progress'
 import {
   compareSession,
   formatAverage,
@@ -144,9 +150,15 @@ export default function SessionSummaryPage() {
 
       <div className="flex flex-col gap-2 sm:flex-row">
         {info?.status === 'completed' && (
-          <Button asChild>
-            <Link to="/sessions/new">{t.summary.newSession}</Link>
-          </Button>
+          <>
+            <Button asChild>
+              <Link to="/sessions/new">{t.summary.newSession}</Link>
+            </Button>
+            <ResumePracticeButton
+              sessionId={info.session_id}
+              createdAt={info.created_at}
+            />
+          </>
         )}
         {info && (
           <Button asChild variant="outline">
@@ -158,5 +170,48 @@ export default function SessionSummaryPage() {
         </Button>
       </div>
     </main>
+  )
+}
+
+// "Continua in pratica libera" di una sessione conclusa: apre, nel dettaglio
+// della sessione (dove si pratica una sessione non piu' attiva), il puzzle
+// dopo l'ultimo praticato in questa sessione, con lo stesso filtro
+// (falliti / problematici) e la stessa regola della pagina di allenamento.
+function ResumePracticeButton({
+  sessionId,
+  createdAt,
+}: {
+  sessionId: string
+  createdAt: string
+}) {
+  const t = useTranslations()
+  const { data: detail } = useSessionDetail(sessionId)
+  const { data: stats } = useUserStats()
+  const { data: savedPuzzleIds } = useSavedPuzzles()
+  const puzzleIds = useMemo(() => detail?.puzzles.map((p) => p.puzzleId) ?? [], [detail])
+  const { data: practiceAttempts } = usePracticeAttempts(puzzleIds)
+
+  if (!detail || !stats || !practiceAttempts) return null
+  const filter: PracticeFilter = {
+    onlyFailed: stats.practice_only_failed,
+    scope: stats.practice_failed_scope,
+    onlySaved: stats.practice_only_saved,
+    savedPuzzleIds,
+  }
+  const resume = practiceResumePuzzle(
+    detail.puzzles,
+    practiceAttempts,
+    filter,
+    createdAt,
+    sessionId,
+  )
+  if (!resume) return null
+
+  return (
+    <Button asChild variant="outline">
+      <Link to={`/sessions/${sessionId}?puzzle=${resume.sessionPuzzleId}`}>
+        {t.train.startPractice}
+      </Link>
+    </Button>
   )
 }
