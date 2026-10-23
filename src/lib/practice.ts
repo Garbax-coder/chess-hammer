@@ -6,6 +6,9 @@ export async function recordPracticeAttempt(params: {
   puzzleId: string
   result: AttemptResult
   timeSeconds: number
+  // Sessione da cui si sta praticando: "Continua in pratica libera" riprende
+  // dall'ultimo puzzle praticato in quella sessione.
+  sessionId?: string
 }): Promise<PracticeAttempt> {
   // Restituisce la riga inserita (id e attempted_at li assegna il DB): serve
   // a chi aggiorna la cache dei tentativi senza rileggerli tutti.
@@ -16,6 +19,7 @@ export async function recordPracticeAttempt(params: {
       puzzle_id: params.puzzleId,
       result: params.result,
       time_seconds: params.timeSeconds,
+      session_id: params.sessionId ?? null,
     })
     .select()
     .single()

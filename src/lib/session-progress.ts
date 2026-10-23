@@ -101,22 +101,29 @@ export function practicePool(
 }
 
 // Da dove riprende "Continua in pratica libera": il primo puzzle ammesso dal
-// filtro dopo l'ultimo concluso in pratica (per order_index), e da capo
-// dopo l'ultimo. I tentativi di pratica sono per puzzle, non per sessione:
-// quelli precedenti alla sessione (stesso puzzle pescato in una sessione
-// passata) non contano.
+// filtro dopo l'ultimo concluso in pratica in questa sessione (per
+// order_index), e da capo dopo l'ultimo. I tentativi registrano la sessione
+// in cui sono stati fatti (migrazione 0033): contano quelli di questa
+// sessione. Quelli piu' vecchi, senza sessione, contano se fatti dopo la sua
+// creazione: lo stesso puzzle pescato in una sessione passata non sposta il
+// punto di ripresa.
 export function practiceResumePuzzle(
   puzzles: SessionPuzzleResult[],
   practiceAttemptsByPuzzle: Map<string, PracticeAttempt[]>,
   filter: PracticeFilter,
   sessionCreatedAt: string,
+  sessionId?: string,
 ): SessionPuzzleResult | undefined {
   const since = Date.parse(sessionCreatedAt)
+  const belongsToSession = (attempt: PracticeAttempt) =>
+    attempt.session_id && sessionId
+      ? attempt.session_id === sessionId
+      : Date.parse(attempt.attempted_at) >= since
   let last: { puzzle: SessionPuzzleResult; at: number } | undefined
   for (const puzzle of puzzles) {
     for (const attempt of practiceAttemptsByPuzzle.get(puzzle.puzzleId) ?? []) {
       const at = Date.parse(attempt.attempted_at)
-      if (at >= since && (!last || at > last.at)) last = { puzzle, at }
+      if (belongsToSession(attempt) && (!last || at > last.at)) last = { puzzle, at }
     }
   }
 

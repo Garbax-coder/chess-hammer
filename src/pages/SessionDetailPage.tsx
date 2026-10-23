@@ -87,6 +87,7 @@ export default function SessionDetailPage() {
       puzzleId: selectedPuzzle.puzzleId,
       result,
       timeSeconds,
+      sessionId: session.id,
     })
   }
 

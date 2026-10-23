@@ -126,4 +126,7 @@ export interface PracticeAttempt {
   result: AttemptResult
   time_seconds: number
   attempted_at: string
+  /** Sessione in cui e' stato fatto; null per i tentativi precedenti alla
+   *  migrazione 0033, che non la registravano. */
+  session_id?: string | null
 }
