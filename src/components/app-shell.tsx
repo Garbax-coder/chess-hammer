@@ -16,6 +16,7 @@ import { useTheme } from '@/hooks/use-theme'
 import { isAdminUser } from '@/lib/admin'
 import { useAuth } from '@/lib/auth-context'
 import { useAdminTranslations } from '@/lib/i18n/admin'
+import { useOpeningsTranslations } from '@/lib/i18n/openings'
 import { useLanguage } from '@/lib/language-context'
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -23,6 +24,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useLanguage()
   const { user } = useAuth()
   const adminT = useAdminTranslations()
+  const openingsT = useOpeningsTranslations()
   const appStyle = useAppStyle()
   // Il menu mobile va chiuso a mano al click su una voce, altrimenti resta
   // aperto sopra la pagina di destinazione.
@@ -45,6 +47,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       </Button>
       <Button asChild variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
         <Link to="/stats">{t.nav.stats}</Link>
+      </Button>
+      <Button asChild variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
+        <Link to="/openings">{openingsT.navLabel}</Link>
       </Button>
       <Button asChild variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
         <Link to="/faq">{t.nav.faq}</Link>

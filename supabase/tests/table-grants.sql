@@ -8,8 +8,10 @@ do $$
 declare
   t text;
   user_tables text[] := array['user_stats', 'training_sessions', 'session_puzzles',
-                              'puzzle_attempts', 'practice_attempts', 'saved_puzzles'];
-  puzzle_tables text[] := array['lichess_puzzles', 'lichess_puzzle_order', 'lichess_rating_ranges'];
+                              'puzzle_attempts', 'practice_attempts', 'saved_puzzles',
+                              'opening_node_progress', 'opening_attempts'];
+  puzzle_tables text[] := array['lichess_puzzles', 'lichess_puzzle_order', 'lichess_rating_ranges',
+                                'opening_repertoires', 'opening_nodes'];
   internal_tables text[] := array['account_deletion_notices', 'app_email_templates'];
   priv text;
 begin
@@ -53,6 +55,10 @@ begin
   end if;
   if has_table_privilege('anon', 'public.lichess_puzzle_order', 'select') then
     raise exception 'anon puo'' leggere lichess_puzzle_order';
+  end if;
+  if has_table_privilege('anon', 'public.opening_repertoires', 'select')
+     or has_table_privilege('anon', 'public.opening_nodes', 'select') then
+    raise exception 'anon puo'' leggere il catalogo delle aperture';
   end if;
 
   foreach t in array internal_tables loop

@@ -27,6 +27,8 @@ const DailySessionSummaryPage = lazy(() => import('@/pages/DailySessionSummaryPa
 const FaqPage = lazy(() => import('@/pages/FaqPage'))
 const StatsPage = lazy(() => import('@/pages/StatsPage'))
 const ThemePracticePage = lazy(() => import('@/pages/ThemePracticePage'))
+const OpeningsPage = lazy(() => import('@/pages/OpeningsPage'))
+const OpeningDrillPage = lazy(() => import('@/pages/OpeningDrillPage'))
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
 const TermsPage = lazy(() => import('@/pages/TermsPage'))
 const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'))
@@ -135,6 +137,22 @@ function App() {
           element={
             <Protected>
               <ThemePracticePage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/openings"
+          element={
+            <Protected>
+              <OpeningsPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/openings/:slug"
+          element={
+            <Protected>
+              <OpeningDrillPage />
             </Protected>
           }
         />

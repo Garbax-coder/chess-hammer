@@ -1,8 +1,9 @@
 # Allenamento sulle aperture — analisi
 
-Stato: **proposta / analisi** (2026-10-24). Nessun codice o migrazione ancora
-scritto. Questo documento raccoglie le fonti dati, il modello dati e le
-funzionalità tipiche per una feature di allenamento sulle aperture.
+Stato: **bozza funzionante** sul branch `feature/opening-training` (vedi
+"Stato della bozza" in fondo). Questo documento raccoglie le fonti dati, il
+modello dati e le funzionalità tipiche per una feature di allenamento sulle
+aperture.
 
 ## Sviluppo
 
@@ -183,3 +184,41 @@ scheduling veloci, il secondo per lo storico e per ricalcolare.
 - In futuro: **confronto con le partite Lichess dell'utente**, per mostrare
   dove è uscito dal repertorio.
 - Import/export PGN, con commenti e frecce (`%cal`).
+
+## Stato della bozza
+
+Fatto (2026-10-25):
+
+- **Migrazioni** `0100_opening_training.sql` (tabelle, RLS, GRANT, funzione
+  `record_opening_move` con ripasso a intervalli fissi: 4 ore, 1, 3, 7, 21,
+  60 giorni) e `0101_opening_catalog.sql` (catalogo, generato).
+- **Catalogo** scritto a mano in `scripts/openings/repertoires.json` (Partita
+  Italiana e Gambetto di Donna col Bianco, Caro-Kann col Nero; 22 Run),
+  trasformato in migrazione da `node scripts/openings/build-catalog.mjs`. Lo
+  script e i test controllano che ogni mossa sia legale, che ogni Run finisca
+  con una mossa dell'utente e che l'utente abbia una sola mossa per
+  posizione; un test verifica che la migrazione sia allineata alle linee.
+- **Pagine** `/openings` (repertori con copertura: mosse consolidate, linee
+  padroneggiate, da ripassare, nuove) e `/openings/:slug` (Drill: un Run
+  alla volta, scelto tra quelli con più mosse da fare; l'avversario risponde
+  da solo; conta solo il primo tentativo; dopo un errore la freccia mostra la
+  mossa del repertorio). Voce "Aperture" nel menu, testi nelle 5 lingue in
+  `src/lib/i18n/openings.ts`.
+- **Prove** SQL in `supabase/tests/opening-training.sql` e tabelle aggiunte
+  a `supabase/tests/table-grants.sql`.
+
+Da fare prima del merge:
+
+- **Esportazione dei dati** (profilo): includere `opening_node_progress` e
+  `opening_attempts`.
+- **Informativa privacy**: verificare se i tentativi sulle aperture vanno
+  citati tra i dati di allenamento (e aggiornare la versione legale).
+- **Anteprima Vercel**: controllare che le variabili "Preview" puntino al
+  progetto Supabase di sviluppo.
+- Un test e2e del Drill.
+
+Idee per i passi successivi: modalità Learn; alternative accettate
+(`is_main`); avanzamento rapido del tronco già consolidato; errori ripetuti a
+fine sessione; pesi dall'Opening Explorer (serve un token); cicli Woodpecker
+sui Run; vista ad albero con heatmap; import PGN dagli studi Lichess.
+

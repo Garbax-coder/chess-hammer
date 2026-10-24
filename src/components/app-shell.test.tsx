@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { adminTranslations } from '@/lib/i18n/admin'
+import { openingsTranslations } from '@/lib/i18n/openings'
 import { it as itTranslations } from '@/lib/i18n/translations'
 import { AppShell } from './app-shell'
 
@@ -36,6 +37,7 @@ describe('AppShell mobile menu', () => {
       itTranslations.nav.train,
       itTranslations.nav.history,
       itTranslations.nav.stats,
+      openingsTranslations.it.navLabel,
       itTranslations.nav.faq,
     ])
 
