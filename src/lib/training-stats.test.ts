@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   MIN_THEME_ATTEMPTS,
   rankThemes,
+  summarizePractice,
   summarizeTraining,
   type TrainingStatsData,
 } from './training-stats'
@@ -30,6 +31,16 @@ const data: TrainingStatsData = {
     { session_id: 'new', round: 2, result: 'solved', attempts: 10, total_seconds: 100 },
   ],
   themes: [],
+  practice: {
+    sessions: [
+      { session_id: 'old', result: 'solved', attempts: 3, total_seconds: 30 },
+      { session_id: 'old', result: 'failed', attempts: 1, total_seconds: 50 },
+      { session_id: 'new', result: 'solved', attempts: 2, total_seconds: 40 },
+      // Tentativo vecchio che non appartiene a nessuna sessione.
+      { session_id: null, result: 'failed', attempts: 1, total_seconds: 15 },
+    ],
+    themes: [],
+  },
 }
 
 describe('summarizeTraining', () => {
@@ -70,11 +81,48 @@ describe('summarizeTraining', () => {
       sessions: [],
       rounds: [],
       themes: [],
+      practice: { sessions: [], themes: [] },
     })
     expect(overall.attempts).toBe(0)
     expect(overall.solvedRate).toBe(0)
     expect(byRound).toEqual([])
     expect(bySession).toEqual([])
+  })
+})
+
+describe('summarizePractice', () => {
+  it('computes free practice totals and averages', () => {
+    const { overall } = summarizePractice(data)
+    expect(overall).toMatchObject({
+      attempts: 7,
+      solved: 5,
+      failed: 2,
+      averageSeconds: 135 / 7,
+      averageSolvedSeconds: 70 / 5,
+      averageFailedSeconds: 65 / 2,
+    })
+  })
+
+  it('splits by session, newest first, with unassigned attempts last', () => {
+    const { bySession } = summarizePractice(data)
+    expect(bySession.map((s) => [s.session?.id ?? null, s.kpi.attempts])).toEqual([
+      ['new', 2],
+      ['old', 4],
+      [null, 1],
+    ])
+  })
+
+  it('lists only the sessions practiced', () => {
+    const { bySession } = summarizePractice({
+      ...data,
+      practice: {
+        sessions: [
+          { session_id: 'old', result: 'solved', attempts: 1, total_seconds: 9 },
+        ],
+        themes: [],
+      },
+    })
+    expect(bySession.map((s) => s.session?.id)).toEqual(['old'])
   })
 })
 

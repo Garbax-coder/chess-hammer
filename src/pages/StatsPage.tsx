@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTrainingStats } from '@/hooks/use-training-stats'
@@ -8,53 +8,95 @@ import { sessionStatusVariant } from '@/lib/session-status'
 import {
   MIN_THEME_ATTEMPTS,
   rankThemes,
+  summarizePractice,
   summarizeTraining,
   type Kpi,
   type ThemeKpi,
+  type TrainingStatsData,
 } from '@/lib/training-stats'
 
 const percent = (value: number) => `${Math.round(value)}%`
 
-// Statistiche dell'utente sui puzzle dell'allenamento ufficiale: totali,
-// suddivisione per giro e per sessione, categorie migliori e peggiori.
-// Tutto viene da una sola richiesta gia' aggregata (useTrainingStats).
+type StatsTab = 'training' | 'practice'
+const TABS: StatsTab[] = ['training', 'practice']
+
+// Statistiche dell'utente in due schede: allenamento ufficiale (totali, per
+// giro, per sessione, categorie) e pratica libera (totali, per sessione,
+// categorie). Tutto viene da una sola richiesta gia' aggregata
+// (useTrainingStats); la scheda scelta resta nell'indirizzo (?tab=practice).
 export default function StatsPage() {
   const t = useTranslations()
   const { data, isLoading } = useTrainingStats()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab: StatsTab = searchParams.get('tab') === 'practice' ? 'practice' : 'training'
 
-  if (isLoading || !data) {
-    return (
-      <main className="flex flex-1 items-center justify-center">
+  return (
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8">
+      <div className="flex flex-col gap-3">
+        <h1 className="text-foreground text-lg font-semibold tracking-tight">
+          {t.stats.title}
+        </h1>
+        <div
+          role="tablist"
+          aria-label={t.stats.title}
+          className="bg-muted flex w-fit gap-1 rounded-lg p-1"
+        >
+          {TABS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              id={`stats-tab-${id}`}
+              aria-selected={tab === id}
+              aria-controls={`stats-panel-${id}`}
+              onClick={() =>
+                setSearchParams(id === 'training' ? {} : { tab: id }, { replace: true })
+              }
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                tab === id
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t.stats.tabs[id]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {isLoading || !data ? (
         <p className="text-muted-foreground text-sm">{t.common.loading}</p>
-      </main>
-    )
-  }
+      ) : (
+        <div
+          role="tabpanel"
+          id={`stats-panel-${tab}`}
+          aria-labelledby={`stats-tab-${tab}`}
+          className="flex flex-col gap-6"
+        >
+          {tab === 'training' ? (
+            <TrainingStats data={data} />
+          ) : (
+            <PracticeStats data={data} />
+          )}
+        </div>
+      )}
+    </main>
+  )
+}
 
+function TrainingStats({ data }: { data: TrainingStatsData }) {
+  const t = useTranslations()
   const summary = summarizeTraining(data)
   const { best, worst } = rankThemes(data.themes)
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-foreground text-lg font-semibold tracking-tight">
-          {t.stats.title}
-        </h1>
-        <p className="text-muted-foreground text-sm">{t.stats.subtitle}</p>
-      </div>
-
+    <>
+      <p className="text-muted-foreground -mt-3 text-sm">{t.stats.subtitle}</p>
       {summary.overall.attempts === 0 ? (
         <p className="text-muted-foreground text-sm">{t.stats.empty}</p>
       ) : (
         <>
-          <Card>
-            <CardHeader>
-              <CardTitle>{t.stats.overviewTitle}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <OverviewTiles kpi={summary.overall} />
-            </CardContent>
-          </Card>
-
+          <OverviewCard kpi={summary.overall} />
           <Card>
             <CardHeader>
               <CardTitle>{t.stats.byRoundTitle}</CardTitle>
@@ -70,50 +112,103 @@ export default function StatsPage() {
               />
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{t.stats.bySessionTitle}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <KpiTable
-                firstColumn={t.stats.columns.session}
-                rows={summary.bySession.map(({ session, kpi }) => ({
-                  key: session.id,
-                  label: (
-                    <div className="flex flex-col gap-0.5">
-                      <Link
-                        to={`/sessions/${session.id}/summary`}
-                        className="text-foreground underline-offset-4 hover:underline"
-                      >
-                        {session.name ||
-                          t.stats.sessionFallback(
-                            new Date(session.created_at).toLocaleDateString(
-                              t.meta.locale,
-                            ),
-                          )}
-                      </Link>
-                      <Badge variant={sessionStatusVariant[session.status]}>
-                        {t.sessionStatus[session.status]}
-                      </Badge>
-                    </div>
-                  ),
-                  kpi,
-                }))}
-              />
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <ThemeCard title={t.stats.bestTitle} themes={best} tone="good" />
-            <ThemeCard title={t.stats.worstTitle} themes={worst} tone="bad" />
-          </div>
-          <p className="text-muted-foreground -mt-3 text-xs">
-            {t.stats.themesNote(MIN_THEME_ATTEMPTS)}
-          </p>
+          <SessionsCard rows={summary.bySession} />
+          <ThemeCards best={best} worst={worst} />
         </>
       )}
-    </main>
+    </>
+  )
+}
+
+function PracticeStats({ data }: { data: TrainingStatsData }) {
+  const t = useTranslations()
+  const summary = summarizePractice(data)
+  const { best, worst } = rankThemes(data.practice.themes)
+
+  return (
+    <>
+      <p className="text-muted-foreground -mt-3 text-sm">{t.stats.practiceSubtitle}</p>
+      {summary.overall.attempts === 0 ? (
+        <p className="text-muted-foreground text-sm">{t.stats.practiceEmpty}</p>
+      ) : (
+        <>
+          <OverviewCard kpi={summary.overall} />
+          <SessionsCard rows={summary.bySession} />
+          <ThemeCards best={best} worst={worst} />
+        </>
+      )}
+    </>
+  )
+}
+
+function OverviewCard({ kpi }: { kpi: Kpi }) {
+  const t = useTranslations()
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t.stats.overviewTitle}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <OverviewTiles kpi={kpi} />
+      </CardContent>
+    </Card>
+  )
+}
+
+function SessionsCard({
+  rows,
+}: {
+  rows: { session: TrainingStatsData['sessions'][number] | null; kpi: Kpi }[]
+}) {
+  const t = useTranslations()
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t.stats.bySessionTitle}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <KpiTable
+          firstColumn={t.stats.columns.session}
+          rows={rows.map(({ session, kpi }) => ({
+            key: session?.id ?? 'none',
+            label: session ? (
+              <div className="flex flex-col gap-0.5">
+                <Link
+                  to={`/sessions/${session.id}/summary`}
+                  className="text-foreground underline-offset-4 hover:underline"
+                >
+                  {session.name ||
+                    t.stats.sessionFallback(
+                      new Date(session.created_at).toLocaleDateString(t.meta.locale),
+                    )}
+                </Link>
+                <Badge variant={sessionStatusVariant[session.status]}>
+                  {t.sessionStatus[session.status]}
+                </Badge>
+              </div>
+            ) : (
+              <span className="text-muted-foreground">{t.stats.unassignedSession}</span>
+            ),
+            kpi,
+          }))}
+        />
+      </CardContent>
+    </Card>
+  )
+}
+
+function ThemeCards({ best, worst }: { best: ThemeKpi[]; worst: ThemeKpi[] }) {
+  const t = useTranslations()
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <ThemeCard title={t.stats.bestTitle} themes={best} tone="good" />
+        <ThemeCard title={t.stats.worstTitle} themes={worst} tone="bad" />
+      </div>
+      <p className="text-muted-foreground -mt-3 text-xs">
+        {t.stats.themesNote(MIN_THEME_ATTEMPTS)}
+      </p>
+    </>
   )
 }
 

@@ -2,10 +2,11 @@ import { PUZZLE_THEME_CATEGORIES } from '@/lib/puzzle-themes'
 import { supabase } from '@/lib/supabase'
 import type { AttemptResult, SessionStatus } from '@/types/training'
 
-// Statistiche dell'utente sui puzzle dell'allenamento ufficiale (pagina
-// /stats). Il database restituisce solo totali gia' aggregati (funzione
-// my_training_stats, migrazione 0034); qui si ricavano percentuali, medie,
-// suddivisioni e classifiche, senza altre richieste.
+// Statistiche dell'utente (pagina /stats) sui puzzle dell'allenamento
+// ufficiale e su quelli della pratica libera. Il database restituisce solo
+// totali gia' aggregati (funzione my_training_stats, migrazione 0034); qui si
+// ricavano percentuali, medie, suddivisioni e classifiche, senza altre
+// richieste.
 
 type Round = 1 | 2 | 3
 
@@ -27,17 +28,41 @@ export interface TrainingStatsData {
     total_seconds: number
   }[]
   /** Un totale per tema Lichess dei puzzle tentati. */
-  themes: { theme: string; attempts: number; solved: number; total_seconds: number }[]
+  themes: ThemeTotals[]
+  practice: {
+    /** Un totale per sessione x esito; session_id null se il tentativo non
+     *  e' riconducibile a nessuna sessione. */
+    sessions: {
+      session_id: string | null
+      result: AttemptResult
+      attempts: number
+      total_seconds: number
+    }[]
+    themes: ThemeTotals[]
+  }
+}
+
+interface ThemeTotals {
+  theme: string
+  attempts: number
+  solved: number
+  total_seconds: number
 }
 
 export async function fetchTrainingStats(): Promise<TrainingStatsData> {
   const { data, error } = await supabase.rpc('my_training_stats')
   if (error) throw error
   const raw = data as TrainingStatsData
+  const seconds = <T extends { total_seconds: number }>(rows: T[]) =>
+    rows.map((r) => ({ ...r, total_seconds: Number(r.total_seconds) }))
   return {
     sessions: raw.sessions,
-    rounds: raw.rounds.map((r) => ({ ...r, total_seconds: Number(r.total_seconds) })),
-    themes: raw.themes.map((t) => ({ ...t, total_seconds: Number(t.total_seconds) })),
+    rounds: seconds(raw.rounds),
+    themes: seconds(raw.themes),
+    practice: {
+      sessions: seconds(raw.practice.sessions),
+      themes: seconds(raw.practice.themes),
+    },
   }
 }
 
@@ -62,7 +87,10 @@ interface Totals {
 
 const ZERO: Totals = { solved: 0, failed: 0, solvedSeconds: 0, failedSeconds: 0 }
 
-function add(totals: Totals, row: TrainingStatsData['rounds'][number]): Totals {
+function add(
+  totals: Totals,
+  row: { result: AttemptResult; attempts: number; total_seconds: number },
+): Totals {
   return row.result === 'solved'
     ? {
         ...totals,
@@ -91,7 +119,9 @@ function toKpi({ solved, failed, solvedSeconds, failedSeconds }: Totals): Kpi {
   }
 }
 
-function kpiOf(rows: TrainingStatsData['rounds']): Kpi {
+function kpiOf(
+  rows: { result: AttemptResult; attempts: number; total_seconds: number }[],
+): Kpi {
   return toKpi(rows.reduce(add, ZERO))
 }
 
@@ -124,6 +154,31 @@ export function summarizeTraining(data: TrainingStatsData): TrainingStatsSummary
   }
 }
 
+export interface PracticeStatsSummary {
+  overall: Kpi
+  /** Dalla sessione piu' recente; session null = tentativi senza sessione. */
+  bySession: { session: TrainingStatsData['sessions'][number] | null; kpi: Kpi }[]
+}
+
+export function summarizePractice(data: TrainingStatsData): PracticeStatsSummary {
+  const rows = data.practice.sessions
+  const sessions = [...data.sessions]
+    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
+    .filter((session) => rows.some((r) => r.session_id === session.id))
+    .map((session) => ({
+      session,
+      kpi: kpiOf(rows.filter((r) => r.session_id === session.id)),
+    }))
+  const unassigned = rows.filter((r) => r.session_id === null)
+  return {
+    overall: kpiOf(rows),
+    bySession:
+      unassigned.length > 0
+        ? [...sessions, { session: null, kpi: kpiOf(unassigned) }]
+        : sessions,
+  }
+}
+
 // Le classifiche sono sui temi scacchistici (tattiche, matti, finali, mosse
 // speciali, fase della partita). Restano fuori le etichette descrittive del
 // puzzle: lunghezza, valutazione finale, partita tra maestri.
@@ -151,7 +206,7 @@ export interface ThemeKpi {
  * percentuale conta di piu' la categoria con piu' puzzle.
  */
 export function rankThemes(
-  themes: TrainingStatsData['themes'],
+  themes: ThemeTotals[],
   limit = 10,
 ): { best: ThemeKpi[]; worst: ThemeKpi[] } {
   const ranked = themes

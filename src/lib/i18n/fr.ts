@@ -257,6 +257,11 @@ export const fr: Translations = {
     themesNote: (min) => `Seulement les catégories avec au moins ${min} puzzles.`,
     themesEmpty: (min) =>
       `Il faut au moins ${min} puzzles par catégorie : continuez à vous entraîner.`,
+    tabs: { training: 'Entraînement', practice: 'Entraînement libre' },
+    practiceSubtitle:
+      'Les puzzles rejoués en entraînement libre, par session d’où vous les avez ouverts.',
+    practiceEmpty: 'Aucun puzzle en entraînement libre pour l’instant.',
+    unassignedSession: 'Sans session',
   },
   sessionsHistory: {
     title: 'Historique des sessions',

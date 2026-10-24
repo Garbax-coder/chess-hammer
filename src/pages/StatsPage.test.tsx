@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { it as itTranslations } from '@/lib/i18n/translations'
@@ -56,6 +56,13 @@ describe('StatsPage', () => {
         { theme: 'fork', attempts: 12, solved: 11, total_seconds: 240 },
         { theme: 'pin', attempts: 8, solved: 2, total_seconds: 300 },
       ],
+      practice: {
+        sessions: [
+          { session_id: 's1', result: 'solved', attempts: 4, total_seconds: 40 },
+          { session_id: null, result: 'failed', attempts: 1, total_seconds: 60 },
+        ],
+        themes: [{ theme: 'skewer', attempts: 5, solved: 4, total_seconds: 50 }],
+      },
     }
     renderStats()
 
@@ -90,9 +97,74 @@ describe('StatsPage', () => {
   })
 
   it('explains that statistics appear after the first puzzle', () => {
-    data = { sessions: [], rounds: [], themes: [] }
+    data = {
+      sessions: [],
+      rounds: [],
+      themes: [],
+      practice: { sessions: [], themes: [] },
+    }
     renderStats()
     expect(screen.getByText(t.stats.empty)).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
+})
+
+describe('StatsPage free practice tab', () => {
+  it('switches to free practice totals, sessions and categories', () => {
+    data = {
+      sessions: [
+        {
+          id: 's1',
+          name: 'Tattiche autunno',
+          status: 'completed',
+          total_puzzles: 40,
+          created_at: '2026-10-01T10:00:00Z',
+          completed_at: null,
+        },
+      ],
+      rounds: [
+        { session_id: 's1', round: 1, result: 'solved', attempts: 3, total_seconds: 30 },
+      ],
+      themes: [],
+      practice: {
+        sessions: [
+          { session_id: 's1', result: 'solved', attempts: 4, total_seconds: 40 },
+          { session_id: null, result: 'failed', attempts: 1, total_seconds: 60 },
+        ],
+        themes: [{ theme: 'skewer', attempts: 5, solved: 4, total_seconds: 50 }],
+      },
+    }
+    renderStats()
+
+    expect(screen.getByRole('tab', { name: t.stats.tabs.training })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    fireEvent.click(screen.getByRole('tab', { name: t.stats.tabs.practice }))
+    expect(screen.getByRole('tab', { name: t.stats.tabs.practice })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+
+    const panel = screen.getByRole('tabpanel')
+    expect(within(panel).getByText(t.stats.practiceSubtitle)).toBeInTheDocument()
+    // Nessuna tabella per giro: la pratica libera non ha giri.
+    expect(within(panel).queryByText(t.stats.byRoundTitle)).not.toBeInTheDocument()
+    expect(within(panel).getAllByRole('table')).toHaveLength(1)
+    expect(within(panel).getByText(t.stats.unassignedSession)).toBeInTheDocument()
+    expect(within(panel).getByText(t.puzzleThemes.labels.skewer)).toBeInTheDocument()
+    expect(within(panel).getByText('80%')).toBeInTheDocument()
+  })
+
+  it('says when nothing was practiced yet', () => {
+    data = {
+      sessions: [],
+      rounds: [],
+      themes: [],
+      practice: { sessions: [], themes: [] },
+    }
+    renderStats()
+    fireEvent.click(screen.getByRole('tab', { name: t.stats.tabs.practice }))
+    expect(screen.getByText(t.stats.practiceEmpty)).toBeInTheDocument()
   })
 })

@@ -53,6 +53,19 @@ union all
 select sp.id, 1, 'failed', 30, 1500, 1500
   from public.session_puzzles sp, ids where sp.session_id = ids.session_b;
 
+-- Pratica libera di A: un tentativo con la sessione (risolto, 8 s), uno
+-- vecchio senza sessione (sbagliato, 12 s) su un puzzle della sessione, da
+-- attribuire a quella sessione. Uno di B, che A non deve vedere.
+insert into public.practice_attempts (user_id, puzzle_id, result, time_seconds, session_id, attempted_at)
+select user_a, sp.puzzle_id, 'solved', 8, session_a, now()
+  from ids join public.session_puzzles sp on sp.session_id = ids.session_a and sp.order_index = 1
+union all
+select user_a, sp.puzzle_id, 'failed', 12, null, now()
+  from ids join public.session_puzzles sp on sp.session_id = ids.session_a and sp.order_index = 2
+union all
+select user_b, sp.puzzle_id, 'solved', 3, session_b, now()
+  from ids join public.session_puzzles sp on sp.session_id = ids.session_b and sp.order_index = 1;
+
 select set_config('request.jwt.claims',
                   json_build_object('sub', user_a, 'role', 'authenticated')::text, true)
   from ids;
@@ -95,6 +108,19 @@ begin
    where sp.session_id = (select session_a from ids);
   if theme_attempts <> first_puzzle_themes then
     raise exception 'temi: attesi % conteggi, ottenuti %', first_puzzle_themes, theme_attempts;
+  end if;
+
+  -- Pratica: 2 tentativi di A, entrambi attribuiti alla sua sessione.
+  if (select sum((r ->> 'attempts')::int) from jsonb_array_elements(s -> 'practice' -> 'sessions') r) <> 2
+     or exists (select 1 from jsonb_array_elements(s -> 'practice' -> 'sessions') r
+                 where r ->> 'session_id' is distinct from (select session_a::text from ids))
+     or (select sum((r ->> 'total_seconds')::numeric)
+           from jsonb_array_elements(s -> 'practice' -> 'sessions') r) <> 20 then
+    raise exception 'pratica: attesi 2 tentativi di A (20 s) sulla sua sessione, ottenuto %',
+      s -> 'practice' -> 'sessions';
+  end if;
+  if jsonb_array_length(s -> 'practice' -> 'themes') = 0 then
+    raise exception 'pratica: temi mancanti';
   end if;
 
   raise notice 'training-stats: tutti i controlli superati';

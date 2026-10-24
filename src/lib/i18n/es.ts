@@ -255,6 +255,11 @@ export const es: Translations = {
     themesNote: (min) => `Solo las categorías con al menos ${min} puzzles.`,
     themesEmpty: (min) =>
       `Cada categoría necesita al menos ${min} puzzles: sigue entrenando.`,
+    tabs: { training: 'Entrenamiento', practice: 'Práctica libre' },
+    practiceSubtitle:
+      'Los puzzles repetidos en práctica libre, por la sesión desde la que los abriste.',
+    practiceEmpty: 'Aún no hay puzzles en práctica libre.',
+    unassignedSession: 'Sin sesión',
   },
   sessionsHistory: {
     title: 'Historial de sesiones',

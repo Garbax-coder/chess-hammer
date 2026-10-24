@@ -178,6 +178,10 @@ export interface Translations {
     themeLine: (rate: number, attempts: number) => string
     themesNote: (min: number) => string
     themesEmpty: (min: number) => string
+    tabs: { training: string; practice: string }
+    practiceSubtitle: string
+    practiceEmpty: string
+    unassignedSession: string
   }
   sessionsHistory: {
     title: string
@@ -693,6 +697,11 @@ export const it: Translations = {
     themeLine: (rate, attempts) => `${rate}% · ${attempts} puzzle`,
     themesNote: (min) => `Solo le categorie con almeno ${min} puzzle.`,
     themesEmpty: (min) => `Servono almeno ${min} puzzle per categoria: continua ad allenarti.`,
+    tabs: { training: 'Allenamento', practice: 'Pratica libera' },
+    practiceSubtitle:
+      'I puzzle rigiocati in pratica libera, divisi per la sessione da cui li hai aperti.',
+    practiceEmpty: 'Ancora nessun puzzle in pratica libera.',
+    unassignedSession: 'Senza sessione',
   },
   sessionsHistory: {
     title: 'Storico sessioni',
@@ -1284,6 +1293,11 @@ export const en: Translations = {
     themeLine: (rate, attempts) => `${rate}% · ${attempts} puzzles`,
     themesNote: (min) => `Only categories with at least ${min} puzzles.`,
     themesEmpty: (min) => `Each category needs at least ${min} puzzles: keep training.`,
+    tabs: { training: 'Training', practice: 'Free practice' },
+    practiceSubtitle:
+      'Puzzles replayed in free practice, split by the session you opened them from.',
+    practiceEmpty: 'No free practice puzzles yet.',
+    unassignedSession: 'No session',
   },
   sessionsHistory: {
     title: 'Session history',
