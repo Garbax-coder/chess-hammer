@@ -29,7 +29,6 @@ import {
 } from '@/hooks/use-puzzle-session'
 import { sessionRoundStatsKey } from '@/hooks/use-session-stats'
 import {
-  usePuzzleById,
   useRecordPracticeAttempt,
   usePracticeAttempts,
 } from '@/hooks/use-practice'
@@ -38,6 +37,7 @@ import { useSessionPuzzles } from '@/hooks/use-session-history'
 import { useSoundEnabled } from '@/hooks/use-sound-enabled'
 import { entriesForDay, todayKey } from '@/lib/session-days'
 import {
+  boardPuzzleFrom,
   deriveSessionProgress,
   practicePool,
   practiceResumePuzzle,
@@ -81,7 +81,6 @@ export default function TrainPage() {
     sessionPuzzleId: string
     puzzleId: string
   } | null>(null)
-  const { data: practicePuzzle } = usePuzzleById(practiceSelection?.puzzleId)
 
   const updatePracticeFilter = useUpdatePracticeFilter()
   const { data: savedPuzzleIds } = useSavedPuzzles()
@@ -100,10 +99,14 @@ export default function TrainPage() {
   // la posizione del puzzle in pratica libera esattamente come in giro
   // ufficiale, quindi si ricava dalla stessa lista invece di portarsela
   // dietro in practiceSelection.
-  const practiceOrderIndex = practiceSelection
+  const practiceResult = practiceSelection
     ? puzzles?.find((p) => p.sessionPuzzleId === practiceSelection.sessionPuzzleId)
-        ?.orderIndex
     : undefined
+  const practiceOrderIndex = practiceResult?.orderIndex
+  const practicePuzzle = useMemo(
+    () => (practiceResult ? boardPuzzleFrom(practiceResult) : undefined),
+    [practiceResult],
+  )
 
   // Riepilogo del giorno corrente, mostrato a fine quota/giro/sessione (vedi
   // sotto): calcolato dagli stessi dati gia' in mano (puzzles), nessuna

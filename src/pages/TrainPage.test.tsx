@@ -40,9 +40,6 @@ vi.mock('@/hooks/use-puzzle-session', () => ({
   useRecordAttempt: () => ({ mutateAsync: recordAttempt, isPending: false }),
 }))
 vi.mock('@/hooks/use-practice', () => ({
-  usePuzzleById: (puzzleId: string | undefined) => ({
-    data: puzzleId ? makeLichessPuzzle({ puzzle_id: puzzleId }) : undefined,
-  }),
   useRecordPracticeAttempt: () => ({
     mutateAsync: recordPracticeAttempt,
     isPending: false,

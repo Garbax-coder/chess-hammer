@@ -24,11 +24,15 @@ interface UserStats {
   legal_version: string | null
 }
 
+export function userStatsKey(userId: string | undefined) {
+  return ['user-stats', userId]
+}
+
 export function useUserStats() {
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['user-stats', user?.id],
+    queryKey: userStatsKey(user?.id),
     queryFn: async (): Promise<UserStats> => {
       const { data, error } = await supabase
         .from('user_stats')
@@ -44,22 +48,44 @@ export function useUserStats() {
   })
 }
 
-export function useUpdateAutoAdvance() {
+// Tutte le preferenze si salvano allo stesso modo: il valore nuovo va subito
+// in cache (l'interfaccia lo mostra senza aspettare il database) e dopo il
+// salvataggio NON si rilegge user_stats, che tornerebbe identica a quella
+// gia' in cache: era una richiesta in piu' a ogni modifica. Solo se il
+// salvataggio fallisce si rilegge, per rimettere il valore vero.
+function useUpdateUserStats<T>(toPatch: (value: T) => Partial<UserStats>) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const queryKey = userStatsKey(user?.id)
 
   return useMutation({
-    mutationFn: async (autoAdvance: boolean) => {
+    mutationFn: async (value: T) => {
+      const patch = toPatch(value)
       const { error } = await supabase
         .from('user_stats')
-        .update({ auto_advance: autoAdvance })
+        .update(
+          // Con la versione accettata si registra anche quando (solo nel
+          // database: in cache non serve).
+          'legal_version' in patch
+            ? { ...patch, legal_accepted_at: new Date().toISOString() }
+            : patch,
+        )
         .eq('user_id', user!.id)
       if (error) throw error
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-stats', user?.id] })
+    onMutate: (value) => {
+      queryClient.setQueryData<UserStats>(queryKey, (current) =>
+        current ? { ...current, ...toPatch(value) } : current,
+      )
+    },
+    onError: () => {
+      void queryClient.invalidateQueries({ queryKey })
     },
   })
+}
+
+export function useUpdateAutoAdvance() {
+  return useUpdateUserStats((autoAdvance: boolean) => ({ auto_advance: autoAdvance }))
 }
 
 type PracticeFilterPatch = Partial<
@@ -69,129 +95,32 @@ type PracticeFilterPatch = Partial<
   >
 >
 
-// Ottimistico (a differenza degli altri): il filtro decide subito il puzzle
-// di "Continua in pratica libera", che non deve partire col valore vecchio
-// se viene premuto prima che la rilettura di user_stats sia tornata.
+// Il filtro decide subito il puzzle di "Continua in pratica libera", che non
+// deve partire col valore vecchio: per questo la cache si aggiorna prima del
+// salvataggio (vale per tutte le preferenze, vedi useUpdateUserStats).
 export function useUpdatePracticeFilter() {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-  const queryKey = ['user-stats', user?.id]
-
-  return useMutation({
-    mutationFn: async (patch: PracticeFilterPatch) => {
-      const { error } = await supabase
-        .from('user_stats')
-        .update(patch)
-        .eq('user_id', user!.id)
-      if (error) throw error
-    },
-    onMutate: (patch) => {
-      queryClient.setQueryData<UserStats>(queryKey, (current) =>
-        current ? { ...current, ...patch } : current,
-      )
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey })
-    },
-  })
+  return useUpdateUserStats((patch: PracticeFilterPatch) => patch)
 }
 
-// Ottimistico: lo stile ricolora subito tutta l'interfaccia, senza aspettare
-// la rilettura di user_stats.
+// Lo stile ricolora subito tutta l'interfaccia.
 export function useUpdateAppStyle() {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-  const queryKey = ['user-stats', user?.id]
-
-  return useMutation({
-    mutationFn: async (appStyle: AppStyleId) => {
-      const { error } = await supabase
-        .from('user_stats')
-        .update({ app_style: appStyle })
-        .eq('user_id', user!.id)
-      if (error) throw error
-    },
-    onMutate: (appStyle) => {
-      queryClient.setQueryData<UserStats>(queryKey, (current) =>
-        current ? { ...current, app_style: appStyle } : current,
-      )
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey })
-    },
-  })
+  return useUpdateUserStats((appStyle: AppStyleId) => ({ app_style: appStyle }))
 }
 
 export function useUpdateLanguage() {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (language: Language) => {
-      const { error } = await supabase
-        .from('user_stats')
-        .update({ language })
-        .eq('user_id', user!.id)
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-stats', user?.id] })
-    },
-  })
+  return useUpdateUserStats((language: Language) => ({ language }))
 }
 
 export function useUpdateBoardTheme() {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (boardTheme: BoardThemeId) => {
-      const { error } = await supabase
-        .from('user_stats')
-        .update({ board_theme: boardTheme })
-        .eq('user_id', user!.id)
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-stats', user?.id] })
-    },
-  })
+  return useUpdateUserStats((boardTheme: BoardThemeId) => ({ board_theme: boardTheme }))
 }
 
 export function useUpdatePieceSet() {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (pieceSet: PieceSetId) => {
-      const { error } = await supabase
-        .from('user_stats')
-        .update({ piece_set: pieceSet })
-        .eq('user_id', user!.id)
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-stats', user?.id] })
-    },
-  })
+  return useUpdateUserStats((pieceSet: PieceSetId) => ({ piece_set: pieceSet }))
 }
 
 // Accettazione della versione attuale di Termini/Privacy dall'avviso
 // nell'app (la registrazione con email la salva gia' dal trigger handle_new_user).
 export function useAcceptLegalTerms() {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (version: string) => {
-      const { error } = await supabase
-        .from('user_stats')
-        .update({ legal_version: version, legal_accepted_at: new Date().toISOString() })
-        .eq('user_id', user!.id)
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-stats', user?.id] })
-    },
-  })
+  return useUpdateUserStats((version: string) => ({ legal_version: version }))
 }

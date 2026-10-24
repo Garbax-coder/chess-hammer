@@ -12,7 +12,13 @@ import { LanguageProvider } from '@/lib/language-context'
 import { marketingPageForPath } from '@/lib/marketing'
 import { installStaleChunkReload } from '@/lib/stale-chunk-reload'
 
-const queryClient = new QueryClient()
+// I dati dell'utente cambiano solo per le sue azioni, e ogni azione aggiorna
+// o segna come vecchi i dati che tocca. Con il default (staleTime 0) ogni
+// pagina aperta e ogni ritorno sulla scheda riscaricavano tutto di nuovo:
+// per un minuto si riusa quello che c'e' gia'.
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { staleTime: 60 * 1000 } },
+})
 
 // Prima di montare l'app si caricano i testi della lingua con cui partira'
 // (quella dell'URL sulle pagine pubbliche, altrimenti quella scelta in questo

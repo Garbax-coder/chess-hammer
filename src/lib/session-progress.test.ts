@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { makePuzzleResult, makeSession, withAttempt } from '@/test/fixtures'
 import type { PracticeAttempt } from '@/types/training'
 import {
+  boardPuzzleFrom,
   deriveSessionProgress,
   isFailedPuzzle,
   practicePool,
@@ -266,5 +267,23 @@ describe('practiceResumePuzzle with the session of each attempt', () => {
     expect(practiceResumePuzzle(pool, attempts, filter, createdAt, 's1')?.puzzleId).toBe(
       'p3',
     )
+  })
+})
+
+describe('boardPuzzleFrom', () => {
+  it('takes what the board needs from the session list, without the full puzzle', () => {
+    const result = makePuzzleResult({
+      puzzleId: 'abc12',
+      fen: '8/8/8/8/8/8/8/K6k w - - 0 1',
+      moves: ['a1a2', 'h1h2'],
+      rating: 1430,
+    })
+
+    expect(boardPuzzleFrom(result)).toEqual({
+      puzzle_id: 'abc12',
+      fen: '8/8/8/8/8/8/8/K6k w - - 0 1',
+      moves: ['a1a2', 'h1h2'],
+      rating: 1430,
+    })
   })
 })

@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
   usePracticeAttempts,
-  usePuzzleById,
   useRecordPracticeAttempt,
 } from '@/hooks/use-practice'
 import { useSavedPuzzles, useToggleSavedPuzzle } from '@/hooks/use-saved-puzzles'
@@ -24,6 +23,7 @@ import {
 } from '@/hooks/use-user-stats'
 import { useTranslations } from '@/lib/language-context'
 import {
+  boardPuzzleFrom,
   practicePool,
   practiceResumePuzzle,
   type PracticeFilter,
@@ -61,7 +61,10 @@ export default function SessionDetailPage() {
   const selectedPuzzle = data?.puzzles.find(
     (p) => p.sessionPuzzleId === selectedSessionPuzzleId,
   )
-  const { data: practicePuzzle } = usePuzzleById(selectedPuzzle?.puzzleId)
+  const practicePuzzle = useMemo(
+    () => (selectedPuzzle ? boardPuzzleFrom(selectedPuzzle) : undefined),
+    [selectedPuzzle],
+  )
 
   const puzzleIds = useMemo(() => data?.puzzles.map((p) => p.puzzleId) ?? [], [data])
   const { data: practiceAttemptsByPuzzle } = usePracticeAttempts(puzzleIds)

@@ -65,6 +65,10 @@ export interface LichessPuzzle {
   opening_tags: string[]
 }
 
+/** Quello che serve alla scacchiera: c'e' gia' nella lista dei puzzle della
+ *  sessione (SessionPuzzleResult), senza rileggere il puzzle completo. */
+export type BoardPuzzle = Pick<LichessPuzzle, 'puzzle_id' | 'fen' | 'moves' | 'rating'>
+
 export interface SessionPuzzle {
   id: string
   session_id: string
