@@ -1,8 +1,9 @@
-import type { Breadcrumb, ErrorEvent } from '@sentry/react'
+import type { Breadcrumb, BrowserOptions, ErrorEvent } from '@sentry/react'
 import { isStaleChunkNoise } from '@/lib/stale-chunk-reload'
 
-// Segnalazione degli errori con Sentry (regione UE), attiva solo in
-// produzione e solo se VITE_SENTRY_DSN e' impostata. Il pacchetto si scarica
+// Segnalazione degli errori e misura delle prestazioni (tracing) con Sentry
+// (regione UE), attive solo in produzione e solo se VITE_SENTRY_DSN e'
+// impostata. Il pacchetto si scarica
 // dopo il caricamento della pagina, per non pesare sul primo avvio: un errore
 // nei primissimi istanti puo' sfuggire, gli altri arrivano tutti.
 //
@@ -28,6 +29,31 @@ export function scrubBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb | null {
     if (typeof scrubbed[key] === 'string') scrubbed[key] = scrubUrl(scrubbed[key])
   }
   return { ...breadcrumb, data: scrubbed }
+}
+
+// Lo span come lo riceve beforeSendSpan (formato "streamed" dell'SDK v11).
+type StreamedSpanJSON = Parameters<NonNullable<BrowserOptions['beforeSendSpan']>>[0]
+
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi
+const DAY = /\b\d{4}-\d{2}-\d{2}\b/g
+
+/** Toglie da un indirizzo o da un nome query string, frammento, id e date. */
+export function scrubPath(text: string): string {
+  return scrubUrl(text).replace(UUID, ':id').replace(DAY, ':date')
+}
+
+/**
+ * Gli span del tracing (caricamento pagine, navigazione, chiamate a Supabase)
+ * portano indirizzi: senza query string (le chiamate a Supabase hanno filtri
+ * come user_id=eq.<id>) e con id e date al posto dei valori, cosi'
+ * /sessions/<id>/summary diventa /sessions/:id/summary.
+ */
+export function scrubSpan(span: StreamedSpanJSON): StreamedSpanJSON {
+  const attributes: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(span.attributes ?? {})) {
+    attributes[key] = typeof value === 'string' ? scrubPath(value) : value
+  }
+  return { ...span, name: scrubPath(span.name), attributes }
 }
 
 export function scrubEvent(event: ErrorEvent): ErrorEvent {
@@ -58,8 +84,18 @@ export function startErrorMonitoring() {
             stackFrameVariables: false,
           },
           // Le sessioni ("release health") manderebbero una richiesta a ogni
-          // visita: servono solo gli errori.
-          integrations: (defaults) => defaults.filter((i) => i.name !== 'BrowserSession'),
+          // visita: servono solo errori e prestazioni.
+          integrations: (defaults) => [
+            ...defaults.filter((i) => i.name !== 'BrowserSession'),
+            // Tempi di caricamento delle pagine, della navigazione e delle
+            // chiamate a Supabase (le intestazioni di tracciamento vanno solo
+            // al sito stesso, non a Supabase).
+            Sentry.browserTracingIntegration(),
+          ],
+          // Tutte le visite: con pochi utenti si resta ampiamente nella quota
+          // gratuita (5 milioni di span al mese).
+          tracesSampleRate: 1,
+          beforeSendSpan: scrubSpan,
           beforeBreadcrumb: scrubBreadcrumb,
           beforeSend: (event) => {
             const message =

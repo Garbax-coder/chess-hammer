@@ -1,6 +1,12 @@
 import type { ErrorEvent } from '@sentry/react'
 import { describe, expect, it } from 'vitest'
-import { scrubBreadcrumb, scrubEvent, scrubUrl } from './error-monitoring'
+import {
+  scrubBreadcrumb,
+  scrubEvent,
+  scrubPath,
+  scrubSpan,
+  scrubUrl,
+} from './error-monitoring'
 
 describe('error monitoring privacy', () => {
   it('removes query strings and fragments, where auth tokens travel', () => {
@@ -52,5 +58,57 @@ describe('error monitoring privacy', () => {
     expect(scrubbed.request?.url).toBe('https://chesshammer.com/dashboard')
     expect(scrubbed.request?.cookies).toBeUndefined()
     expect(scrubbed.user).toBeUndefined()
+  })
+})
+
+describe('tracing privacy', () => {
+  const ID = '5d3e20cf-f7d4-4d28-ae19-8746880b4067'
+
+  it('replaces ids and dates in page names', () => {
+    expect(scrubPath(`/sessions/${ID}/summary`)).toBe('/sessions/:id/summary')
+    expect(scrubPath(`/sessions/${ID}/day/2026-10-18`)).toBe('/sessions/:id/day/:date')
+    expect(scrubPath('/sessions')).toBe('/sessions')
+  })
+
+  it('drops the filters of Supabase calls, which carry the user id', () => {
+    const span = {
+      trace_id: 't',
+      span_id: 's',
+      name: `GET https://x.supabase.co/rest/v1/user_stats?select=current_elo&user_id=eq.${ID}`,
+      start_timestamp: 0,
+      status: 'ok' as const,
+      is_segment: false,
+      attributes: {
+        'url.full': `https://x.supabase.co/rest/v1/user_stats?select=current_elo&user_id=eq.${ID}`,
+        'http.response.status_code': 200,
+        'sentry.op': 'http.client',
+      },
+    }
+    const scrubbed = scrubSpan(span)
+
+    expect(scrubbed.name).toBe('GET https://x.supabase.co/rest/v1/user_stats')
+    expect(scrubbed.attributes).toEqual({
+      'url.full': 'https://x.supabase.co/rest/v1/user_stats',
+      'http.response.status_code': 200,
+      'sentry.op': 'http.client',
+    })
+    expect(JSON.stringify(scrubbed)).not.toContain(ID)
+  })
+
+  it('keeps the auth tokens of the page address out of the page load span', () => {
+    const span = {
+      trace_id: 't',
+      span_id: 's',
+      name: '/reset-password',
+      start_timestamp: 0,
+      status: 'ok' as const,
+      is_segment: true,
+      attributes: {
+        'url.full': 'https://chesshammer.com/reset-password#access_token=abc',
+      },
+    }
+    expect(scrubSpan(span).attributes['url.full']).toBe(
+      'https://chesshammer.com/reset-password',
+    )
   })
 })

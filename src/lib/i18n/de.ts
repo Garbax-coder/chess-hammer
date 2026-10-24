@@ -497,6 +497,7 @@ export const de: Translations = {
       'Wir haben unsere Nutzungsbedingungen und Datenschutzerklärung aktualisiert',
     updatedIntro: 'Das ändert sich:',
     changes: [
+      'Wir messen mit Sentry die Ladezeiten der Seiten und der Anfragen an den Server, um Langsames zu finden: ohne E-Mail-Adresse, Namen oder IP-Adresse, nach 30 Tagen gelöscht.',
       'Der Verantwortliche kann die Daten deines Kontos für Support und Betrieb des Dienstes schreibgeschützt einsehen, in einem Bereich, auf den nur er Zugriff hat.',
     ],
     continuing:

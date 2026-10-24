@@ -11,7 +11,7 @@ export default function PrivacyIt() {
   return (
     <>
       <p>
-        Ultimo aggiornamento: 18 ottobre 2026. Questa informativa descrive quali dati
+        Ultimo aggiornamento: 24 ottobre 2026. Questa informativa descrive quali dati
         personali raccoglie {SITE_DOMAIN} ("Chess Hammer", "il Servizio"), per quali
         finalità e con quali diritti puoi gestirli, in base al Regolamento (UE) 2016/679
         (GDPR).
@@ -51,6 +51,12 @@ export default function PrivacyIt() {
           allenamento). Non contiene la tua email, il tuo nome né il tuo indirizzo IP.
         </li>
         <li>
+          <b>Misure di prestazione:</b> i tempi di caricamento delle pagine e delle
+          richieste al server, per capire cosa è lento (pagina e indirizzo delle richieste
+          senza parametri né identificativi, tipo di browser e sistema operativo, versione
+          dell'app). Non contengono la tua email, il tuo nome né il tuo indirizzo IP.
+        </li>
+        <li>
           <b>Dati tecnici minimi:</b> indirizzo IP e informazioni del browser, trattati
           dai nostri fornitori di infrastruttura (sotto) per il solo funzionamento del
           Servizio e la sicurezza; non li usiamo per profilarti.
@@ -74,9 +80,9 @@ export default function PrivacyIt() {
           a proteggere il Servizio e i suoi utenti.
         </li>
         <li>
-          <b>Correzione degli errori</b> (sapere quando e dove l'app si guasta, e
-          controllare che il sito sia raggiungibile): legittimo interesse a offrire un
-          Servizio funzionante.
+          <b>Correzione degli errori e delle lentezze</b> (sapere quando e dove l'app si
+          guasta o rallenta, e controllare che il sito sia raggiungibile): legittimo
+          interesse a offrire un Servizio funzionante.
         </li>
         <li>
           <b>Statistiche d'uso aggregate</b> (quante persone si allenano, quanto spesso
@@ -116,9 +122,10 @@ export default function PrivacyIt() {
           infrastruttura nella regione UE (Belgio).
         </li>
         <li>
-          <b>Sentry</b> (segnalazioni di errore e controllo della raggiungibilità del
-          sito) — dati conservati nella regione UE (Germania). Il controllo di
-          raggiungibilità interroga il sito da più paesi e non riguarda dati personali.
+          <b>Sentry</b> (segnalazioni di errore, misure di prestazione e controllo della
+          raggiungibilità del sito) — dati conservati nella regione UE (Germania). Il
+          controllo di raggiungibilità interroga il sito da più paesi e non riguarda dati
+          personali.
         </li>
         <li>
           <b>Cloudflare</b> (verifica anti-bot "Turnstile" su registrazione, accesso e
@@ -148,10 +155,10 @@ export default function PrivacyIt() {
         copia di sicurezza del database viene salvata ogni settimana su Google Cloud, in
         un archivio privato nell'Unione Europea, e conservata per un massimo di 8
         settimane: entro questo termine i dati di un account eliminato spariscono anche
-        dalle copie. Le segnalazioni di errore sono cancellate dopo 30 giorni. Se non usi
-        il tuo account per 24 mesi lo eliminiamo, con tutti i suoi dati: ti avvisiamo via
-        email 30 giorni prima, e per tenerlo basta accedere. Gli account registrati ma mai
-        confermati vengono eliminati dopo 7 giorni.
+        dalle copie. Le segnalazioni di errore e le misure di prestazione sono cancellate
+        dopo 30 giorni. Se non usi il tuo account per 24 mesi lo eliminiamo, con tutti i
+        suoi dati: ti avvisiamo via email 30 giorni prima, e per tenerlo basta accedere.
+        Gli account registrati ma mai confermati vengono eliminati dopo 7 giorni.
       </p>
 
       <h2>Cookie e memoria del browser</h2>
