@@ -33,6 +33,7 @@ export interface Translations {
     dashboard: string
     train: string
     history: string
+    stats: string
     faq: string
     menu: string
     toggleTheme: string
@@ -144,6 +145,43 @@ export interface Translations {
   puzzleThemes: {
     categories: Record<PuzzleThemeCategoryId, string>
     labels: Record<string, string>
+  }
+  // Statistiche dell'utente (pagina /stats, vedi training-stats.ts).
+  stats: {
+    title: string
+    subtitle: string
+    empty: string
+    overviewTitle: string
+    tiles: {
+      attempts: string
+      solved: string
+      failed: string
+      average: string
+      averageSolved: string
+      averageFailed: string
+    }
+    byRoundTitle: string
+    bySessionTitle: string
+    columns: {
+      round: string
+      session: string
+      puzzles: string
+      solved: string
+      failed: string
+      average: string
+      averageSolved: string
+      averageFailed: string
+    }
+    sessionFallback: (date: string) => string
+    bestTitle: string
+    worstTitle: string
+    themeLine: (rate: number, attempts: number) => string
+    themesNote: (min: number) => string
+    themesEmpty: (min: number) => string
+    tabs: { training: string; practice: string }
+    practiceSubtitle: string
+    practiceEmpty: string
+    unassignedSession: string
   }
   sessionsHistory: {
     title: string
@@ -423,6 +461,7 @@ export const it: Translations = {
     dashboard: 'Dashboard',
     train: 'Allenamento',
     history: 'Storico',
+    stats: 'Statistiche',
     faq: 'FAQ',
     menu: 'Menu',
     toggleTheme: 'Cambia tema',
@@ -624,6 +663,45 @@ export const it: Translations = {
       castling: 'Arrocco',
       underPromotion: 'Sottopromozione',
     },
+  },
+  stats: {
+    title: 'Statistiche',
+    subtitle:
+      "I puzzle dell'allenamento ufficiale, in tutti i giri. La pratica libera non conta.",
+    empty:
+      "Ancora nessun puzzle giocato: le statistiche compaiono dal primo puzzle dell'allenamento.",
+    overviewTitle: 'In totale',
+    tiles: {
+      attempts: 'Puzzle giocati',
+      solved: 'Risolti',
+      failed: 'Sbagliati',
+      average: 'Tempo medio',
+      averageSolved: 'Medio risolti',
+      averageFailed: 'Medio sbagliati',
+    },
+    byRoundTitle: 'Per giro',
+    bySessionTitle: 'Per sessione',
+    columns: {
+      round: 'Giro',
+      session: 'Sessione',
+      puzzles: 'Puzzle',
+      solved: 'Risolti',
+      failed: 'Sbagliati',
+      average: 'Tempo medio',
+      averageSolved: 'Medio risolti',
+      averageFailed: 'Medio sbagliati',
+    },
+    sessionFallback: (date) => `Sessione del ${date}`,
+    bestTitle: 'Categorie migliori',
+    worstTitle: 'Categorie peggiori',
+    themeLine: (rate, attempts) => `${rate}% · ${attempts} puzzle`,
+    themesNote: (min) => `Solo le categorie con almeno ${min} puzzle.`,
+    themesEmpty: (min) => `Servono almeno ${min} puzzle per categoria: continua ad allenarti.`,
+    tabs: { training: 'Allenamento', practice: 'Pratica libera' },
+    practiceSubtitle:
+      'I puzzle rigiocati in pratica libera, divisi per la sessione da cui li hai aperti.',
+    practiceEmpty: 'Ancora nessun puzzle in pratica libera.',
+    unassignedSession: 'Senza sessione',
   },
   sessionsHistory: {
     title: 'Storico sessioni',
@@ -979,6 +1057,7 @@ export const en: Translations = {
     dashboard: 'Dashboard',
     train: 'Training',
     history: 'History',
+    stats: 'Statistics',
     faq: 'FAQ',
     menu: 'Menu',
     toggleTheme: 'Toggle theme',
@@ -1180,6 +1259,45 @@ export const en: Translations = {
       castling: 'Castling',
       underPromotion: 'Underpromotion',
     },
+  },
+  stats: {
+    title: 'Statistics',
+    subtitle:
+      "Official training puzzles, across all rounds. Free practice doesn't count.",
+    empty:
+      'No puzzles played yet: statistics appear from your first training puzzle.',
+    overviewTitle: 'Overall',
+    tiles: {
+      attempts: 'Puzzles played',
+      solved: 'Solved',
+      failed: 'Failed',
+      average: 'Average time',
+      averageSolved: 'Avg. solved',
+      averageFailed: 'Avg. failed',
+    },
+    byRoundTitle: 'By round',
+    bySessionTitle: 'By session',
+    columns: {
+      round: 'Round',
+      session: 'Session',
+      puzzles: 'Puzzles',
+      solved: 'Solved',
+      failed: 'Failed',
+      average: 'Average time',
+      averageSolved: 'Avg. solved',
+      averageFailed: 'Avg. failed',
+    },
+    sessionFallback: (date) => `Session from ${date}`,
+    bestTitle: 'Best categories',
+    worstTitle: 'Worst categories',
+    themeLine: (rate, attempts) => `${rate}% · ${attempts} puzzles`,
+    themesNote: (min) => `Only categories with at least ${min} puzzles.`,
+    themesEmpty: (min) => `Each category needs at least ${min} puzzles: keep training.`,
+    tabs: { training: 'Training', practice: 'Free practice' },
+    practiceSubtitle:
+      'Puzzles replayed in free practice, split by the session you opened them from.',
+    practiceEmpty: 'No free practice puzzles yet.',
+    unassignedSession: 'No session',
   },
   sessionsHistory: {
     title: 'Session history',

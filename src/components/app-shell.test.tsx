@@ -35,6 +35,7 @@ describe('AppShell mobile menu', () => {
       itTranslations.nav.dashboard,
       itTranslations.nav.train,
       itTranslations.nav.history,
+      itTranslations.nav.stats,
       itTranslations.nav.faq,
     ])
 

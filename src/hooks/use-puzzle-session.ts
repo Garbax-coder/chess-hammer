@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
 import { sessionRoundStatsKey } from '@/hooks/use-session-stats'
+import { trainingStatsKey } from '@/hooks/use-training-stats'
 import { syncSessionPuzzles } from '@/lib/session-puzzles-cache'
 import {
   getNextPuzzle,
@@ -99,6 +100,12 @@ export function useRecordAttempt(session: TrainingSession | null | undefined) {
       if (roundChanged && outcome.status !== 'session_complete') {
         queryClient.invalidateQueries({ queryKey: ['active-session', user?.id] })
       }
+      // Le statistiche dell'utente vanno rilette alla prossima apertura
+      // della pagina (solo segnate come vecchie: nessuna richiesta adesso).
+      queryClient.invalidateQueries({
+        queryKey: trainingStatsKey(user?.id),
+        refetchType: 'none',
+      })
       // I riepiloghi di fine giro leggono statistiche aggiornate.
       if (roundChanged) {
         queryClient.invalidateQueries({ queryKey: sessionRoundStatsKey(user?.id) })
