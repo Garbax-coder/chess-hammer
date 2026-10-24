@@ -1,5 +1,5 @@
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
+import { Bookmark, X } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { useUpdatePracticeFilter } from '@/hooks/use-user-stats'
 import { useTranslations } from '@/lib/language-context'
 import type { PracticeFilter } from '@/lib/session-progress'
@@ -7,7 +7,8 @@ import type { PracticeFilter } from '@/lib/session-progress'
 /**
  * Su quali puzzle si esercita la pratica libera: i falliti (in qualunque giro
  * o solo nell'ultimo), i problematici salvati, entrambi, o (nessuno dei due)
- * tutti. Stesso controllo in allenamento e nel dettaglio di una sessione.
+ * tutti. Pulsanti compatti nell'intestazione della lista dei puzzle, che e'
+ * cio' che filtrano; stesso controllo in tutte le schermate di risoluzione.
  */
 export function PracticeFilterControls({
   filter,
@@ -16,37 +17,44 @@ export function PracticeFilterControls({
 }: {
   filter: PracticeFilter
   update: ReturnType<typeof useUpdatePracticeFilter>['mutate']
-  // Solo "problematici" attivo ma nessuno salvato in questa sessione.
+  // Solo "problematici" attivo ma nessuno salvato in questa lista.
   showNoSavedHint?: boolean
 }) {
   const t = useTranslations()
+  const onlySaved = filter.onlySaved ?? false
 
   return (
-    <div className="flex flex-col gap-2 pl-1">
+    <div className="flex flex-col gap-1.5">
       <span className="text-muted-foreground text-xs">{t.train.practiceOnlyTitle}</span>
-      <div className="flex items-center gap-2">
-        <Switch
-          id="only-failed-practice"
-          checked={filter.onlyFailed}
-          onCheckedChange={(checked) => update({ practice_only_failed: checked })}
-        />
-        <Label htmlFor="only-failed-practice" className="text-muted-foreground text-sm">
+      <div className="flex flex-wrap gap-1">
+        <FilterToggle
+          pressed={filter.onlyFailed}
+          onClick={() => update({ practice_only_failed: !filter.onlyFailed })}
+          icon={<X className="size-3" />}
+        >
           {t.train.failedPuzzles}
-        </Label>
+        </FilterToggle>
+        <FilterToggle
+          pressed={onlySaved}
+          onClick={() => update({ practice_only_saved: !onlySaved })}
+          icon={<Bookmark className="size-3" />}
+        >
+          {t.train.savedPuzzles}
+        </FilterToggle>
       </div>
 
       {filter.onlyFailed && (
-        <div className="flex gap-1 pl-9">
+        <div className="bg-muted/60 flex w-fit gap-0.5 rounded-md p-0.5">
           {(['all', 'lastRound'] as const).map((scope) => (
             <button
               key={scope}
               type="button"
               onClick={() => update({ practice_failed_scope: scope })}
               aria-pressed={filter.scope === scope}
-              className={`rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+              className={`rounded px-2 py-0.5 text-xs font-medium transition-colors ${
                 filter.scope === scope
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {scope === 'all' ? t.train.failedScopeAll : t.train.failedScopeLastRound}
@@ -55,19 +63,37 @@ export function PracticeFilterControls({
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <Switch
-          id="only-saved-practice"
-          checked={filter.onlySaved ?? false}
-          onCheckedChange={(checked) => update({ practice_only_saved: checked })}
-        />
-        <Label htmlFor="only-saved-practice" className="text-muted-foreground text-sm">
-          {t.train.savedPuzzles}
-        </Label>
-      </div>
       {showNoSavedHint && (
-        <p className="text-muted-foreground pl-9 text-xs">{t.train.noSavedPuzzles}</p>
+        <p className="text-muted-foreground text-xs">{t.train.noSavedPuzzles}</p>
       )}
     </div>
+  )
+}
+
+function FilterToggle({
+  pressed,
+  onClick,
+  icon,
+  children,
+}: {
+  pressed: boolean
+  onClick: () => void
+  icon: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      onClick={onClick}
+      className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-colors ${
+        pressed
+          ? 'border-primary bg-primary/10 text-primary'
+          : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'
+      }`}
+    >
+      {icon}
+      {children}
+    </button>
   )
 }

@@ -19,10 +19,14 @@ describe('PracticeFilterControls', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('switch', { name: t.train.savedPuzzles }))
+    fireEvent.click(screen.getByRole('button', { name: t.train.savedPuzzles }))
     expect(update).toHaveBeenLastCalledWith({ practice_only_saved: true })
-    fireEvent.click(screen.getByRole('switch', { name: t.train.failedPuzzles }))
+    fireEvent.click(screen.getByRole('button', { name: t.train.failedPuzzles }))
     expect(update).toHaveBeenLastCalledWith({ practice_only_failed: true })
+    expect(screen.getByRole('button', { name: t.train.failedPuzzles })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
     // Lo scope dei falliti compare solo col filtro dei falliti attivo.
     expect(
       screen.queryByRole('button', { name: t.train.failedScopeLastRound }),
@@ -36,8 +40,14 @@ describe('PracticeFilterControls', () => {
         update={() => {}}
       />,
     )
-    expect(screen.getByRole('switch', { name: t.train.failedPuzzles })).toBeChecked()
-    expect(screen.getByRole('switch', { name: t.train.savedPuzzles })).toBeChecked()
+    expect(screen.getByRole('button', { name: t.train.failedPuzzles })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: t.train.savedPuzzles })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
     expect(
       screen.getByRole('button', { name: t.train.failedScopeLastRound }),
     ).toHaveAttribute('aria-pressed', 'true')

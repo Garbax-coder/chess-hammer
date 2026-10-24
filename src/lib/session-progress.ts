@@ -142,5 +142,6 @@ export function boardPuzzleFrom(result: SessionPuzzleResult): BoardPuzzle {
     fen: result.fen,
     moves: result.moves,
     rating: result.rating,
+    themes: result.themes,
   }
 }

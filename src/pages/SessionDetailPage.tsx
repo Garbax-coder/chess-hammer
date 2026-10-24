@@ -4,23 +4,17 @@ import { EditableSessionName } from '@/components/editable-session-name'
 import { PracticeFilterControls } from '@/components/practice-filter-controls'
 import { PuzzleBoard } from '@/components/puzzle-board'
 import { PuzzleBoardSkeleton } from '@/components/puzzle-board-skeleton'
+import { PuzzleSidebar } from '@/components/puzzle-sidebar'
 import { SavePuzzleToggle } from '@/components/save-puzzle-toggle'
 import { SessionPuzzleList } from '@/components/session-puzzle-list'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import {
   usePracticeAttempts,
   useRecordPracticeAttempt,
 } from '@/hooks/use-practice'
 import { useSavedPuzzles, useToggleSavedPuzzle } from '@/hooks/use-saved-puzzles'
 import { useSessionDetail } from '@/hooks/use-session-history'
-import { useSoundEnabled } from '@/hooks/use-sound-enabled'
-import {
-  useUpdateAutoAdvance,
-  useUpdatePracticeFilter,
-  useUserStats,
-} from '@/hooks/use-user-stats'
+import { useUpdatePracticeFilter, useUserStats } from '@/hooks/use-user-stats'
 import { useTranslations } from '@/lib/language-context'
 import {
   boardPuzzleFrom,
@@ -39,8 +33,6 @@ export default function SessionDetailPage() {
   const t = useTranslations()
   const { data, isLoading } = useSessionDetail(id)
   const { data: stats } = useUserStats()
-  const updateAutoAdvance = useUpdateAutoAdvance()
-  const { enabled: soundEnabled, setEnabled: setSoundEnabled } = useSoundEnabled()
   const [searchParams, setSearchParams] = useSearchParams()
   // "Rifai il puzzle": cambiando la key la scacchiera riparte da capo.
   const [practiceRetries, setPracticeRetries] = useState(0)
@@ -127,81 +119,33 @@ export default function SessionDetailPage() {
 
   return (
     <main className="flex w-full flex-1 flex-col items-center gap-4 px-4 py-8 lg:flex-row lg:items-start lg:justify-center lg:gap-3">
-      {/* 117px = header (53px) + padding sopra/sotto di questo <main> (py-8,
-          32px ciascuno): senza sottrarli, la sidebar sticky puo' sporgere
-          di quel tanto oltre il fondo della viewport e costringere a
-          scorrere l'intera pagina solo per vederne l'ultima riga. */}
-      <aside className="order-2 flex min-h-0 w-full flex-col gap-4 lg:sticky lg:top-14 lg:order-1 lg:max-h-[calc(100vh-117px)] lg:w-64 lg:shrink-0 lg:self-start">
-        <div>
-          <h1 className="text-foreground text-lg font-semibold tracking-tight">
-            <EditableSessionName
-              session={session}
-              fallback={t.sessionDetail.title(
-                new Date(session.created_at).toLocaleDateString(t.meta.locale),
-              )}
-            />
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {t.sessionDetail.subtitle(
-              session.total_puzzles,
-              session.current_round,
-              t.sessionStatus[session.status],
+      <PuzzleSidebar
+        title={
+          <EditableSessionName
+            session={session}
+            fallback={t.sessionDetail.title(
+              new Date(session.created_at).toLocaleDateString(t.meta.locale),
             )}
-          </p>
-          <Link
-            to={`/sessions/${session.id}/summary`}
-            className="text-primary text-sm underline-offset-4 hover:underline"
-          >
-            {t.summary.viewSummary}
-          </Link>
-        </div>
-
-        {selectedPuzzle && <SavePuzzleToggle puzzleId={selectedPuzzle.puzzleId} />}
-
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <Switch
-              id="auto-advance"
-              checked={autoAdvance}
-              onCheckedChange={(checked) => updateAutoAdvance.mutate(checked)}
-            />
-            <Label htmlFor="auto-advance" className="text-muted-foreground text-sm">
-              {t.train.autoAdvance}
-            </Label>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Switch
-              id="sound-enabled"
-              checked={soundEnabled}
-              onCheckedChange={setSoundEnabled}
-            />
-            <Label htmlFor="sound-enabled" className="text-muted-foreground text-sm">
-              {t.train.soundEnabled}
-            </Label>
-          </div>
-
-          {/* Sempre visibile: questa pagina e' solo pratica libera, e il
-              filtro decide anche da dove riparte "Continua in pratica libera"
-              prima di aver scelto un puzzle. */}
-          <PracticeFilterControls
-            filter={practiceFilter}
-            update={updatePracticeFilter.mutate}
-            showNoSavedHint={
-              practiceFilter.onlySaved === true &&
-              !practiceFilter.onlyFailed &&
-              !!savedPuzzleIds &&
-              !puzzles.some((p) => savedPuzzleIds.has(p.puzzleId))
-            }
           />
-        </div>
-
-        {selectedPuzzle && (
-          <Button variant="outline" size="sm" onClick={backToList}>
-            {t.train.backToList}
-          </Button>
-        )}
-
+        }
+        subtitle={
+          <>
+            <span>
+              {t.sessionDetail.subtitle(
+                session.total_puzzles,
+                session.current_round,
+                t.sessionStatus[session.status],
+              )}
+            </span>
+            <Link
+              to={`/sessions/${session.id}/summary`}
+              className="text-primary w-fit underline-offset-4 hover:underline"
+            >
+              {t.summary.viewSummary}
+            </Link>
+          </>
+        }
+      >
         <SessionPuzzleList
           puzzles={puzzles}
           activeSessionPuzzleId={selectedSessionPuzzleId}
@@ -212,8 +156,23 @@ export default function SessionDetailPage() {
           onToggleSaved={(puzzleId, saved) => toggleSavedPuzzle.mutate({ puzzleId, saved })}
           onSelectPuzzle={(p) => selectPuzzle(p.sessionPuzzleId)}
           boardTheme={boardTheme}
+          // Sempre visibili: questa pagina e' solo pratica libera, e il filtro
+          // decide anche da dove riparte "Continua in pratica libera" prima di
+          // aver scelto un puzzle.
+          filters={
+            <PracticeFilterControls
+              filter={practiceFilter}
+              update={updatePracticeFilter.mutate}
+              showNoSavedHint={
+                practiceFilter.onlySaved === true &&
+                !practiceFilter.onlyFailed &&
+                !!savedPuzzleIds &&
+                !puzzles.some((p) => savedPuzzleIds.has(p.puzzleId))
+              }
+            />
+          }
         />
-      </aside>
+      </PuzzleSidebar>
 
       <div className="order-1 flex w-full flex-col items-center justify-center gap-6 lg:order-2 lg:w-auto">
         {selectedPuzzle ? (
@@ -229,6 +188,14 @@ export default function SessionDetailPage() {
               boardTheme={boardTheme}
               pieceSet={pieceSet}
               progress={{ current: selectedPuzzle.orderIndex, total: session.total_puzzles }}
+              actions={
+                <>
+                  <SavePuzzleToggle puzzleId={selectedPuzzle.puzzleId} />
+                  <Button variant="outline" size="sm" onClick={backToList}>
+                    {t.train.backToList}
+                  </Button>
+                </>
+              }
             />
           ) : (
             <PuzzleBoardSkeleton />

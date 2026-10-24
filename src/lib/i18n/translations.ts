@@ -257,6 +257,7 @@ export interface Translations {
     autoAdvance: string
     soundEnabled: string
     practiceOnlyTitle: string
+    // Etichette brevi: sono pulsanti affiancati sotto practiceOnlyTitle.
     failedPuzzles: string
     savedPuzzles: string
     noSavedPuzzles: string
@@ -296,6 +297,8 @@ export interface Translations {
     nextMove: string
     nextPuzzle: string
     retry: string
+    infoTitle: string
+    openOnLichess: string
     choosePromotion: string
     promotionPieces: { q: string; r: string; b: string; n: string }
   }
@@ -805,8 +808,8 @@ export const it: Translations = {
     autoAdvance: 'Avanzamento automatico',
     soundEnabled: 'Suoni',
     practiceOnlyTitle: 'Pratica libera solo su',
-    failedPuzzles: 'Puzzle falliti',
-    savedPuzzles: 'Puzzle problematici',
+    failedPuzzles: 'Falliti',
+    savedPuzzles: 'Problematici',
     noSavedPuzzles:
       'Nessun puzzle problematico in questa sessione: salvane uno con il segnalibro.',
     failedScopeAll: 'Tutti i falliti',
@@ -847,6 +850,8 @@ export const it: Translations = {
     nextMove: 'Mossa successiva',
     nextPuzzle: 'Puzzle successivo →',
     retry: 'Rifai il puzzle',
+    infoTitle: 'Informazioni sul puzzle',
+    openOnLichess: 'Apri su Lichess',
     choosePromotion: 'Scegli il pezzo per la promozione',
     promotionPieces: { q: 'Regina', r: 'Torre', b: 'Alfiere', n: 'Cavallo' },
   },
@@ -1415,8 +1420,8 @@ export const en: Translations = {
     autoAdvance: 'Auto-advance',
     soundEnabled: 'Sounds',
     practiceOnlyTitle: 'Free practice only on',
-    failedPuzzles: 'Failed puzzles',
-    savedPuzzles: 'Problem puzzles',
+    failedPuzzles: 'Failed',
+    savedPuzzles: 'Problem',
     noSavedPuzzles:
       'No problem puzzles in this session: save one with the bookmark.',
     failedScopeAll: 'All failed',
@@ -1457,6 +1462,8 @@ export const en: Translations = {
     nextMove: 'Next move',
     nextPuzzle: 'Next puzzle →',
     retry: 'Try this puzzle again',
+    infoTitle: 'About this puzzle',
+    openOnLichess: 'Open on Lichess',
     choosePromotion: 'Choose promotion piece',
     promotionPieces: { q: 'Queen', r: 'Rook', b: 'Bishop', n: 'Knight' },
   },

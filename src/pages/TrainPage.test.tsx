@@ -75,9 +75,11 @@ vi.mock('@/hooks/use-user-stats', () => ({
 vi.mock(import('@/components/puzzle-board'), async (importOriginal) => ({
   ...(await importOriginal()),
   // Pulsanti al posto della scacchiera: concludere il puzzle e passare al successivo.
-  PuzzleBoard: ({ puzzle, onComplete, onAdvance, onRetry }) => (
+  // Le azioni sul puzzle (segnalibro, torna alla lista) stanno accanto alla scacchiera.
+  PuzzleBoard: ({ puzzle, onComplete, onAdvance, onRetry, actions }) => (
     <div data-testid="puzzle-board" data-can-retry={onRetry ? 'yes' : 'no'}>
       {puzzle.puzzle_id}
+      {actions}
       <button type="button" onClick={() => onComplete('solved', 12)}>
         concludi
       </button>

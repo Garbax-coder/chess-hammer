@@ -1,10 +1,10 @@
-import { Bookmark, BookmarkCheck, Check, Copy } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Bookmark, BookmarkCheck } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PuzzleInfoContent } from '@/components/puzzle-info'
 import { PuzzleMiniBoard } from '@/components/puzzle-mini-board'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { BoardThemeId } from '@/lib/board-themes'
-import { puzzlePgn } from '@/lib/chess-format'
 import type { Translations } from '@/lib/i18n/translations'
 import { useTranslations } from '@/lib/language-context'
 import { lastAttemptDay, puzzleIdsForDay } from '@/lib/session-days'
@@ -253,75 +253,14 @@ function PuzzleRow({
       )}
       </div>
       {themesOpen && !isPending && (
-        <div className="flex flex-col gap-1.5 pl-3.5">
-          <div className="flex flex-wrap gap-1">
-            {result.themes.length === 0 && (
-              <span className="text-muted-foreground text-[0.6rem]">
-                {t.sessionPuzzleList.themesEmpty}
-              </span>
-            )}
-            {result.themes.map((theme) => (
-              <span
-                key={theme}
-                className="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[0.6rem]"
-              >
-                {t.puzzleThemes.labels[theme] ?? theme}
-              </span>
-            ))}
-          </div>
-          <div className="flex items-center gap-3">
-            <CopyButton
-              getText={() => result.fen}
-              label={t.sessionPuzzleList.copyFen}
-              copiedLabel={t.sessionPuzzleList.fenCopied}
-            />
-            <CopyButton
-              getText={() => puzzlePgn(result.fen, result.moves)}
-              label={t.sessionPuzzleList.copyPgn}
-              copiedLabel={t.sessionPuzzleList.fenCopied}
-            />
-          </div>
-        </div>
+        <PuzzleInfoContent
+          className="pl-3.5"
+          fen={result.fen}
+          moves={result.moves}
+          themes={result.themes}
+        />
       )}
     </div>
-  )
-}
-
-function CopyButton({
-  getText,
-  label,
-  copiedLabel,
-}: {
-  getText: () => string
-  label: string
-  copiedLabel: string
-}) {
-  const [copied, setCopied] = useState(false)
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(getText())
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    } catch {
-      // Clipboard API non disponibile o permesso negato: nessun feedback
-      // di errore, l'utente puo' comunque riprovare.
-    }
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      className="text-muted-foreground hover:text-foreground flex shrink-0 items-center gap-1 text-[0.6rem] transition-colors"
-    >
-      {copied ? (
-        <Check className="size-3 shrink-0" />
-      ) : (
-        <Copy className="size-3 shrink-0" />
-      )}
-      {copied ? copiedLabel : label}
-    </button>
   )
 }
 
@@ -340,6 +279,8 @@ interface SessionPuzzleListProps {
    *  lista che non e' quella di una sessione. */
   title?: string
   practiceHint?: string
+  /** Filtri della pratica libera, nell'intestazione: e' la lista che filtrano. */
+  filters?: ReactNode
 }
 
 export function SessionPuzzleList({
@@ -355,6 +296,7 @@ export function SessionPuzzleList({
   onToggleSaved,
   title,
   practiceHint,
+  filters,
 }: SessionPuzzleListProps) {
   const t = useTranslations()
   const listRef = useRef<HTMLDivElement>(null)
@@ -400,8 +342,9 @@ export function SessionPuzzleList({
 
   return (
     <Card className="min-h-0 w-full flex-1 lg:w-64">
-      <CardHeader className="py-3">
+      <CardHeader className="gap-2 py-3">
         <CardTitle className="text-sm">{title ?? t.sessionPuzzleList.title}</CardTitle>
+        {filters}
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 flex-col gap-1 pt-0">
         {canPractice && (

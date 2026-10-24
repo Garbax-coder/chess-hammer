@@ -3,20 +3,14 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { PracticeFilterControls } from '@/components/practice-filter-controls'
 import { PuzzleBoard } from '@/components/puzzle-board'
 import { PuzzleBoardSkeleton } from '@/components/puzzle-board-skeleton'
+import { PuzzleSidebar } from '@/components/puzzle-sidebar'
 import { SavePuzzleToggle } from '@/components/save-puzzle-toggle'
 import { SessionPuzzleList } from '@/components/session-puzzle-list'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import { usePracticeAttempts, useRecordPracticeAttempt } from '@/hooks/use-practice'
 import { useSavedPuzzles, useToggleSavedPuzzle } from '@/hooks/use-saved-puzzles'
-import { useSoundEnabled } from '@/hooks/use-sound-enabled'
 import { useThemePuzzles } from '@/hooks/use-theme-puzzles'
-import {
-  useUpdateAutoAdvance,
-  useUpdatePracticeFilter,
-  useUserStats,
-} from '@/hooks/use-user-stats'
+import { useUpdatePracticeFilter, useUserStats } from '@/hooks/use-user-stats'
 import { useTranslations } from '@/lib/language-context'
 import {
   boardPuzzleFrom,
@@ -43,8 +37,6 @@ export default function ThemePracticePage() {
     searchParams.get('source') === 'practice' ? 'practice' : 'training'
   const { data: puzzles, isLoading } = useThemePuzzles(theme, source)
   const { data: stats } = useUserStats()
-  const updateAutoAdvance = useUpdateAutoAdvance()
-  const { enabled: soundEnabled, setEnabled: setSoundEnabled } = useSoundEnabled()
   const [practiceRetries, setPracticeRetries] = useState(0)
   const recordPracticeAttempt = useRecordPracticeAttempt()
 
@@ -124,67 +116,20 @@ export default function ThemePracticePage() {
 
   return (
     <main className="flex w-full flex-1 flex-col items-center gap-4 px-4 py-8 lg:flex-row lg:items-start lg:justify-center lg:gap-3">
-      {/* Stessa colonna laterale di SessionDetailPage (vedi li' il calcolo
-          dell'altezza massima). */}
-      <aside className="order-2 flex min-h-0 w-full flex-col gap-4 lg:sticky lg:top-14 lg:order-1 lg:max-h-[calc(100vh-117px)] lg:w-64 lg:shrink-0 lg:self-start">
-        <div>
-          <h1 className="text-foreground text-lg font-semibold tracking-tight">
-            {t.themePractice.title(themeLabel)}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {t.themePractice.subtitle(puzzles.length, source)}
-          </p>
-          <Link
-            to={backPath}
-            className="text-primary text-sm underline-offset-4 hover:underline"
-          >
-            {t.themePractice.back}
-          </Link>
-        </div>
-
-        {selected && <SavePuzzleToggle puzzleId={selected.puzzleId} />}
-
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <Switch
-              id="auto-advance"
-              checked={autoAdvance}
-              onCheckedChange={(checked) => updateAutoAdvance.mutate(checked)}
-            />
-            <Label htmlFor="auto-advance" className="text-muted-foreground text-sm">
-              {t.train.autoAdvance}
-            </Label>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Switch
-              id="sound-enabled"
-              checked={soundEnabled}
-              onCheckedChange={setSoundEnabled}
-            />
-            <Label htmlFor="sound-enabled" className="text-muted-foreground text-sm">
-              {t.train.soundEnabled}
-            </Label>
-          </div>
-
-          <PracticeFilterControls
-            filter={practiceFilter}
-            update={updatePracticeFilter.mutate}
-            showNoSavedHint={
-              practiceFilter.onlySaved === true &&
-              !practiceFilter.onlyFailed &&
-              !!savedPuzzleIds &&
-              !puzzles.some((p) => savedPuzzleIds.has(p.puzzleId))
-            }
-          />
-        </div>
-
-        {selected && (
-          <Button variant="outline" size="sm" onClick={backToList}>
-            {t.train.backToList}
-          </Button>
-        )}
-
+      <PuzzleSidebar
+        title={t.themePractice.title(themeLabel)}
+        subtitle={
+          <>
+            <span>{t.themePractice.subtitle(puzzles.length, source)}</span>
+            <Link
+              to={backPath}
+              className="text-primary w-fit underline-offset-4 hover:underline"
+            >
+              {t.themePractice.back}
+            </Link>
+          </>
+        }
+      >
         <SessionPuzzleList
           puzzles={puzzles}
           activeSessionPuzzleId={selectedId}
@@ -201,8 +146,20 @@ export default function ThemePracticePage() {
           }
           onSelectPuzzle={(p) => selectPuzzle(p.sessionPuzzleId)}
           boardTheme={boardTheme}
+          filters={
+            <PracticeFilterControls
+              filter={practiceFilter}
+              update={updatePracticeFilter.mutate}
+              showNoSavedHint={
+                practiceFilter.onlySaved === true &&
+                !practiceFilter.onlyFailed &&
+                !!savedPuzzleIds &&
+                !puzzles.some((p) => savedPuzzleIds.has(p.puzzleId))
+              }
+            />
+          }
         />
-      </aside>
+      </PuzzleSidebar>
 
       <div className="order-1 flex w-full flex-col items-center justify-center gap-6 lg:order-2 lg:w-auto">
         {selected ? (
@@ -218,6 +175,14 @@ export default function ThemePracticePage() {
               boardTheme={boardTheme}
               pieceSet={pieceSet}
               progress={{ current: selected.orderIndex, total: puzzles.length }}
+              actions={
+                <>
+                  <SavePuzzleToggle puzzleId={selected.puzzleId} />
+                  <Button variant="outline" size="sm" onClick={backToList}>
+                    {t.train.backToList}
+                  </Button>
+                </>
+              }
             />
           ) : (
             <PuzzleBoardSkeleton />
