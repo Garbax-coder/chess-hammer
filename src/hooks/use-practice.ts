@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { themePuzzlesKey } from '@/hooks/use-theme-puzzles'
 import { trainingStatsKey } from '@/hooks/use-training-stats'
 import { useAuth } from '@/lib/auth-context'
 import { fetchPracticeAttempts, recordPracticeAttempt } from '@/lib/practice'
@@ -48,12 +49,12 @@ export function useRecordPracticeAttempt() {
           return next
         },
       )
-      // Le statistiche della pratica libera vanno rilette alla prossima
-      // apertura della pagina (solo segnate come vecchie).
-      queryClient.invalidateQueries({
-        queryKey: trainingStatsKey(user?.id),
-        refetchType: 'none',
-      })
+      // Le statistiche della pratica libera e i puzzle per categoria vanno
+      // riletti alla prossima apertura della pagina (solo segnati come
+      // vecchi: la lista che si sta ripassando non cambia sotto gli occhi).
+      for (const queryKey of [trainingStatsKey(user?.id), themePuzzlesKey(user?.id)]) {
+        queryClient.invalidateQueries({ queryKey, refetchType: 'none' })
+      }
     },
   })
 }

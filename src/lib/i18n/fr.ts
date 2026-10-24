@@ -263,6 +263,18 @@ export const fr: Translations = {
     practiceEmpty: 'Aucun puzzle en entraînement libre pour l’instant.',
     unassignedSession: 'Sans session',
   },
+  themePractice: {
+    title: (theme) => `Révision : ${theme}`,
+    subtitle: (count, source) =>
+      `${count} ${count === 1 ? 'puzzle tenté' : 'puzzles tentés'} ${
+        source === 'training' ? 'à l’entraînement' : 'en entraînement libre'
+      }`,
+    back: 'Retour aux statistiques',
+    listTitle: 'Puzzles de la catégorie',
+    hint: 'Les puzzles de cette catégorie que vous avez tentés : choisissez-en un ou continuez en entraînement libre.',
+    empty: 'Aucun puzzle dans cette catégorie.',
+    openTheme: (theme) => `Réviser les puzzles ${theme} en entraînement libre`,
+  },
   sessionsHistory: {
     title: 'Historique des sessions',
     empty: 'Aucune session créée pour l’instant.',

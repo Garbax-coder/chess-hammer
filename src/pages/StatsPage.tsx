@@ -14,6 +14,7 @@ import {
   type ThemeKpi,
   type TrainingStatsData,
 } from '@/lib/training-stats'
+import { themePracticePath, type ThemePuzzleSource } from '@/lib/theme-puzzles'
 
 const percent = (value: number) => `${Math.round(value)}%`
 
@@ -113,7 +114,7 @@ function TrainingStats({ data }: { data: TrainingStatsData }) {
             </CardContent>
           </Card>
           <SessionsCard rows={summary.bySession} />
-          <ThemeCards best={best} worst={worst} />
+          <ThemeCards best={best} worst={worst} source="training" />
         </>
       )}
     </>
@@ -134,7 +135,7 @@ function PracticeStats({ data }: { data: TrainingStatsData }) {
         <>
           <OverviewCard kpi={summary.overall} />
           <SessionsCard rows={summary.bySession} />
-          <ThemeCards best={best} worst={worst} />
+          <ThemeCards best={best} worst={worst} source="practice" />
         </>
       )}
     </>
@@ -197,13 +198,21 @@ function SessionsCard({
   )
 }
 
-function ThemeCards({ best, worst }: { best: ThemeKpi[]; worst: ThemeKpi[] }) {
+function ThemeCards({
+  best,
+  worst,
+  source,
+}: {
+  best: ThemeKpi[]
+  worst: ThemeKpi[]
+  source: ThemePuzzleSource
+}) {
   const t = useTranslations()
   return (
     <>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <ThemeCard title={t.stats.bestTitle} themes={best} tone="good" />
-        <ThemeCard title={t.stats.worstTitle} themes={worst} tone="bad" />
+        <ThemeCard title={t.stats.bestTitle} themes={best} tone="good" source={source} />
+        <ThemeCard title={t.stats.worstTitle} themes={worst} tone="bad" source={source} />
       </div>
       <p className="text-muted-foreground -mt-3 text-xs">
         {t.stats.themesNote(MIN_THEME_ATTEMPTS)}
@@ -311,14 +320,18 @@ function KpiTable({
   )
 }
 
+// Ogni categoria apre la pratica libera sui suoi puzzle, presi dalla stessa
+// fonte della scheda (allenamento o pratica libera).
 function ThemeCard({
   title,
   themes,
   tone,
+  source,
 }: {
   title: string
   themes: ThemeKpi[]
   tone: 'good' | 'bad'
+  source: ThemePuzzleSource
 }) {
   const t = useTranslations()
   return (
@@ -333,26 +346,33 @@ function ThemeCard({
           </p>
         ) : (
           <ol className="flex flex-col gap-2.5">
-            {themes.map((theme) => (
-              <li key={theme.theme} className="flex flex-col gap-1">
-                <div className="flex items-baseline justify-between gap-2 text-sm">
-                  <span className="text-foreground">
-                    {t.puzzleThemes.labels[theme.theme] ?? theme.theme}
-                  </span>
-                  <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-                    {t.stats.themeLine(Math.round(theme.solvedRate), theme.attempts)}
-                  </span>
-                </div>
-                <div className="bg-muted h-1.5 overflow-hidden rounded-full">
-                  <div
-                    className={`h-full rounded-full ${
-                      tone === 'good' ? 'bg-emerald-500' : 'bg-destructive'
-                    }`}
-                    style={{ width: `${theme.solvedRate}%` }}
-                  />
-                </div>
-              </li>
-            ))}
+            {themes.map((theme) => {
+              const label = t.puzzleThemes.labels[theme.theme] ?? theme.theme
+              return (
+                <li key={theme.theme} className="flex flex-col gap-1">
+                  <div className="flex items-baseline justify-between gap-2 text-sm">
+                    <Link
+                      to={themePracticePath(theme.theme, source)}
+                      title={t.themePractice.openTheme(label)}
+                      className="text-foreground decoration-muted-foreground/50 underline decoration-dotted underline-offset-4 hover:decoration-current hover:decoration-solid"
+                    >
+                      {label}
+                    </Link>
+                    <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+                      {t.stats.themeLine(Math.round(theme.solvedRate), theme.attempts)}
+                    </span>
+                  </div>
+                  <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+                    <div
+                      className={`h-full rounded-full ${
+                        tone === 'good' ? 'bg-emerald-500' : 'bg-destructive'
+                      }`}
+                      style={{ width: `${theme.solvedRate}%` }}
+                    />
+                  </div>
+                </li>
+              )
+            })}
           </ol>
         )}
       </CardContent>

@@ -94,6 +94,13 @@ describe('StatsPage', () => {
       .getByText(t.stats.worstTitle)
       .closest('[data-slot="card"]') as HTMLElement
     expect(within(worst).getByText(t.puzzleThemes.labels.pin)).toBeInTheDocument()
+    // Ogni categoria apre la pratica libera sui suoi puzzle dell'allenamento.
+    expect(
+      within(best).getByRole('link', { name: t.puzzleThemes.labels.fork }),
+    ).toHaveAttribute('href', '/stats/themes/fork')
+    expect(
+      within(worst).getByRole('link', { name: t.puzzleThemes.labels.pin }),
+    ).toHaveAttribute('href', '/stats/themes/pin')
   })
 
   it('explains that statistics appear after the first puzzle', () => {
@@ -152,7 +159,9 @@ describe('StatsPage free practice tab', () => {
     expect(within(panel).queryByText(t.stats.byRoundTitle)).not.toBeInTheDocument()
     expect(within(panel).getAllByRole('table')).toHaveLength(1)
     expect(within(panel).getByText(t.stats.unassignedSession)).toBeInTheDocument()
-    expect(within(panel).getByText(t.puzzleThemes.labels.skewer)).toBeInTheDocument()
+    expect(
+      within(panel).getByRole('link', { name: t.puzzleThemes.labels.skewer }),
+    ).toHaveAttribute('href', '/stats/themes/skewer?source=practice')
     expect(within(panel).getByText('80%')).toBeInTheDocument()
   })
 

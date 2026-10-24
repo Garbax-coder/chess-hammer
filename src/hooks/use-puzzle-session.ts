@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
 import { sessionRoundStatsKey } from '@/hooks/use-session-stats'
+import { themePuzzlesKey } from '@/hooks/use-theme-puzzles'
 import { trainingStatsKey } from '@/hooks/use-training-stats'
 import { userStatsKey } from '@/hooks/use-user-stats'
 import { syncSessionPuzzles } from '@/lib/session-puzzles-cache'
@@ -99,13 +100,14 @@ export function useRecordAttempt(session: TrainingSession | null | undefined) {
       if (roundChanged && outcome.status !== 'session_complete') {
         queryClient.invalidateQueries({ queryKey: ['active-session', user?.id] })
       }
-      // Quello che il tentativo cambia (ELO e conteggi, statistiche,
-      // dettaglio e avanzamento della sessione) va riletto alla prossima
+      // Quello che il tentativo cambia (ELO e conteggi, statistiche e
+      // puzzle per categoria, dettaglio e avanzamento della sessione) va riletto alla prossima
       // apertura della pagina che lo mostra: solo segnato come vecchio,
       // nessuna richiesta adesso.
       for (const queryKey of [
         userStatsKey(user?.id),
         trainingStatsKey(user?.id),
+        themePuzzlesKey(user?.id),
         ['elo-history', user?.id],
         ['sessions-list', user?.id],
         ['session-detail', session?.id],
