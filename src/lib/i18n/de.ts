@@ -355,6 +355,7 @@ export const de: Translations = {
     title: 'Training',
     roundInfo: (round, total) => `Durchgang ${round} von 3 — ${total} Puzzles insgesamt`,
     todayPuzzle: (current, target) => `Heutiges Puzzle: ${current}/${target}`,
+    settings: 'Einstellungen',
     autoAdvance: 'Automatisch weiter',
     soundEnabled: 'Töne',
     practiceOnlyTitle: 'Freies Üben nur mit',

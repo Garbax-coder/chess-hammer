@@ -253,6 +253,7 @@ export interface Translations {
     title: string
     roundInfo: (round: number, total: number) => string
     todayPuzzle: (current: number, target: number) => string
+    settings: string
     autoAdvance: string
     soundEnabled: string
     practiceOnlyTitle: string
@@ -800,6 +801,7 @@ export const it: Translations = {
     title: 'Allenamento',
     roundInfo: (round, total) => `Giro ${round} di 3 — ${total} puzzle totali`,
     todayPuzzle: (current, target) => `Puzzle di oggi: ${current}/${target}`,
+    settings: 'Impostazioni',
     autoAdvance: 'Avanzamento automatico',
     soundEnabled: 'Suoni',
     practiceOnlyTitle: 'Pratica libera solo su',
@@ -1409,6 +1411,7 @@ export const en: Translations = {
     title: 'Training',
     roundInfo: (round, total) => `Round ${round} of 3 — ${total} total puzzles`,
     todayPuzzle: (current, target) => `Today's puzzle: ${current}/${target}`,
+    settings: 'Settings',
     autoAdvance: 'Auto-advance',
     soundEnabled: 'Sounds',
     practiceOnlyTitle: 'Free practice only on',

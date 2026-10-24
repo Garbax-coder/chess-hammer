@@ -353,6 +353,7 @@ export const fr: Translations = {
     title: 'Entraînement',
     roundInfo: (round, total) => `Cycle ${round} sur 3 — ${total} puzzles au total`,
     todayPuzzle: (current, target) => `Puzzle du jour : ${current}/${target}`,
+    settings: 'Réglages',
     autoAdvance: 'Passage automatique',
     soundEnabled: 'Sons',
     practiceOnlyTitle: 'Entraînement libre seulement sur',
