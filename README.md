@@ -100,6 +100,7 @@ psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/table-grants.sql        # permessi
 psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/practice-attempt-session.sql  # sessione dei tentativi liberi (0033)
 psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/training-stats.sql      # statistiche dell'utente (0034)
 psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/next-puzzle.sql         # prossimo puzzle in una chiamata (0035)
+psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/theme-puzzles.sql       # puzzle per categoria in pratica libera (0036)
 ```
 
 ## Conservazione degli account

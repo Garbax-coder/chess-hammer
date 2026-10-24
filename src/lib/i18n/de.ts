@@ -263,6 +263,18 @@ export const de: Translations = {
     practiceEmpty: 'Noch keine Puzzles im freien Üben.',
     unassignedSession: 'Ohne Session',
   },
+  themePractice: {
+    title: (theme) => `Wiederholung: ${theme}`,
+    subtitle: (count, source) =>
+      `${count} ${count === 1 ? 'versuchtes Puzzle' : 'versuchte Puzzles'} ${
+        source === 'training' ? 'im Training' : 'im freien Üben'
+      }`,
+    back: 'Zurück zu den Statistiken',
+    listTitle: 'Puzzles der Kategorie',
+    hint: 'Die Puzzles dieser Kategorie, die du versucht hast: wähle eines oder übe frei weiter.',
+    empty: 'Keine Puzzles in dieser Kategorie.',
+    openTheme: (theme) => `Die ${theme}-Puzzles im freien Üben wiederholen`,
+  },
   sessionsHistory: {
     title: 'Session-Verlauf',
     empty: 'Noch keine Session erstellt.',

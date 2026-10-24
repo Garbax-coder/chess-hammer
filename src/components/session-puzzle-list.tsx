@@ -336,6 +336,10 @@ interface SessionPuzzleListProps {
   boardTheme?: BoardThemeId
   savedPuzzleIds?: ReadonlySet<string>
   onToggleSaved?: (puzzleId: string, saved: boolean) => void
+  /** Al posto del titolo e dell'avviso della quota del giorno, per una
+   *  lista che non e' quella di una sessione. */
+  title?: string
+  practiceHint?: string
 }
 
 export function SessionPuzzleList({
@@ -349,6 +353,8 @@ export function SessionPuzzleList({
   boardTheme,
   savedPuzzleIds,
   onToggleSaved,
+  title,
+  practiceHint,
 }: SessionPuzzleListProps) {
   const t = useTranslations()
   const listRef = useRef<HTMLDivElement>(null)
@@ -395,12 +401,12 @@ export function SessionPuzzleList({
   return (
     <Card className="min-h-0 w-full flex-1 lg:w-64">
       <CardHeader className="py-3">
-        <CardTitle className="text-sm">{t.sessionPuzzleList.title}</CardTitle>
+        <CardTitle className="text-sm">{title ?? t.sessionPuzzleList.title}</CardTitle>
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 flex-col gap-1 pt-0">
         {canPractice && (
           <p className="text-muted-foreground mb-1 text-xs">
-            {t.sessionPuzzleList.quotaHint}
+            {practiceHint ?? t.sessionPuzzleList.quotaHint}
           </p>
         )}
         <div

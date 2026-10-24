@@ -261,6 +261,18 @@ export const es: Translations = {
     practiceEmpty: 'Aún no hay puzzles en práctica libre.',
     unassignedSession: 'Sin sesión',
   },
+  themePractice: {
+    title: (theme) => `Repaso: ${theme}`,
+    subtitle: (count, source) =>
+      `${count} ${count === 1 ? 'puzzle intentado' : 'puzzles intentados'} ${
+        source === 'training' ? 'en el entrenamiento' : 'en práctica libre'
+      }`,
+    back: 'Volver a las estadísticas',
+    listTitle: 'Puzzles de la categoría',
+    hint: 'Los puzzles de esta categoría que has intentado: elige uno o continúa en práctica libre.',
+    empty: 'No hay puzzles en esta categoría.',
+    openTheme: (theme) => `Repasar en práctica libre los puzzles de ${theme}`,
+  },
   sessionsHistory: {
     title: 'Historial de sesiones',
     empty: 'Todavía no has creado ninguna sesión.',

@@ -183,6 +183,15 @@ export interface Translations {
     practiceEmpty: string
     unassignedSession: string
   }
+  themePractice: {
+    title: (theme: string) => string
+    subtitle: (count: number, source: 'training' | 'practice') => string
+    back: string
+    listTitle: string
+    hint: string
+    empty: string
+    openTheme: (theme: string) => string
+  }
   sessionsHistory: {
     title: string
     empty: string
@@ -702,6 +711,18 @@ export const it: Translations = {
       'I puzzle rigiocati in pratica libera, divisi per la sessione da cui li hai aperti.',
     practiceEmpty: 'Ancora nessun puzzle in pratica libera.',
     unassignedSession: 'Senza sessione',
+  },
+  themePractice: {
+    title: (theme) => `Ripasso: ${theme}`,
+    subtitle: (count, source) =>
+      `${count} ${count === 1 ? 'puzzle tentato' : 'puzzle tentati'} ${
+        source === 'training' ? "nell'allenamento" : 'in pratica libera'
+      }`,
+    back: 'Torna alle statistiche',
+    listTitle: 'Puzzle della categoria',
+    hint: 'I puzzle di questa categoria che hai tentato: scegline uno o continua in pratica libera.',
+    empty: 'Nessun puzzle di questa categoria.',
+    openTheme: (theme) => `Ripassa in pratica libera i puzzle di ${theme}`,
   },
   sessionsHistory: {
     title: 'Storico sessioni',
@@ -1299,6 +1320,18 @@ export const en: Translations = {
       'Puzzles replayed in free practice, split by the session you opened them from.',
     practiceEmpty: 'No free practice puzzles yet.',
     unassignedSession: 'No session',
+  },
+  themePractice: {
+    title: (theme) => `Review: ${theme}`,
+    subtitle: (count, source) =>
+      `${count} ${count === 1 ? 'puzzle' : 'puzzles'} attempted ${
+        source === 'training' ? 'in training' : 'in free practice'
+      }`,
+    back: 'Back to statistics',
+    listTitle: 'Category puzzles',
+    hint: 'The puzzles of this category you attempted: pick one or continue in free practice.',
+    empty: 'No puzzles in this category.',
+    openTheme: (theme) => `Review the ${theme} puzzles in free practice`,
   },
   sessionsHistory: {
     title: 'Session history',
