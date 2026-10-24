@@ -25,6 +25,7 @@ const SessionSummaryPage = lazy(() => import('@/pages/SessionSummaryPage'))
 const RoundSummaryPage = lazy(() => import('@/pages/RoundSummaryPage'))
 const DailySessionSummaryPage = lazy(() => import('@/pages/DailySessionSummaryPage'))
 const FaqPage = lazy(() => import('@/pages/FaqPage'))
+const StatsPage = lazy(() => import('@/pages/StatsPage'))
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
 const TermsPage = lazy(() => import('@/pages/TermsPage'))
 const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'))
@@ -117,6 +118,14 @@ function App() {
           element={
             <Protected>
               <DailySessionSummaryPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/stats"
+          element={
+            <Protected>
+              <StatsPage />
             </Protected>
           }
         />

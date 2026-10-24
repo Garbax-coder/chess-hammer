@@ -44,6 +44,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link to="/sessions">{t.nav.history}</Link>
       </Button>
       <Button asChild variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
+        <Link to="/stats">{t.nav.stats}</Link>
+      </Button>
+      <Button asChild variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
         <Link to="/faq">{t.nav.faq}</Link>
       </Button>
       {isAdminUser(user) && (
