@@ -74,6 +74,9 @@ export default function TrainPage() {
     [session, puzzles],
   )
 
+  // "Rifai il puzzle" in pratica libera: cambiando la key la scacchiera
+  // riparte da capo sullo stesso puzzle.
+  const [practiceRetries, setPracticeRetries] = useState(0)
   const [practiceSelection, setPracticeSelection] = useState<{
     sessionPuzzleId: string
     puzzleId: string
@@ -402,7 +405,8 @@ export default function TrainPage() {
         {practiceSelection ? (
           practicePuzzle ? (
             <PuzzleBoard
-              key={practicePuzzle.puzzle_id}
+              key={`${practicePuzzle.puzzle_id}-${practiceRetries}`}
+              onRetry={() => setPracticeRetries((n) => n + 1)}
               puzzle={practicePuzzle}
               autoAdvance={autoAdvance}
               onComplete={handlePracticeAttempt}

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { EditableSessionName } from '@/components/editable-session-name'
 import { PracticeFilterControls } from '@/components/practice-filter-controls'
@@ -42,6 +42,8 @@ export default function SessionDetailPage() {
   const updateAutoAdvance = useUpdateAutoAdvance()
   const { enabled: soundEnabled, setEnabled: setSoundEnabled } = useSoundEnabled()
   const [searchParams, setSearchParams] = useSearchParams()
+  // "Rifai il puzzle": cambiando la key la scacchiera riparte da capo.
+  const [practiceRetries, setPracticeRetries] = useState(0)
   const recordPracticeAttempt = useRecordPracticeAttempt()
 
   // Stesso filtro salvato di TrainPage.
@@ -214,7 +216,8 @@ export default function SessionDetailPage() {
         {selectedPuzzle ? (
           practicePuzzle ? (
             <PuzzleBoard
-              key={practicePuzzle.puzzle_id}
+              key={`${practicePuzzle.puzzle_id}-${practiceRetries}`}
+              onRetry={() => setPracticeRetries((n) => n + 1)}
               puzzle={practicePuzzle}
               autoAdvance={autoAdvance}
               onComplete={handlePracticeAttempt}

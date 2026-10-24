@@ -239,6 +239,7 @@ export interface Translations {
     reviewingMove: (ply: number) => string
     opponentMoving: string
     solved: string
+    checkmate: string
     wrongMove: string
     moveWith: (color: string) => string
     white: string
@@ -246,6 +247,7 @@ export interface Translations {
     prevMove: string
     nextMove: string
     nextPuzzle: string
+    retry: string
     choosePromotion: string
     promotionPieces: { q: string; r: string; b: string; n: string }
   }
@@ -734,6 +736,7 @@ export const it: Translations = {
     reviewingMove: (ply) => `Stai rivedendo la mossa ${ply}`,
     opponentMoving: "L'avversario muove…",
     solved: 'Risolto! 🎉',
+    checkmate: 'Scacco matto',
     wrongMove: 'Mossa sbagliata',
     moveWith: (color) => `Muovi con il ${color}`,
     white: 'Bianco',
@@ -741,6 +744,7 @@ export const it: Translations = {
     prevMove: 'Mossa precedente',
     nextMove: 'Mossa successiva',
     nextPuzzle: 'Puzzle successivo →',
+    retry: 'Rifai il puzzle',
     choosePromotion: 'Scegli il pezzo per la promozione',
     promotionPieces: { q: 'Regina', r: 'Torre', b: 'Alfiere', n: 'Cavallo' },
   },
@@ -1288,6 +1292,7 @@ export const en: Translations = {
     reviewingMove: (ply) => `Reviewing move ${ply}`,
     opponentMoving: 'Opponent is moving…',
     solved: 'Solved! 🎉',
+    checkmate: 'Checkmate',
     wrongMove: 'Wrong move',
     moveWith: (color) => `Move with ${color}`,
     white: 'White',
@@ -1295,6 +1300,7 @@ export const en: Translations = {
     prevMove: 'Previous move',
     nextMove: 'Next move',
     nextPuzzle: 'Next puzzle →',
+    retry: 'Try this puzzle again',
     choosePromotion: 'Choose promotion piece',
     promotionPieces: { q: 'Queen', r: 'Rook', b: 'Bishop', n: 'Knight' },
   },
