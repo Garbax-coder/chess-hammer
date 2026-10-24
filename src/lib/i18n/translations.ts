@@ -247,6 +247,7 @@ export interface Translations {
     prevMove: string
     nextMove: string
     nextPuzzle: string
+    retry: string
     choosePromotion: string
     promotionPieces: { q: string; r: string; b: string; n: string }
   }
@@ -743,6 +744,7 @@ export const it: Translations = {
     prevMove: 'Mossa precedente',
     nextMove: 'Mossa successiva',
     nextPuzzle: 'Puzzle successivo →',
+    retry: 'Rifai il puzzle',
     choosePromotion: 'Scegli il pezzo per la promozione',
     promotionPieces: { q: 'Regina', r: 'Torre', b: 'Alfiere', n: 'Cavallo' },
   },
@@ -1298,6 +1300,7 @@ export const en: Translations = {
     prevMove: 'Previous move',
     nextMove: 'Next move',
     nextPuzzle: 'Next puzzle →',
+    retry: 'Try this puzzle again',
     choosePromotion: 'Choose promotion piece',
     promotionPieces: { q: 'Queen', r: 'Rook', b: 'Bishop', n: 'Knight' },
   },

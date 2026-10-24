@@ -78,8 +78,8 @@ vi.mock('@/hooks/use-user-stats', () => ({
 vi.mock(import('@/components/puzzle-board'), async (importOriginal) => ({
   ...(await importOriginal()),
   // Pulsanti al posto della scacchiera: concludere il puzzle e passare al successivo.
-  PuzzleBoard: ({ puzzle, onComplete, onAdvance }) => (
-    <div data-testid="puzzle-board">
+  PuzzleBoard: ({ puzzle, onComplete, onAdvance, onRetry }) => (
+    <div data-testid="puzzle-board" data-can-retry={onRetry ? 'yes' : 'no'}>
       {puzzle.puzzle_id}
       <button type="button" onClick={() => onComplete('solved', 12)}>
         concludi
@@ -342,5 +342,37 @@ describe('TrainPage problem puzzles', () => {
 
     fireEvent.click(screen.getByRole('button', { name: itTranslations.savedPuzzle.save }))
     expect(toggleSaved).toHaveBeenCalledWith({ puzzleId: 'first', saved: true })
+  })
+})
+
+describe('TrainPage redo a puzzle', () => {
+  beforeEach(() => {
+    practiceAttempts = new Map()
+    sessionPuzzles = [makePuzzleResult({ puzzleId: 'first', orderIndex: 1 })]
+  })
+
+  it('lets free practice redo a puzzle, but not the official session', () => {
+    outcome = {
+      status: 'next',
+      data: {
+        sessionPuzzleId: 'sp-1',
+        round: 1,
+        puzzle: makeLichessPuzzle({ puzzle_id: 'p1' }),
+      },
+    }
+    const { unmount } = render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter>
+          <TrainPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    expect(screen.getByTestId('puzzle-board')).toHaveAttribute('data-can-retry', 'no')
+    unmount()
+
+    outcome = { status: 'quota_reached', round: 1 }
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: startLabel }))
+    expect(screen.getByTestId('puzzle-board')).toHaveAttribute('data-can-retry', 'yes')
   })
 })

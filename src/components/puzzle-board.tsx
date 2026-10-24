@@ -158,6 +158,10 @@ interface PuzzleBoardProps {
   // altrimenti): a differenza di onComplete non registra nulla, dice solo
   // al chiamante di mostrare il puzzle che ha gia' pronto.
   onAdvance: () => void
+  // Solo in pratica libera: ricomincia lo stesso puzzle da capo. Se c'e', dopo
+  // un puzzle sbagliato (senza avanzamento automatico) compare il bottone
+  // "Rifai il puzzle" sotto "Puzzle successivo".
+  onRetry?: () => void
   // True mentre il tentativo appena concluso e' in registrazione (chiamata
   // di rete in corso): disabilita il bottone "Puzzle successivo" e mostra
   // uno spinner, cosi' un click ripetuto o una rete lenta non passano
@@ -178,6 +182,7 @@ export function PuzzleBoard({
   autoAdvance,
   onComplete,
   onAdvance,
+  onRetry,
   isCompleting = false,
   boardTheme = DEFAULT_BOARD_THEME,
   pieceSet = DEFAULT_PIECE_SET,
@@ -388,6 +393,7 @@ export function PuzzleBoard({
   // cronologia con le frecce/i bottoni qui sotto.
   const { settings: engineSettings, update: updateEngineSettings } = useEngineSettings()
   const analysisEnabled = pendingCompletion !== null
+  const canRetry = !!onRetry && pendingCompletion?.result === 'failed'
   // Al motore va la partenza del puzzle con tutte le mosse fino alla
   // posizione mostrata, non solo la posizione: cosi' conta le ripetizioni
   // (vedi EnginePosition) e chi e' in vantaggio non suggerisce una linea che
@@ -1081,6 +1087,17 @@ export function PuzzleBoard({
             {t.puzzleBoard.nextPuzzle}
           </Button>
         )}
+        {canRetry && (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full lg:hidden"
+            style={{ width: BOARD_SIZE }}
+            onClick={onRetry}
+          >
+            {t.puzzleBoard.retry}
+          </Button>
+        )}
       </div>
 
       {/* Questa colonna riserva SEMPRE lo spazio (anche vuota) cosi' la
@@ -1119,6 +1136,16 @@ export function PuzzleBoard({
             >
               {t.puzzleBoard.nextPuzzle}
             </Button>
+            {canRetry && (
+              <Button
+                type="button"
+                variant="outline"
+                className="-mt-2 hidden lg:inline-flex"
+                onClick={onRetry}
+              >
+                {t.puzzleBoard.retry}
+              </Button>
+            )}
           </div>
         )}
       </div>

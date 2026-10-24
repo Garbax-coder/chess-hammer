@@ -344,6 +344,7 @@ export const fr: Translations = {
     prevMove: 'Coup précédent',
     nextMove: 'Coup suivant',
     nextPuzzle: 'Puzzle suivant →',
+    retry: 'Refaire le puzzle',
     choosePromotion: 'Choisissez la pièce de promotion',
     promotionPieces: { q: 'Dame', r: 'Tour', b: 'Fou', n: 'Cavalier' },
   },

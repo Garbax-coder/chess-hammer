@@ -346,6 +346,7 @@ export const de: Translations = {
     prevMove: 'Vorheriger Zug',
     nextMove: 'Nächster Zug',
     nextPuzzle: 'Nächstes Puzzle →',
+    retry: 'Puzzle wiederholen',
     choosePromotion: 'Umwandlungsfigur wählen',
     promotionPieces: { q: 'Dame', r: 'Turm', b: 'Läufer', n: 'Springer' },
   },

@@ -343,6 +343,7 @@ export const es: Translations = {
     prevMove: 'Jugada anterior',
     nextMove: 'Jugada siguiente',
     nextPuzzle: 'Siguiente puzzle →',
+    retry: 'Repetir el puzzle',
     choosePromotion: 'Elige la pieza de coronación',
     promotionPieces: { q: 'Dama', r: 'Torre', b: 'Alfil', n: 'Caballo' },
   },

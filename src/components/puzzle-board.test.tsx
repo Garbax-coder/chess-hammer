@@ -135,6 +135,63 @@ describe('PuzzleBoard', () => {
     })
   })
 
+  describe('retrying a failed puzzle in free practice', () => {
+    // Il nero apre con a6; la soluzione e' Td8#, g3 e' una mossa sbagliata.
+    const puzzle = makeLichessPuzzle({
+      fen: '6k1/p4ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1',
+      moves: ['a7a6', 'd1d8'],
+    })
+
+    function playAfterOpening(from: string, to: string, onRetry?: () => void) {
+      const view = render(
+        <PuzzleBoard
+          puzzle={puzzle}
+          autoAdvance={false}
+          onComplete={() => {}}
+          onAdvance={() => {}}
+          onRetry={onRetry}
+        />,
+      )
+      act(() => vi.advanceTimersByTime(2000))
+      const square = (name: string) =>
+        view.container.querySelector(`[data-square="${name}"]`)!
+      act(() => {
+        fireEvent.click(square(from))
+      })
+      act(() => {
+        fireEvent.click(square(to))
+      })
+      act(() => vi.advanceTimersByTime(2000))
+      return view
+    }
+
+    it('offers to redo the puzzle after a wrong move', () => {
+      const onRetry = vi.fn()
+      const view = playAfterOpening('g2', 'g3', onRetry)
+
+      const buttons = view.getAllByRole('button', {
+        name: itTranslations.puzzleBoard.retry,
+      })
+      expect(buttons.length).toBeGreaterThan(0)
+      fireEvent.click(buttons[0])
+      expect(onRetry).toHaveBeenCalled()
+    })
+
+    it('does not offer it after solving the puzzle', () => {
+      const view = playAfterOpening('d1', 'd8', () => {})
+      expect(
+        view.queryByRole('button', { name: itTranslations.puzzleBoard.retry }),
+      ).not.toBeInTheDocument()
+    })
+
+    it('does not offer it where retrying is not allowed (official session)', () => {
+      const view = playAfterOpening('g2', 'g3')
+      expect(
+        view.queryByRole('button', { name: itTranslations.puzzleBoard.retry }),
+      ).not.toBeInTheDocument()
+    })
+  })
+
   describe('marking squares with the right mouse button', () => {
     const puzzle = makeLichessPuzzle({
       fen: '6k1/p4ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1',
