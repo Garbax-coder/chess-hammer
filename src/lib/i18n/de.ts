@@ -338,6 +338,7 @@ export const de: Translations = {
     reviewingMove: (ply) => `Zug ${ply} wird angesehen`,
     opponentMoving: 'Der Gegner zieht…',
     solved: 'Gelöst! 🎉',
+    checkmate: 'Schachmatt',
     wrongMove: 'Falscher Zug',
     moveWith: (color) => `Du spielst ${color}`,
     white: 'Weiß',

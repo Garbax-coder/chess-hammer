@@ -336,6 +336,7 @@ export const fr: Translations = {
     reviewingMove: (ply) => `Revue du coup ${ply}`,
     opponentMoving: 'L’adversaire joue…',
     solved: 'Résolu ! 🎉',
+    checkmate: 'Échec et mat',
     wrongMove: 'Mauvais coup',
     moveWith: (color) => `Vous jouez les ${color}`,
     white: 'Blancs',

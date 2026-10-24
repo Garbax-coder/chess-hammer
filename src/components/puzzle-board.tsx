@@ -1,6 +1,13 @@
 import { Chess, type Square } from 'chess.js'
 import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
 import { Chessboard, type Arrow } from 'react-chessboard'
 import { AnalysisPanel } from '@/components/analysis-panel'
 import { EvalBar } from '@/components/eval-bar'
@@ -428,6 +435,33 @@ export function PuzzleBoard({
   // il matto. Va rilevato qui con chess.js, non dedotto da un punteggio che
   // semplicemente non arriva.
   const isDisplayCheckmate = displayGame.isCheckmate()
+  // Casa del re sotto scacco nella posizione mostrata (sempre il lato che
+  // deve muovere), per animarlo e colorare di rosso la sua casa.
+  const checkedKingSquare = useMemo(
+    () =>
+      displayGame.inCheck()
+        ? (displayGame.findPiece({ type: 'k', color: displayGame.turn() })[0] ?? null)
+        : null,
+    [displayGame],
+  )
+  // Quando lo scacco finisce (o passa all'altro re) lo sfondo rosso della
+  // casa precedente sfuma invece di sparire di colpo: si ricorda quale era.
+  // Aggiornato durante il render (non in un effetto), legato al puzzle: lo
+  // scacco di un puzzle non deve sfumare sulla scacchiera del successivo.
+  const [checkTrail, setCheckTrail] = useState<{
+    puzzleId: string
+    current: string | null
+    previous: string | null
+  }>({ puzzleId: puzzle.puzzle_id, current: checkedKingSquare, previous: null })
+  if (checkTrail.puzzleId !== puzzle.puzzle_id || checkTrail.current !== checkedKingSquare) {
+    setCheckTrail({
+      puzzleId: puzzle.puzzle_id,
+      current: checkedKingSquare,
+      previous: checkTrail.puzzleId === puzzle.puzzle_id ? checkTrail.current : null,
+    })
+  }
+  const fadingCheckSquare =
+    checkTrail.previous !== checkedKingSquare ? checkTrail.previous : null
   // A differenza dello scacco matto, una posizione ripetuta 3 volte non
   // impedisce da sola altre mosse (sono ancora legali): va controllata a
   // parte per terminare l'esplorazione in analisi, vedi attemptFreeMove.
@@ -494,6 +528,56 @@ export function PuzzleBoard({
 
     return Object.keys(styles).length > 0 ? styles : undefined
   }, [lastMoveSquares, effectiveWrongMove, effectiveSelection, markedSquares])
+
+  // Contenuto di ogni casa. Come il default di react-chessboard (un livello
+  // a tutta casa con squareStyles, sopra il colore della scacchiera), piu':
+  // sul re sotto scacco lo sfondo rosso e l'animazione, sul re matto anche il
+  // simbolo "#"; sulla casa da cui lo scacco e' appena sparito, lo sfondo che
+  // sfuma. Il pezzo resta sempre dentro lo stesso livello, cosi' cambiare
+  // stato non smonta e rimonta il pezzo trascinabile.
+  function renderSquare({ square, children }: { square: string; children?: ReactNode }) {
+    const isCheck = square === checkedKingSquare
+    const isFading = square === fadingCheckSquare
+    const isMate = isCheck && isDisplayCheckmate
+    return (
+      <div
+        data-check={isMate ? 'mate' : isCheck ? 'check' : undefined}
+        style={{ width: '100%', height: '100%', position: 'relative', ...squareStyles?.[square] }}
+      >
+        {(isCheck || isFading) && (
+          <div aria-hidden className={isCheck ? 'check-glow' : 'check-glow check-glow-out'} />
+        )}
+        <div
+          className={isMate ? 'king-mated' : isCheck ? 'king-in-check' : undefined}
+          style={{ width: '100%', height: '100%' }}
+        >
+          {children}
+        </div>
+        {isMate && (
+          <svg
+            aria-label={t.puzzleBoard.checkmate}
+            role="img"
+            viewBox="0 0 20 20"
+            className="pointer-events-none absolute"
+            style={{ top: '3%', right: '3%', width: '36%', zIndex: 2 }}
+          >
+            <circle cx="10" cy="10" r="9.5" fill="#b91c1c" stroke="white" strokeWidth="1" />
+            <text
+              x="10"
+              y="14.6"
+              textAnchor="middle"
+              fontSize="13"
+              fontWeight="700"
+              fill="white"
+              fontFamily="system-ui, sans-serif"
+            >
+              #
+            </text>
+          </svg>
+        )}
+      </div>
+    )
+  }
 
   // Calcolate qui (in un event handler, non durante il render) cosi'
   // gameRef puo' essere letto liberamente senza toccare la logica di
@@ -902,7 +986,7 @@ export function PuzzleBoard({
                 lightSquareStyle: { backgroundColor: theme.light },
                 darkSquareStyle: { backgroundColor: theme.dark },
                 pieces,
-                squareStyles,
+                squareRenderer: renderSquare,
                 arrows: bestMoveArrows,
                 // react-chessboard usa `id` per generare selettori CSS interni
                 // (es. `#${id}-square-a1`): un ID CSS non puo' iniziare con una

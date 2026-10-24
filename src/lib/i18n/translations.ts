@@ -239,6 +239,7 @@ export interface Translations {
     reviewingMove: (ply: number) => string
     opponentMoving: string
     solved: string
+    checkmate: string
     wrongMove: string
     moveWith: (color: string) => string
     white: string
@@ -734,6 +735,7 @@ export const it: Translations = {
     reviewingMove: (ply) => `Stai rivedendo la mossa ${ply}`,
     opponentMoving: "L'avversario muove…",
     solved: 'Risolto! 🎉',
+    checkmate: 'Scacco matto',
     wrongMove: 'Mossa sbagliata',
     moveWith: (color) => `Muovi con il ${color}`,
     white: 'Bianco',
@@ -1288,6 +1290,7 @@ export const en: Translations = {
     reviewingMove: (ply) => `Reviewing move ${ply}`,
     opponentMoving: 'Opponent is moving…',
     solved: 'Solved! 🎉',
+    checkmate: 'Checkmate',
     wrongMove: 'Wrong move',
     moveWith: (color) => `Move with ${color}`,
     white: 'White',

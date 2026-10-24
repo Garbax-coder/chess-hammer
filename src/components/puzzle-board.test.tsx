@@ -71,6 +71,70 @@ describe('PuzzleBoard', () => {
     expect(animatedPieces(container).map((el) => el.dataset.piece)).toEqual(['wQ'])
   })
 
+  describe('check and checkmate', () => {
+    function renderPuzzle(fen: string, moves: string[]) {
+      const { container } = render(
+        <PuzzleBoard
+          puzzle={makeLichessPuzzle({ fen, moves })}
+          autoAdvance={false}
+          onComplete={() => {}}
+          onAdvance={() => {}}
+        />,
+      )
+      act(() => vi.advanceTimersByTime(2000)) // mossa d'apertura dell'avversario
+      const square = (name: string) =>
+        container.querySelector<HTMLElement>(`[data-square="${name}"]`)!
+      const layer = (name: string) =>
+        square(name).querySelector<HTMLElement>(':scope > div')!
+      const play = (from: string, to: string) => {
+        act(() => {
+          fireEvent.click(square(from))
+        })
+        act(() => {
+          fireEvent.click(square(to))
+        })
+      }
+      return { layer, play }
+    }
+
+    // Il nero apre con Th1+: il re bianco in a1 e' sotto scacco; la
+    // soluzione Ra2 lo toglie dallo scacco.
+    const checkFen = '7r/8/8/8/8/2k5/8/K7 b - - 0 1'
+
+    it('shakes the king in check over a red background', () => {
+      const { layer } = renderPuzzle(checkFen, ['h8h1', 'a1a2'])
+
+      expect(layer('a1').dataset.check).toBe('check')
+      expect(layer('a1').querySelector('.check-glow')).not.toBeNull()
+      expect(layer('a1').querySelector('.king-in-check')).not.toBeNull()
+      expect(layer('b1').dataset.check).toBeUndefined()
+    })
+
+    it('fades the red background out once the king is out of check', () => {
+      const { layer, play } = renderPuzzle(checkFen, ['h8h1', 'a1a2'])
+
+      play('a1', 'a2')
+
+      expect(layer('a1').dataset.check).toBeUndefined()
+      expect(layer('a1').querySelector('.check-glow-out')).not.toBeNull()
+      expect(layer('a2').querySelector('.check-glow')).toBeNull()
+    })
+
+    it('lays the mated king down with the checkmate symbol', () => {
+      // Il nero apre con a6, poi Td8# matta il re nero in g8.
+      const { layer, play } = renderPuzzle('6k1/p4ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1', [
+        'a7a6',
+        'd1d8',
+      ])
+
+      play('d1', 'd8')
+
+      expect(layer('g8').dataset.check).toBe('mate')
+      expect(layer('g8').querySelector('.king-mated')).not.toBeNull()
+      expect(layer('g8').querySelector('[aria-label="Scacco matto"]')).not.toBeNull()
+    })
+  })
+
   describe('marking squares with the right mouse button', () => {
     const puzzle = makeLichessPuzzle({
       fen: '6k1/p4ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1',

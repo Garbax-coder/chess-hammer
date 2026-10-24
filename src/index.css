@@ -277,3 +277,117 @@
     opacity: 0;
   }
 }
+
+/* Re sotto scacco (PuzzleBoard): sfondo rosso a gradiente radiale, piu'
+   scuro al centro e piu' chiaro verso il bordo, che compare e poi sfuma
+   quando lo scacco finisce; il re fa una scossa ingrandendosi un poco. Con lo
+   scacco matto, dopo la scossa il re si stende e resta steso. */
+.check-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at center,
+    rgba(153, 27, 27, 0.95) 0%,
+    rgba(220, 38, 38, 0.75) 35%,
+    rgba(239, 68, 68, 0.4) 65%,
+    rgba(248, 113, 113, 0.15) 100%
+  );
+  animation: check-glow-in 200ms ease-out;
+}
+.check-glow-out {
+  animation: check-glow-out 450ms ease-out forwards;
+}
+.king-in-check,
+.king-mated {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}
+.king-in-check {
+  animation: king-check-shake 600ms ease-in-out;
+}
+.king-mated {
+  animation: king-mate-fall 1000ms ease-in-out forwards;
+}
+
+@keyframes check-glow-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes check-glow-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes king-check-shake {
+  0% {
+    transform: none;
+  }
+  15% {
+    transform: translateX(-6%) rotate(-6deg) scale(1.12);
+  }
+  30% {
+    transform: translateX(6%) rotate(6deg) scale(1.16);
+  }
+  45% {
+    transform: translateX(-5%) rotate(-4deg) scale(1.12);
+  }
+  60% {
+    transform: translateX(4%) rotate(3deg) scale(1.08);
+  }
+  80% {
+    transform: translateX(-2%) rotate(-1deg) scale(1.03);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes king-mate-fall {
+  0% {
+    transform: none;
+  }
+  10% {
+    transform: translateX(-6%) rotate(-6deg) scale(1.12);
+  }
+  20% {
+    transform: translateX(6%) rotate(6deg) scale(1.16);
+  }
+  30% {
+    transform: translateX(-5%) rotate(-4deg) scale(1.12);
+  }
+  40% {
+    transform: translateX(3%) rotate(2deg) scale(1.06);
+  }
+  55% {
+    transform: none;
+  }
+  100% {
+    transform: rotate(90deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .check-glow {
+    animation: none;
+  }
+  .check-glow-out {
+    animation: none;
+    opacity: 0;
+  }
+  .king-in-check {
+    animation: none;
+  }
+  .king-mated {
+    animation: none;
+    transform: rotate(90deg);
+  }
+}

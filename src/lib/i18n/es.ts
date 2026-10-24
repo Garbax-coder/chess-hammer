@@ -335,6 +335,7 @@ export const es: Translations = {
     reviewingMove: (ply) => `Revisando la jugada ${ply}`,
     opponentMoving: 'El rival está moviendo…',
     solved: '¡Resuelto! 🎉',
+    checkmate: 'Jaque mate',
     wrongMove: 'Jugada incorrecta',
     moveWith: (color) => `Juegas con las ${color}`,
     white: 'blancas',
