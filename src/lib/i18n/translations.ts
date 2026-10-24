@@ -703,9 +703,10 @@ export const it: Translations = {
     sessionFallback: (date) => `Sessione del ${date}`,
     bestTitle: 'Categorie migliori',
     worstTitle: 'Categorie peggiori',
-    themeLine: (rate, attempts) => `${rate}% · ${attempts} puzzle`,
-    themesNote: (min) => `Solo le categorie con almeno ${min} puzzle.`,
-    themesEmpty: (min) => `Servono almeno ${min} puzzle per categoria: continua ad allenarti.`,
+    themeLine: (rate, attempts) => `${rate}% · ${attempts} tentativi`,
+    themesNote: (min) => `Solo le categorie con almeno ${min} tentativi.`,
+    themesEmpty: (min) =>
+      `Servono almeno ${min} tentativi per categoria: continua ad allenarti.`,
     tabs: { training: 'Allenamento', practice: 'Pratica libera' },
     practiceSubtitle:
       'I puzzle rigiocati in pratica libera, divisi per la sessione da cui li hai aperti.',
@@ -1312,9 +1313,9 @@ export const en: Translations = {
     sessionFallback: (date) => `Session from ${date}`,
     bestTitle: 'Best categories',
     worstTitle: 'Worst categories',
-    themeLine: (rate, attempts) => `${rate}% · ${attempts} puzzles`,
-    themesNote: (min) => `Only categories with at least ${min} puzzles.`,
-    themesEmpty: (min) => `Each category needs at least ${min} puzzles: keep training.`,
+    themeLine: (rate, attempts) => `${rate}% · ${attempts} attempts`,
+    themesNote: (min) => `Only categories with at least ${min} attempts.`,
+    themesEmpty: (min) => `Each category needs at least ${min} attempts: keep training.`,
     tabs: { training: 'Training', practice: 'Free practice' },
     practiceSubtitle:
       'Puzzles replayed in free practice, split by the session you opened them from.',

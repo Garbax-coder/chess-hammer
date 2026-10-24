@@ -253,10 +253,10 @@ export const de: Translations = {
     sessionFallback: (date) => `Session vom ${date}`,
     bestTitle: 'Stärkste Kategorien',
     worstTitle: 'Schwächste Kategorien',
-    themeLine: (rate, attempts) => `${rate} % · ${attempts} Puzzles`,
-    themesNote: (min) => `Nur Kategorien mit mindestens ${min} Puzzles.`,
+    themeLine: (rate, attempts) => `${rate} % · ${attempts} Versuche`,
+    themesNote: (min) => `Nur Kategorien mit mindestens ${min} Versuchen.`,
     themesEmpty: (min) =>
-      `Jede Kategorie braucht mindestens ${min} Puzzles: Trainiere weiter.`,
+      `Jede Kategorie braucht mindestens ${min} Versuche: Trainiere weiter.`,
     tabs: { training: 'Training', practice: 'Freies Üben' },
     practiceSubtitle:
       'Im freien Üben wiederholte Puzzles, nach der Session, aus der du sie geöffnet hast.',

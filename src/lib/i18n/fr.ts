@@ -253,10 +253,10 @@ export const fr: Translations = {
     sessionFallback: (date) => `Session du ${date}`,
     bestTitle: 'Meilleures catégories',
     worstTitle: 'Catégories les plus faibles',
-    themeLine: (rate, attempts) => `${rate} % · ${attempts} puzzles`,
-    themesNote: (min) => `Seulement les catégories avec au moins ${min} puzzles.`,
+    themeLine: (rate, attempts) => `${rate} % · ${attempts} tentatives`,
+    themesNote: (min) => `Seulement les catégories avec au moins ${min} tentatives.`,
     themesEmpty: (min) =>
-      `Il faut au moins ${min} puzzles par catégorie : continuez à vous entraîner.`,
+      `Il faut au moins ${min} tentatives par catégorie : continuez à vous entraîner.`,
     tabs: { training: 'Entraînement', practice: 'Entraînement libre' },
     practiceSubtitle:
       'Les puzzles rejoués en entraînement libre, par session d’où vous les avez ouverts.',
