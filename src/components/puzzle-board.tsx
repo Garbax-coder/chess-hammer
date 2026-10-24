@@ -1,5 +1,5 @@
 import { Chess, type Square } from 'chess.js'
-import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, ExternalLink, X } from 'lucide-react'
 import {
   useEffect,
   useMemo,
@@ -13,6 +13,7 @@ import { AnalysisPanel } from '@/components/analysis-panel'
 import { EvalBar } from '@/components/eval-bar'
 import { MoveHistoryPanel } from '@/components/move-history'
 import { PromotionPicker, type PromotionPieceType } from '@/components/promotion-picker'
+import { PuzzleInfoContent } from '@/components/puzzle-info'
 import { SolvedFireworks } from '@/components/solved-fireworks'
 import { Button } from '@/components/ui/button'
 import { useStockfishAnalysis } from '@/hooks/use-stockfish-analysis'
@@ -175,6 +176,9 @@ interface PuzzleBoardProps {
   // il componente e' usato anche altrove (es. onboarding) senza un contesto
   // di sessione.
   progress?: { current: number; total: number }
+  // Azioni sul puzzle in corso (salvarlo tra i problematici, tornare alla
+  // lista): nella colonna accanto alla scacchiera, vicino a stato e frecce.
+  actions?: ReactNode
 }
 
 export function PuzzleBoard({
@@ -187,6 +191,7 @@ export function PuzzleBoard({
   boardTheme = DEFAULT_BOARD_THEME,
   pieceSet = DEFAULT_PIECE_SET,
   progress,
+  actions,
 }: PuzzleBoardProps) {
   const t = useTranslations()
   const theme = useMemo(() => boardThemeById(boardTheme), [boardTheme])
@@ -1113,6 +1118,8 @@ export function PuzzleBoard({
 
         <div className="hidden w-full lg:block">{moveNavButtons}</div>
 
+        {actions && <div className="flex w-full flex-wrap gap-2">{actions}</div>}
+
         {pendingCompletion && (
           <div className="flex w-full flex-col gap-4">
             <AnalysisPanel
@@ -1146,6 +1153,30 @@ export function PuzzleBoard({
                 {t.puzzleBoard.retry}
               </Button>
             )}
+            {/* Solo a puzzle concluso: i temi suggeriscono la soluzione. */}
+            <section
+              aria-label={t.puzzleBoard.infoTitle}
+              className="border-border/60 flex flex-col gap-2 rounded-lg border p-3"
+            >
+              <h2 className="text-foreground text-xs font-semibold">
+                {t.puzzleBoard.infoTitle}
+              </h2>
+              <PuzzleInfoContent
+                fen={puzzle.fen}
+                moves={puzzle.moves}
+                themes={puzzle.themes}
+                size="md"
+              />
+              <a
+                href={`https://lichess.org/training/${puzzle.puzzle_id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary flex w-fit items-center gap-1 text-xs underline-offset-4 hover:underline"
+              >
+                {t.puzzleBoard.openOnLichess}
+                <ExternalLink className="size-3" />
+              </a>
+            </section>
           </div>
         )}
       </div>

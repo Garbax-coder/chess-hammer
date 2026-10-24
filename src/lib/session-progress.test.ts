@@ -277,6 +277,7 @@ describe('boardPuzzleFrom', () => {
       fen: '8/8/8/8/8/8/8/K6k w - - 0 1',
       moves: ['a1a2', 'h1h2'],
       rating: 1430,
+      themes: ['endgame'],
     })
 
     expect(boardPuzzleFrom(result)).toEqual({
@@ -284,6 +285,7 @@ describe('boardPuzzleFrom', () => {
       fen: '8/8/8/8/8/8/8/K6k w - - 0 1',
       moves: ['a1a2', 'h1h2'],
       rating: 1430,
+      themes: ['endgame'],
     })
   })
 })

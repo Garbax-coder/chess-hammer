@@ -7,6 +7,7 @@ import { EditableSessionName } from '@/components/editable-session-name'
 import { PracticeFilterControls } from '@/components/practice-filter-controls'
 import { PuzzleBoard } from '@/components/puzzle-board'
 import { PuzzleBoardSkeleton } from '@/components/puzzle-board-skeleton'
+import { PuzzleSidebar } from '@/components/puzzle-sidebar'
 import { RoundSummary } from '@/components/round-summary'
 import { SavePuzzleToggle } from '@/components/save-puzzle-toggle'
 import { SessionPuzzleList } from '@/components/session-puzzle-list'
@@ -18,8 +19,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import { useActiveSession } from '@/hooks/use-active-session'
 import {
   nextPuzzleQueryKey,
@@ -34,7 +33,6 @@ import {
 } from '@/hooks/use-practice'
 import { useSavedPuzzles, useToggleSavedPuzzle } from '@/hooks/use-saved-puzzles'
 import { useSessionPuzzles } from '@/hooks/use-session-history'
-import { useSoundEnabled } from '@/hooks/use-sound-enabled'
 import { entriesForDay, todayKey } from '@/lib/session-days'
 import {
   boardPuzzleFrom,
@@ -44,11 +42,7 @@ import {
   type PracticeFilter,
 } from '@/lib/session-progress'
 import { useTranslations } from '@/lib/language-context'
-import {
-  useUpdateAutoAdvance,
-  useUpdatePracticeFilter,
-  useUserStats,
-} from '@/hooks/use-user-stats'
+import { useUpdatePracticeFilter, useUserStats } from '@/hooks/use-user-stats'
 import type { NextPuzzleOutcome } from '@/lib/puzzle-engine'
 import type { SessionPuzzleResult } from '@/types/training'
 
@@ -62,10 +56,8 @@ export default function TrainPage() {
   const { data: outcome, isLoading: loadingPuzzle } = useNextPuzzle(session)
   const recordAttempt = useRecordAttempt(session)
   const { data: stats } = useUserStats()
-  const updateAutoAdvance = useUpdateAutoAdvance()
   const { data: puzzles, isLoading: loadingPuzzles } = useSessionPuzzles(session)
   const recordPracticeAttempt = useRecordPracticeAttempt()
-  const { enabled: soundEnabled, setEnabled: setSoundEnabled } = useSoundEnabled()
 
   // Calcolati dagli stessi dati della lista puzzle in sidebar (puzzles), non
   // da query di rete separate: vedi deriveSessionProgress e useSessionPuzzles.
@@ -280,10 +272,6 @@ export default function TrainPage() {
     outcome?.status === 'quota_reached' ||
     outcome?.status === 'resting' ||
     outcome?.status === 'session_complete'
-  // Il puzzle sulla scacchiera, per il segnalibro dei "problematici".
-  const currentPuzzleId =
-    practiceSelection?.puzzleId ??
-    (completedRound === null && outcome?.status === 'next' ? outcome.data.puzzle.puzzle_id : null)
   const activeSessionPuzzleId =
     practiceSelection?.sessionPuzzleId ??
     (outcome?.status === 'next' ? outcome.data.sessionPuzzleId : null)
@@ -311,85 +299,32 @@ export default function TrainPage() {
 
   return (
     <main className="flex w-full flex-1 flex-col items-center gap-4 px-4 py-8 lg:flex-row lg:items-start lg:justify-center lg:gap-3">
-      {/* 117px = header (53px) + padding sopra/sotto di questo <main> (py-8,
-          32px ciascuno): senza sottrarli, la sidebar sticky puo' sporgere
-          di quel tanto oltre il fondo della viewport e costringere a
-          scorrere l'intera pagina solo per vederne l'ultima riga. */}
-      <aside className="order-2 flex min-h-0 w-full flex-col gap-4 lg:sticky lg:top-14 lg:order-1 lg:max-h-[calc(100vh-117px)] lg:w-64 lg:shrink-0 lg:self-start">
-        <div className="flex flex-col gap-3">
-          {practiceSelection ? (
-            <div>
-              <h1 className="text-foreground text-lg font-semibold tracking-tight">
-                {t.train.practiceTitle}
-              </h1>
-              <p className="text-muted-foreground text-sm">{t.train.practiceSubtitle}</p>
-            </div>
+      <PuzzleSidebar
+        title={
+          practiceSelection ? (
+            t.train.practiceTitle
           ) : (
-            <div>
-              <h1 className="text-foreground text-lg font-semibold tracking-tight">
-                <EditableSessionName session={session} fallback={t.train.title} />
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                {t.train.roundInfo(session.current_round, session.total_puzzles)}
-              </p>
+            <EditableSessionName session={session} fallback={t.train.title} />
+          )
+        }
+        subtitle={
+          practiceSelection ? (
+            <span>{t.train.practiceSubtitle}</span>
+          ) : (
+            <>
+              <span>{t.train.roundInfo(session.current_round, session.total_puzzles)}</span>
               {progress && (
-                <p className="text-muted-foreground text-sm">
+                <span>
                   {t.train.todayPuzzle(
                     Math.min(progress.attemptedToday + 1, progress.dailyTarget),
                     progress.dailyTarget,
                   )}
-                </p>
+                </span>
               )}
-            </div>
-          )}
-
-          {currentPuzzleId && <SavePuzzleToggle puzzleId={currentPuzzleId} />}
-
-          <div className="flex items-center gap-2">
-            <Switch
-              id="auto-advance"
-              checked={autoAdvance}
-              onCheckedChange={(checked) => updateAutoAdvance.mutate(checked)}
-            />
-            <Label htmlFor="auto-advance" className="text-muted-foreground text-sm">
-              {t.train.autoAdvance}
-            </Label>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Switch
-              id="sound-enabled"
-              checked={soundEnabled}
-              onCheckedChange={setSoundEnabled}
-            />
-            <Label htmlFor="sound-enabled" className="text-muted-foreground text-sm">
-              {t.train.soundEnabled}
-            </Label>
-          </div>
-
-          {/* Solo quando la pratica libera e' disponibile: decide sia il
-              "Puzzle successivo" in pratica sia da dove riprende "Continua in
-              pratica libera" nelle schermate di riepilogo. */}
-          {(practiceSelection || canPractice) && (
-            <PracticeFilterControls
-              filter={practiceFilter}
-              update={updatePracticeFilter.mutate}
-              showNoSavedHint={
-                practiceFilter.onlySaved === true &&
-                !practiceFilter.onlyFailed &&
-                !!savedPuzzleIds &&
-                !(puzzles ?? []).some((p) => savedPuzzleIds.has(p.puzzleId))
-              }
-            />
-          )}
-        </div>
-
-        {practiceSelection && (
-          <Button variant="outline" size="sm" onClick={() => setPracticeSelection(null)}>
-            {t.train.backToList}
-          </Button>
-        )}
-
+            </>
+          )
+        }
+      >
         <SessionPuzzleList
           puzzles={puzzles ?? []}
           isLoading={loadingPuzzles}
@@ -401,8 +336,25 @@ export default function TrainPage() {
           onToggleSaved={(puzzleId, saved) => toggleSavedPuzzle.mutate({ puzzleId, saved })}
           onSelectPuzzle={handleSelectPuzzle}
           boardTheme={boardTheme}
+          // Solo quando la pratica libera e' disponibile: decide sia il
+          // "Puzzle successivo" in pratica sia da dove riprende "Continua in
+          // pratica libera" nelle schermate di riepilogo.
+          filters={
+            (practiceSelection || canPractice) && (
+              <PracticeFilterControls
+                filter={practiceFilter}
+                update={updatePracticeFilter.mutate}
+                showNoSavedHint={
+                  practiceFilter.onlySaved === true &&
+                  !practiceFilter.onlyFailed &&
+                  !!savedPuzzleIds &&
+                  !(puzzles ?? []).some((p) => savedPuzzleIds.has(p.puzzleId))
+                }
+              />
+            )
+          }
         />
-      </aside>
+      </PuzzleSidebar>
 
       <div className="order-1 flex w-full flex-col items-center justify-center gap-6 lg:order-2 lg:w-auto">
         {practiceSelection ? (
@@ -421,6 +373,18 @@ export default function TrainPage() {
                 practiceOrderIndex !== undefined
                   ? { current: practiceOrderIndex, total: session.total_puzzles }
                   : undefined
+              }
+              actions={
+                <>
+                  <SavePuzzleToggle puzzleId={practicePuzzle.puzzle_id} />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPracticeSelection(null)}
+                  >
+                    {t.train.backToList}
+                  </Button>
+                </>
               }
             />
           ) : (
@@ -556,6 +520,7 @@ export default function TrainPage() {
                 isCompleting={recordAttempt.isPending}
                 boardTheme={boardTheme}
                 pieceSet={pieceSet}
+                actions={<SavePuzzleToggle puzzleId={outcome.data.puzzle.puzzle_id} />}
                 progress={
                   progress
                     ? {

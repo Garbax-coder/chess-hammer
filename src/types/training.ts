@@ -66,8 +66,12 @@ export interface LichessPuzzle {
 }
 
 /** Quello che serve alla scacchiera: c'e' gia' nella lista dei puzzle della
- *  sessione (SessionPuzzleResult), senza rileggere il puzzle completo. */
-export type BoardPuzzle = Pick<LichessPuzzle, 'puzzle_id' | 'fen' | 'moves' | 'rating'>
+ *  sessione (SessionPuzzleResult), senza rileggere il puzzle completo. I temi
+ *  si mostrano a puzzle concluso. */
+export type BoardPuzzle = Pick<
+  LichessPuzzle,
+  'puzzle_id' | 'fen' | 'moves' | 'rating' | 'themes'
+>
 
 export interface SessionPuzzle {
   id: string

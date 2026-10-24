@@ -96,10 +96,8 @@ describe('SessionDetailPage free practice', () => {
 
   it('shows the practice filter before a puzzle is picked', () => {
     renderDetail()
-    expect(
-      screen.getByRole('switch', { name: t.train.failedPuzzles }),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('switch', { name: t.train.savedPuzzles })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t.train.failedPuzzles })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t.train.savedPuzzles })).toBeInTheDocument()
   })
 
   it('cannot start when the filter leaves no puzzle to practice', () => {

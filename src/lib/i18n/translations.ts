@@ -253,9 +253,11 @@ export interface Translations {
     title: string
     roundInfo: (round: number, total: number) => string
     todayPuzzle: (current: number, target: number) => string
+    settings: string
     autoAdvance: string
     soundEnabled: string
     practiceOnlyTitle: string
+    // Etichette brevi: sono pulsanti affiancati sotto practiceOnlyTitle.
     failedPuzzles: string
     savedPuzzles: string
     noSavedPuzzles: string
@@ -295,6 +297,8 @@ export interface Translations {
     nextMove: string
     nextPuzzle: string
     retry: string
+    infoTitle: string
+    openOnLichess: string
     choosePromotion: string
     promotionPieces: { q: string; r: string; b: string; n: string }
   }
@@ -703,9 +707,10 @@ export const it: Translations = {
     sessionFallback: (date) => `Sessione del ${date}`,
     bestTitle: 'Categorie migliori',
     worstTitle: 'Categorie peggiori',
-    themeLine: (rate, attempts) => `${rate}% · ${attempts} puzzle`,
-    themesNote: (min) => `Solo le categorie con almeno ${min} puzzle.`,
-    themesEmpty: (min) => `Servono almeno ${min} puzzle per categoria: continua ad allenarti.`,
+    themeLine: (rate, attempts) => `${rate}% · ${attempts} tentativi`,
+    themesNote: (min) => `Solo le categorie con almeno ${min} tentativi.`,
+    themesEmpty: (min) =>
+      `Servono almeno ${min} tentativi per categoria: continua ad allenarti.`,
     tabs: { training: 'Allenamento', practice: 'Pratica libera' },
     practiceSubtitle:
       'I puzzle rigiocati in pratica libera, divisi per la sessione da cui li hai aperti.',
@@ -799,11 +804,12 @@ export const it: Translations = {
     title: 'Allenamento',
     roundInfo: (round, total) => `Giro ${round} di 3 — ${total} puzzle totali`,
     todayPuzzle: (current, target) => `Puzzle di oggi: ${current}/${target}`,
+    settings: 'Impostazioni',
     autoAdvance: 'Avanzamento automatico',
     soundEnabled: 'Suoni',
     practiceOnlyTitle: 'Pratica libera solo su',
-    failedPuzzles: 'Puzzle falliti',
-    savedPuzzles: 'Puzzle problematici',
+    failedPuzzles: 'Falliti',
+    savedPuzzles: 'Problematici',
     noSavedPuzzles:
       'Nessun puzzle problematico in questa sessione: salvane uno con il segnalibro.',
     failedScopeAll: 'Tutti i falliti',
@@ -844,6 +850,8 @@ export const it: Translations = {
     nextMove: 'Mossa successiva',
     nextPuzzle: 'Puzzle successivo →',
     retry: 'Rifai il puzzle',
+    infoTitle: 'Informazioni sul puzzle',
+    openOnLichess: 'Apri su Lichess',
     choosePromotion: 'Scegli il pezzo per la promozione',
     promotionPieces: { q: 'Regina', r: 'Torre', b: 'Alfiere', n: 'Cavallo' },
   },
@@ -1312,9 +1320,9 @@ export const en: Translations = {
     sessionFallback: (date) => `Session from ${date}`,
     bestTitle: 'Best categories',
     worstTitle: 'Worst categories',
-    themeLine: (rate, attempts) => `${rate}% · ${attempts} puzzles`,
-    themesNote: (min) => `Only categories with at least ${min} puzzles.`,
-    themesEmpty: (min) => `Each category needs at least ${min} puzzles: keep training.`,
+    themeLine: (rate, attempts) => `${rate}% · ${attempts} attempts`,
+    themesNote: (min) => `Only categories with at least ${min} attempts.`,
+    themesEmpty: (min) => `Each category needs at least ${min} attempts: keep training.`,
     tabs: { training: 'Training', practice: 'Free practice' },
     practiceSubtitle:
       'Puzzles replayed in free practice, split by the session you opened them from.',
@@ -1408,11 +1416,12 @@ export const en: Translations = {
     title: 'Training',
     roundInfo: (round, total) => `Round ${round} of 3 — ${total} total puzzles`,
     todayPuzzle: (current, target) => `Today's puzzle: ${current}/${target}`,
+    settings: 'Settings',
     autoAdvance: 'Auto-advance',
     soundEnabled: 'Sounds',
     practiceOnlyTitle: 'Free practice only on',
-    failedPuzzles: 'Failed puzzles',
-    savedPuzzles: 'Problem puzzles',
+    failedPuzzles: 'Failed',
+    savedPuzzles: 'Problem',
     noSavedPuzzles:
       'No problem puzzles in this session: save one with the bookmark.',
     failedScopeAll: 'All failed',
@@ -1453,6 +1462,8 @@ export const en: Translations = {
     nextMove: 'Next move',
     nextPuzzle: 'Next puzzle →',
     retry: 'Try this puzzle again',
+    infoTitle: 'About this puzzle',
+    openOnLichess: 'Open on Lichess',
     choosePromotion: 'Choose promotion piece',
     promotionPieces: { q: 'Queen', r: 'Rook', b: 'Bishop', n: 'Knight' },
   },

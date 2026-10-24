@@ -192,6 +192,63 @@ describe('PuzzleBoard', () => {
     })
   })
 
+  describe('next to the board', () => {
+    const puzzle = makeLichessPuzzle({
+      puzzle_id: 'Ab12C',
+      fen: '6k1/p4ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1',
+      moves: ['a7a6', 'd1d8'],
+      themes: ['backRankMate', 'mateIn1'],
+    })
+
+    function renderBoard() {
+      const view = render(
+        <PuzzleBoard
+          puzzle={puzzle}
+          autoAdvance={false}
+          onComplete={() => {}}
+          onAdvance={() => {}}
+          actions={<button type="button">azione</button>}
+        />,
+      )
+      act(() => vi.advanceTimersByTime(2000))
+      return view
+    }
+
+    it('shows the actions on the puzzle while it is being solved', () => {
+      const view = renderBoard()
+      expect(view.getByRole('button', { name: 'azione' })).toBeInTheDocument()
+    })
+
+    it('shows the themes and the Lichess link only once the puzzle is over', () => {
+      const view = renderBoard()
+      const info = () =>
+        view.queryByRole('region', { name: itTranslations.puzzleBoard.infoTitle })
+      // Prima della soluzione i temi la suggerirebbero.
+      expect(info()).not.toBeInTheDocument()
+      expect(
+        view.queryByText(itTranslations.puzzleThemes.labels.backRankMate),
+      ).not.toBeInTheDocument()
+
+      const square = (name: string) =>
+        view.container.querySelector(`[data-square="${name}"]`)!
+      act(() => {
+        fireEvent.click(square('d1'))
+      })
+      act(() => {
+        fireEvent.click(square('d8'))
+      })
+      act(() => vi.advanceTimersByTime(2000))
+
+      expect(info()).toBeInTheDocument()
+      expect(
+        view.getByText(itTranslations.puzzleThemes.labels.backRankMate),
+      ).toBeInTheDocument()
+      expect(
+        view.getByRole('link', { name: itTranslations.puzzleBoard.openOnLichess }),
+      ).toHaveAttribute('href', 'https://lichess.org/training/Ab12C')
+    })
+  })
+
   describe('marking squares with the right mouse button', () => {
     const puzzle = makeLichessPuzzle({
       fen: '6k1/p4ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1',
