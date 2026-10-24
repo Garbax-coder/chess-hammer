@@ -4,6 +4,32 @@ Stato: **proposta / analisi** (2026-10-24). Nessun codice o migrazione ancora
 scritto. Questo documento raccoglie le fonti dati, il modello dati e le
 funzionalità tipiche per una feature di allenamento sulle aperture.
 
+## Sviluppo
+
+La feature si sviluppa sul branch di lunga durata `feature/opening-training`
+e va in `main` solo quando è pronta. Nel frattempo la manutenzione
+dell'app in produzione continua come sempre, su branch brevi da `main`.
+
+- **Allineamento con `main`**: dopo ogni pubblicazione, `main` si porta nel
+  branch con un merge (niente rebase), così i conflitti si risolvono un
+  poco alla volta e non tutti alla fine.
+- **Migrazioni**: la feature usa i numeri da `0100` in su
+  (`0100_opening_….sql`, `0101_…`); la manutenzione continua con `0037`,
+  `0038`… senza collisioni. In produzione le `01xx` arrivano solo al merge,
+  dopo tutte le altre. In sviluppo invece, dopo le `01xx`, una migrazione di
+  manutenzione con numero più basso va applicata con
+  `supabase db push --db-url "$DEV_SUPABASE_DB_URL" --include-all`.
+- **Database di sviluppo condiviso**: finché la feature non è in `main`, le
+  sue migrazioni sono solo additive (tabelle, indici e funzioni nuovi); non
+  modificano tabelle o funzioni che usa `main`. Se servisse, se ne discute
+  prima.
+- **Codice**: la feature vive in file e route nuovi; le modifiche ai file
+  condivisi (navigazione, traduzioni, `App.tsx`) restano piccole, per
+  limitare i conflitti con la manutenzione.
+- **Prima del merge**: typecheck, lint, test unitari, build ed e2e, come per
+  ogni rilascio; le tabelle nuove con GRANT espliciti e in
+  `supabase/tests/table-grants.sql`.
+
 ## Concetti
 
 - **Repertorio**: albero di mosse per un'apertura, giocato da un colore
