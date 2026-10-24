@@ -1,16 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { trainingStatsKey } from '@/hooks/use-training-stats'
 import { useAuth } from '@/lib/auth-context'
-import { fetchPuzzleById } from '@/lib/puzzle-engine'
 import { fetchPracticeAttempts, recordPracticeAttempt } from '@/lib/practice'
 import type { AttemptResult, PracticeAttempt } from '@/types/training'
-
-export function usePuzzleById(puzzleId: string | undefined) {
-  return useQuery({
-    queryKey: ['puzzle', puzzleId],
-    queryFn: () => fetchPuzzleById(puzzleId!),
-    enabled: !!puzzleId,
-  })
-}
 
 export function usePracticeAttempts(puzzleIds: string[]) {
   const { user } = useAuth()
@@ -56,6 +48,12 @@ export function useRecordPracticeAttempt() {
           return next
         },
       )
+      // Le statistiche della pratica libera vanno rilette alla prossima
+      // apertura della pagina (solo segnate come vecchie).
+      queryClient.invalidateQueries({
+        queryKey: trainingStatsKey(user?.id),
+        refetchType: 'none',
+      })
     },
   })
 }

@@ -2,10 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
 import { sessionRoundStatsKey } from '@/hooks/use-session-stats'
 import { trainingStatsKey } from '@/hooks/use-training-stats'
+import { userStatsKey } from '@/hooks/use-user-stats'
 import { syncSessionPuzzles } from '@/lib/session-puzzles-cache'
 import {
   getNextPuzzle,
-  getUserElo,
   recordAttemptAndGetNextPuzzle,
   type NextPuzzleOutcome,
 } from '@/lib/puzzle-engine'
@@ -36,8 +36,7 @@ export function useNextPuzzle(session: TrainingSession | null | undefined) {
   return useQuery({
     queryKey: nextPuzzleQueryKey(session?.id),
     queryFn: async () => {
-      const elo = await getUserElo(user!.id)
-      const outcome = await getNextPuzzle(session!, elo)
+      const outcome = await getNextPuzzle(session!.id)
       // getNextPuzzle puo', come effetto collaterale, inserire un nuovo
       // session_puzzle (nuova pesca al giro 1) o avanzare di giro: senza
       // aggiornare la lista, la sidebar (useSessionPuzzles, cache separata)
@@ -100,12 +99,20 @@ export function useRecordAttempt(session: TrainingSession | null | undefined) {
       if (roundChanged && outcome.status !== 'session_complete') {
         queryClient.invalidateQueries({ queryKey: ['active-session', user?.id] })
       }
-      // Le statistiche dell'utente vanno rilette alla prossima apertura
-      // della pagina (solo segnate come vecchie: nessuna richiesta adesso).
-      queryClient.invalidateQueries({
-        queryKey: trainingStatsKey(user?.id),
-        refetchType: 'none',
-      })
+      // Quello che il tentativo cambia (ELO e conteggi, statistiche,
+      // dettaglio e avanzamento della sessione) va riletto alla prossima
+      // apertura della pagina che lo mostra: solo segnato come vecchio,
+      // nessuna richiesta adesso.
+      for (const queryKey of [
+        userStatsKey(user?.id),
+        trainingStatsKey(user?.id),
+        ['elo-history', user?.id],
+        ['sessions-list', user?.id],
+        ['session-detail', session?.id],
+        ['session-progress', session?.id],
+      ]) {
+        queryClient.invalidateQueries({ queryKey, refetchType: 'none' })
+      }
       // I riepiloghi di fine giro leggono statistiche aggiornate.
       if (roundChanged) {
         queryClient.invalidateQueries({ queryKey: sessionRoundStatsKey(user?.id) })

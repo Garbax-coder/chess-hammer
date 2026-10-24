@@ -7,6 +7,7 @@ import {
   startOfTodayIso,
 } from '@/lib/puzzle-engine'
 import type {
+  BoardPuzzle,
   PracticeAttempt,
   SessionProgress,
   SessionPuzzleResult,
@@ -131,4 +132,15 @@ export function practiceResumePuzzle(
   if (!last) return pool[0]
   const lastOrderIndex = last.puzzle.orderIndex
   return pool.find((p) => p.orderIndex > lastOrderIndex) ?? pool[0]
+}
+
+// Il puzzle da mostrare in pratica libera, dalla lista gia' in mano: nessuna
+// richiesta al passaggio da un puzzle all'altro.
+export function boardPuzzleFrom(result: SessionPuzzleResult): BoardPuzzle {
+  return {
+    puzzle_id: result.puzzleId,
+    fen: result.fen,
+    moves: result.moves,
+    rating: result.rating,
+  }
 }

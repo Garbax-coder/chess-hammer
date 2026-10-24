@@ -35,7 +35,7 @@ import { DEFAULT_PIECE_SET, pieceSetById, type PieceSetId } from '@/lib/piece-se
 import { isAcceptedMove, needsPromotion } from '@/lib/puzzle-moves'
 import { playIllegalMoveSound, playMoveSound } from '@/lib/sound-effects'
 import { parseUci } from '@/lib/uci'
-import type { LichessPuzzle } from '@/types/training'
+import type { BoardPuzzle } from '@/types/training'
 
 const BEST_MOVE_ARROW_COLOR = 'rgba(37, 99, 235, 0.8)'
 // calc(100vw - 2rem) invece di una frazione fissa (es. 90vw): la scacchiera
@@ -144,7 +144,7 @@ interface PendingPromotion {
 }
 
 interface PuzzleBoardProps {
-  puzzle: LichessPuzzle
+  puzzle: BoardPuzzle
   autoAdvance: boolean
   // Chiamata SUBITO quando il puzzle finisce (risolto o sbagliato), non al
   // passaggio al successivo: deve registrare il tentativo appena accade,

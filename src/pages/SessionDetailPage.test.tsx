@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { it as itTranslations } from '@/lib/i18n/translations'
-import { makeLichessPuzzle, makePuzzleResult, makeSession } from '@/test/fixtures'
+import { makePuzzleResult, makeSession } from '@/test/fixtures'
 import type { PracticeAttempt } from '@/types/training'
 import SessionDetailPage from './SessionDetailPage'
 
@@ -22,9 +22,6 @@ vi.mock('@/hooks/use-session-history', () => ({
 }))
 vi.mock('@/hooks/use-practice', () => ({
   usePracticeAttempts: () => ({ data: practiceAttempts }),
-  usePuzzleById: (puzzleId: string | undefined) => ({
-    data: puzzleId ? makeLichessPuzzle({ puzzle_id: puzzleId }) : undefined,
-  }),
   useRecordPracticeAttempt: () => ({ mutateAsync: async () => {}, isPending: false }),
 }))
 vi.mock('@/hooks/use-saved-puzzles', () => ({
