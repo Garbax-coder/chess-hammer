@@ -11,7 +11,7 @@ export default function PrivacyEn() {
   return (
     <>
       <p>
-        Last updated: October 18, 2026. This notice describes what personal data{' '}
+        Last updated: October 24, 2026. This notice describes what personal data{' '}
         {SITE_DOMAIN} ("Chess Hammer", "the Service") collects, why, and what rights you
         have over it, under Regulation (EU) 2016/679 (GDPR).
       </p>
@@ -47,6 +47,12 @@ export default function PrivacyEn() {
           name or your IP address.
         </li>
         <li>
+          <b>Performance measurements:</b> how long pages and requests to the server take
+          to load, to find out what is slow (page and request address without parameters
+          or identifiers, browser and operating system type, app version). They don't
+          contain your email, your name or your IP address.
+        </li>
+        <li>
           <b>Minimal technical data:</b> IP address and browser information, processed by
           our infrastructure providers (below) only to run and secure the Service; we
           don't use it to profile you.
@@ -70,8 +76,9 @@ export default function PrivacyEn() {
           protecting the Service and its users.
         </li>
         <li>
-          <b>Fixing errors</b> (knowing when and where the app breaks, and checking that
-          the site is reachable): legitimate interest in offering a working Service.
+          <b>Fixing errors and slowdowns</b> (knowing when and where the app breaks or
+          slows down, and checking that the site is reachable): legitimate interest in
+          offering a working Service.
         </li>
         <li>
           <b>Aggregate usage statistics</b> (how many people train, how often they come
@@ -110,9 +117,9 @@ export default function PrivacyEn() {
           infrastructure (Belgium).
         </li>
         <li>
-          <b>Sentry</b> (error reports and site availability checks) — data stored in the
-          EU region (Germany). The availability check queries the site from several
-          countries and involves no personal data.
+          <b>Sentry</b> (error reports, performance measurements and site availability
+          checks) — data stored in the EU region (Germany). The availability check queries
+          the site from several countries and involves no personal data.
         </li>
         <li>
           <b>Cloudflare</b> ("Turnstile" bot check on signup, sign-in and password reset).
@@ -140,10 +147,11 @@ export default function PrivacyEn() {
         linked sessions, attempts and statistics. To protect data against failures, a
         backup copy of the database is saved every week on Google Cloud, in private
         storage in the European Union, and kept for at most 8 weeks: within that period a
-        deleted account's data also disappears from the copies. Error reports are deleted
-        after 30 days. If you don't use your account for 24 months we delete it, with all
-        its data: we email you 30 days before, and signing in is enough to keep it.
-        Accounts that are registered but never confirmed are deleted after 7 days.
+        deleted account's data also disappears from the copies. Error reports and
+        performance measurements are deleted after 30 days. If you don't use your account
+        for 24 months we delete it, with all its data: we email you 30 days before, and
+        signing in is enough to keep it. Accounts that are registered but never confirmed
+        are deleted after 7 days.
       </p>
 
       <h2>Cookies and browser storage</h2>

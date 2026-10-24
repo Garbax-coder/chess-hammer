@@ -10,6 +10,16 @@ REGION=europe-west1
 BUCKET=chess-hammer-db-backups
 SA=db-backup@$PROJECT.iam.gserviceaccount.com
 ALERT_EMAIL="${ALERT_EMAIL:?imposta ALERT_EMAIL con la email che riceve gli avvisi}"
+# Check-in del monitor Sentry Cron "db-backup-weekly" (vedi job.sh), ricavati
+# dal DSN di Sentry (lo stesso di VITE_SENTRY_DSN, non e' un segreto):
+# https://<chiave>@<host>/<progetto> -> https://<host>/api/<progetto>/cron/db-backup-weekly/<chiave>/
+SENTRY_DSN="${SENTRY_DSN:?imposta SENTRY_DSN con il DSN di Sentry (lo stesso di VITE_SENTRY_DSN)}"
+sentry_key="${SENTRY_DSN#https://}"
+sentry_key="${sentry_key%%@*}"
+sentry_host="${SENTRY_DSN#*@}"
+sentry_project="${sentry_host##*/}"
+sentry_host="${sentry_host%%/*}"
+SENTRY_CRONS="https://$sentry_host/api/$sentry_project/cron/db-backup-weekly/$sentry_key/"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 
 gcloud services enable run.googleapis.com cloudscheduler.googleapis.com \
@@ -49,6 +59,7 @@ gcloud run jobs create db-backup --project=$PROJECT --region=$REGION \
   --add-volume=name=backups,type=cloud-storage,bucket=$BUCKET \
   --add-volume-mount=volume=backups,mount-path=/backups \
   --command=bash --args="^@^-c@$(cat "$ROOT/scripts/cloud-backup/job.sh")" \
+  --set-env-vars=SENTRY_CRONS="$SENTRY_CRONS" \
   --task-timeout=15m --max-retries=1 --cpu=1 --memory=512Mi
 gcloud run jobs add-iam-policy-binding db-backup --project=$PROJECT --region=$REGION \
   --member="serviceAccount:$SA" --role=roles/run.invoker

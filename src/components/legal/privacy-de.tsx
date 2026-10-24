@@ -11,7 +11,7 @@ export default function PrivacyDe() {
   return (
     <>
       <p>
-        Zuletzt aktualisiert: 18. Oktober 2026. Diese Datenschutzerklärung beschreibt,
+        Zuletzt aktualisiert: 24. Oktober 2026. Diese Datenschutzerklärung beschreibt,
         welche personenbezogenen Daten {SITE_DOMAIN} („Chess Hammer“, „der Dienst“)
         erhebt, zu welchen Zwecken und welche Rechte du daran hast, gemäß der Verordnung
         (EU) 2016/679 (DSGVO).
@@ -51,6 +51,12 @@ export default function PrivacyDe() {
           E-Mail-Adresse noch deinen Namen oder deine IP-Adresse.
         </li>
         <li>
+          <b>Leistungsmessungen:</b> die Ladezeiten der Seiten und der Anfragen an den
+          Server, um herauszufinden, was langsam ist (Seite und Adresse der Anfragen ohne
+          Parameter oder Kennungen, Browser- und Betriebssystemtyp, App-Version). Sie
+          enthalten weder deine E-Mail-Adresse noch deinen Namen oder deine IP-Adresse.
+        </li>
+        <li>
           <b>Minimale technische Daten:</b> IP-Adresse und Browserinformationen, die
           unsere Infrastrukturanbieter (siehe unten) nur für Betrieb und Sicherheit des
           Dienstes verarbeiten; wir nutzen sie nicht, um Profile zu erstellen.
@@ -74,9 +80,9 @@ export default function PrivacyDe() {
           Interesse am Schutz des Dienstes und seiner Nutzer.
         </li>
         <li>
-          <b>Fehlerbehebung</b> (erfahren, wann und wo die App Fehler hat, und prüfen, ob
-          die Website erreichbar ist): berechtigtes Interesse an einem funktionierenden
-          Dienst.
+          <b>Behebung von Fehlern und Verzögerungen</b> (erfahren, wann und wo die App
+          Fehler hat oder langsam ist, und prüfen, ob die Website erreichbar ist):
+          berechtigtes Interesse an einem funktionierenden Dienst.
         </li>
         <li>
           <b>Zusammengefasste Nutzungsstatistiken</b> (wie viele Personen trainieren, wie
@@ -117,10 +123,10 @@ export default function PrivacyDe() {
           Infrastruktur in der EU-Region (Belgien).
         </li>
         <li>
-          <b>Sentry</b> (Fehlerberichte und Prüfung der Erreichbarkeit der Website) —
-          Daten gespeichert in der EU-Region (Deutschland). Die Erreichbarkeitsprüfung
-          ruft die Website aus mehreren Ländern auf und betrifft keine personenbezogenen
-          Daten.
+          <b>Sentry</b> (Fehlerberichte, Leistungsmessungen und Prüfung der Erreichbarkeit
+          der Website) — Daten gespeichert in der EU-Region (Deutschland). Die
+          Erreichbarkeitsprüfung ruft die Website aus mehreren Ländern auf und betrifft
+          keine personenbezogenen Daten.
         </li>
         <li>
           <b>Cloudflare</b> („Turnstile“-Prüfung gegen Bots bei Registrierung, Anmeldung
@@ -152,11 +158,11 @@ export default function PrivacyDe() {
         Ausfällen wird jede Woche eine Sicherungskopie der Datenbank in einem privaten
         Speicher von Google Cloud in der Europäischen Union abgelegt und höchstens 8
         Wochen aufbewahrt: Innerhalb dieser Frist verschwinden die Daten eines gelöschten
-        Kontos auch aus den Kopien. Fehlerberichte werden nach 30 Tagen gelöscht. Wenn du
-        dein Konto 24 Monate lang nicht nutzt, löschen wir es mit allen Daten: Wir
-        benachrichtigen dich 30 Tage vorher per E-Mail, und eine Anmeldung genügt, um es
-        zu behalten. Registrierte, aber nie bestätigte Konten werden nach 7 Tagen
-        gelöscht.
+        Kontos auch aus den Kopien. Fehlerberichte und Leistungsmessungen werden nach 30
+        Tagen gelöscht. Wenn du dein Konto 24 Monate lang nicht nutzt, löschen wir es mit
+        allen Daten: Wir benachrichtigen dich 30 Tage vorher per E-Mail, und eine
+        Anmeldung genügt, um es zu behalten. Registrierte, aber nie bestätigte Konten
+        werden nach 7 Tagen gelöscht.
       </p>
 
       <h2>Cookies und Browserspeicher</h2>

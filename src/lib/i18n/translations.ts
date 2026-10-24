@@ -929,6 +929,7 @@ export const it: Translations = {
     updatedTitle: "Abbiamo aggiornato Termini e Privacy",
     updatedIntro: "Ecco cosa cambia:",
     changes: [
+      'Misuriamo con Sentry i tempi di caricamento delle pagine e delle richieste al server, per trovare cosa è lento: senza email, nome né indirizzo IP, cancellati dopo 30 giorni.',
       "Il titolare può consultare in sola lettura i dati del tuo account, da un'area riservata solo a lui, per l'assistenza e la gestione del Servizio.",
     ],
     continuing: "Continuando a usare Chess Hammer accetti i testi aggiornati.",
@@ -1525,6 +1526,7 @@ export const en: Translations = {
     updatedTitle: "We've updated our Terms and Privacy Policy",
     updatedIntro: "Here's what changed:",
     changes: [
+      'We use Sentry to measure how long pages and server requests take to load, to find what is slow: without email, name or IP address, deleted after 30 days.',
       'The controller can view your account data in read-only mode, from an area only they can access, for support and to run the Service.',
     ],
     continuing: "By continuing to use Chess Hammer you accept the updated texts.",

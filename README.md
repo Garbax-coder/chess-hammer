@@ -188,6 +188,19 @@ al testo. Se un backup fallisce, o lo Scheduler non riesce ad avviarlo, Cloud Mo
 manda un'email: con la cancellazione automatica, un errore ignorato per 8 settimane
 lascerebbe il bucket vuoto.
 
+Il job manda anche i check-in al monitor **Sentry Cron** `db-backup-weekly` ("in corso"
+all'avvio, poi "ok" o "error"): se una domenica il backup non parte affatto (Scheduler
+disattivato, fatturazione sospesa) Sentry segnala l'esecuzione mancata e manda un'email.
+Il monitor si crea da solo al primo check-in. L'indirizzo dei check-in, ricavato dal DSN
+di Sentry, sta nella variabile `SENTRY_CRONS` del job; per aggiornare il job dopo una
+modifica a `job.sh`:
+
+```bash
+gcloud run jobs update db-backup --project=chess-hammer --region=europe-west1 \
+  --args="^@^-c@$(cat scripts/cloud-backup/job.sh)" \
+  --update-env-vars=SENTRY_CRONS="https://<host>/api/<progetto>/cron/db-backup-weekly/<chiave>/"
+```
+
 Lo stesso job misura anche la dimensione del database: oltre i **400 MB** (80% dei 500 MB
 del piano gratuito) scrive nei log la riga `DB_SIZE_ALERT` e arriva un'email (al massimo
 una al giorno). La soglia si cambia con la variabile `DB_SIZE_ALERT_MB`; per provare
@@ -222,9 +235,13 @@ psql "$DB" -c "create trigger on_auth_user_created after insert on auth.users
 rm -f *.dump   # contengono dati personali
 ```
 
-Dopo il ripristino vanno riapplicati i permessi di `anon`/`authenticated` sullo schema
-`public` (il backup è fatto con `--no-privileges`): sono quelli predefiniti di un progetto
-Supabase nuovo, ma vanno verificati al primo ripristino di prova.
+Dopo il ripristino vanno riapplicati i permessi delle tabelle (il backup è fatto con
+`--no-privileges`, e dal 30 ottobre 2026 un progetto Supabase nuovo non li dà più in
+automatico): basta rieseguire la migrazione che li scrive tutti.
+
+```bash
+psql "$DB" -f supabase/migrations/0032_explicit_table_grants.sql
+```
 
 ## Flusso funzionale
 
