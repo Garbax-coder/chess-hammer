@@ -337,16 +337,16 @@ function LineRow({
               {o.mastered(mastery.mastered, mastery.total)}
             </span>
           </div>
-          {/* Una linea con mosse mai viste si studia; poi si allena. */}
-          {mastery.new > 0 ? (
-            <Button asChild size="sm">
+          {/* Studio e allenamento sempre; in evidenza lo studio finche' la
+              linea ha mosse mai viste, poi l'allenamento. */}
+          <div className="flex flex-wrap justify-end gap-1.5">
+            <Button asChild size="sm" variant={mastery.new > 0 ? 'default' : 'outline'}>
               <Link to={`/openings/${slug}/learn?line=${leaf.id}`}>{o.learnLine}</Link>
             </Button>
-          ) : (
-            <Button asChild size="sm" variant="outline">
+            <Button asChild size="sm" variant={mastery.new > 0 ? 'outline' : 'default'}>
               <Link to={`/openings/${slug}?line=${leaf.id}`}>{o.trainLine}</Link>
             </Button>
-          )}
+          </div>
         </div>
       </div>
     </li>

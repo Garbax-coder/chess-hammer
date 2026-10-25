@@ -91,12 +91,13 @@ export default function OpeningsPage() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {/* Con mosse mai viste si comincia studiandole. */}
-                    {coverage.userMoves > coverage.seen && (
-                      <Button asChild>
-                        <Link to={`/openings/${repertoire.slug}/learn`}>{o.learn}</Link>
-                      </Button>
-                    )}
+                    {/* Sempre disponibile; in evidenza finche' ci sono mosse mai viste. */}
+                    <Button
+                      asChild
+                      variant={coverage.userMoves > coverage.seen ? 'default' : 'outline'}
+                    >
+                      <Link to={`/openings/${repertoire.slug}/learn`}>{o.learn}</Link>
+                    </Button>
                     <Button
                       asChild
                       variant={coverage.userMoves > coverage.seen ? 'outline' : 'default'}

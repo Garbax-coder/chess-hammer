@@ -107,6 +107,8 @@ describe('OpeningLearnPage', () => {
 
   it('guides the user through the first line with new moves', () => {
     renderLearn()
+    // Quale linea, rispetto a tutte e a quelle ancora da studiare.
+    expect(screen.getByText(`${o.lineOf(1, 2)} · ${o.toLearn(2)}`)).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent(o.playMove('1.e4'))
     expect(screen.getByTestId('board')).toHaveAttribute('data-hint', 'e2e4')
 
@@ -139,13 +141,17 @@ describe('OpeningLearnPage', () => {
     expect(screen.getByRole('status')).toHaveTextContent(o.playMove('2.Nc3'))
   })
 
-  it('says when every line has been learned', () => {
+  it('stays available when every line has been learned, as a review', () => {
     progress = new Map([1, 3, 5].map((id) => [id, learned(id)]))
     renderLearn()
-    expect(screen.getByText(o.allLearned)).toBeInTheDocument()
-    for (const link of screen.getAllByRole('link', { name: o.train })) {
-      expect(link).toHaveAttribute('href', '/openings/italian-game')
-    }
+    expect(screen.getByText(o.allLearnedReview)).toBeInTheDocument()
+    expect(screen.getByText(`${o.lineOf(1, 2)} · ${o.toLearn(0)}`)).toBeInTheDocument()
+    // Si ripassa la prima linea (con l'avanzamento rapido, dall'ultima mossa).
+    expect(screen.getByRole('status')).toHaveTextContent(o.playMove('2.Nf3'))
+    fireEvent.click(screen.getByRole('button', { name: 'g1f3' }))
+    // Finita, si passa alla successiva nell'ordine dell'albero.
+    fireEvent.click(screen.getByRole('button', { name: o.nextRun }))
+    expect(screen.getByText(`${o.lineOf(2, 2)} · ${o.toLearn(0)}`)).toBeInTheDocument()
   })
 
   it('opens the line chosen from the browse page, skipping the moves already known', () => {

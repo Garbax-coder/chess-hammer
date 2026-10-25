@@ -104,7 +104,12 @@ describe('OpeningLinesPage', () => {
       '/openings/italian-game/learn?line=3',
       '/openings/italian-game/learn?line=5',
     ])
-    expect(screen.queryByRole('link', { name: o.trainLine })).not.toBeInTheDocument()
+    // L'allenamento resta sempre disponibile accanto.
+    expect(
+      screen
+        .getAllByRole('link', { name: o.trainLine })
+        .map((a) => a.getAttribute('href')),
+    ).toEqual(['/openings/italian-game?line=3', '/openings/italian-game?line=5'])
     expect(screen.getByRole('button', { name: '1.e4 e5 2.Nf3' })).toBeInTheDocument()
     // Il nome di ogni linea, con il codice ECO.
     expect(screen.getAllByText("King's Knight Opening").length).toBeGreaterThan(0)

@@ -55,6 +55,9 @@ export interface OpeningsTranslations {
   learnNext: string
   repeatLearn: string
   allLearned: string
+  allLearnedReview: string
+  lineOf: (n: number, total: number) => string
+  toLearn: (n: number) => string
   alternativeLabel: string
   alternativePlayed: (played: string, main: string) => string
   fastForward: string
@@ -162,6 +165,9 @@ const it: OpeningsTranslations = {
   learnNext: 'Studia la prossima linea',
   repeatLearn: 'Rivedi questa linea',
   allLearned: 'Hai già studiato tutte le linee di questo repertorio: ora allenale.',
+  allLearnedReview: 'Hai già studiato tutte le linee: le stai ripassando.',
+  lineOf: (n, total) => `Linea ${n} di ${total}`,
+  toLearn: (n) => (n === 0 ? 'tutte studiate' : `${n} da studiare`),
   alternativeLabel: 'Alternativa accettata',
   alternativePlayed: (played, main) =>
     `${played} è una buona mossa, ma in questa linea alleniamo ${main}.`,
@@ -279,6 +285,9 @@ const en: OpeningsTranslations = {
   learnNext: 'Learn the next line',
   repeatLearn: 'Go through this line again',
   allLearned: 'You have learned every line of this repertoire: now train them.',
+  allLearnedReview: 'You have learned every line: you are going through them again.',
+  lineOf: (n, total) => `Line ${n} of ${total}`,
+  toLearn: (n) => (n === 0 ? 'all learned' : `${n} to learn`),
   alternativeLabel: 'Accepted alternative',
   alternativePlayed: (played, main) =>
     `${played} is a good move, but in this line we train ${main}.`,
@@ -393,6 +402,9 @@ const fr: OpeningsTranslations = {
   repeatLearn: 'Revoir cette ligne',
   allLearned:
     'Vous avez appris toutes les lignes de ce répertoire : entraînez-les maintenant.',
+  allLearnedReview: 'Vous avez appris toutes les lignes : vous les révisez.',
+  lineOf: (n, total) => `Ligne ${n} sur ${total}`,
+  toLearn: (n) => (n === 0 ? 'toutes apprises' : `${n} à apprendre`),
   alternativeLabel: 'Alternative acceptée',
   alternativePlayed: (played, main) =>
     `${played} est un bon coup, mais dans cette ligne on entraîne ${main}.`,
@@ -514,6 +526,9 @@ const es: OpeningsTranslations = {
   learnNext: 'Aprender la siguiente línea',
   repeatLearn: 'Repasar esta línea',
   allLearned: 'Ya has aprendido todas las líneas de este repertorio: ahora entrénalas.',
+  allLearnedReview: 'Ya has aprendido todas las líneas: las estás repasando.',
+  lineOf: (n, total) => `Línea ${n} de ${total}`,
+  toLearn: (n) => (n === 0 ? 'todas aprendidas' : `${n} por aprender`),
   alternativeLabel: 'Alternativa aceptada',
   alternativePlayed: (played, main) =>
     `${played} es una buena jugada, pero en esta línea entrenamos ${main}.`,
@@ -632,6 +647,9 @@ const de: OpeningsTranslations = {
   learnNext: 'Nächste Linie lernen',
   repeatLearn: 'Diese Linie noch einmal ansehen',
   allLearned: 'Du hast alle Linien dieses Repertoires gelernt: Trainiere sie jetzt.',
+  allLearnedReview: 'Du hast alle Linien gelernt: Du wiederholst sie.',
+  lineOf: (n, total) => `Linie ${n} von ${total}`,
+  toLearn: (n) => (n === 0 ? 'alle gelernt' : `${n} zu lernen`),
   alternativeLabel: 'Akzeptierte Alternative',
   alternativePlayed: (played, main) =>
     `${played} ist ein guter Zug, aber in dieser Linie trainieren wir ${main}.`,

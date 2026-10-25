@@ -14,7 +14,13 @@ import { useOpeningRun } from '@/hooks/use-opening-run'
 import { useLearnOpeningMove, useOpeningNames } from '@/hooks/use-openings'
 import { useUserStats } from '@/hooks/use-user-stats'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
-import { chooseLearnRun, moveLabel, nameAt } from '@/lib/opening-tree'
+import {
+  chooseLearnRun,
+  isUserMove,
+  moveLabel,
+  nameAt,
+  runPath,
+} from '@/lib/opening-tree'
 
 // Modalita' Learn: si studia una linea seguendo la freccia. L'avversario
 // risponde da solo; ogni mossa dell'utente si gioca guidati (o la gioca
@@ -37,13 +43,15 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
   const color = repertoire.color
   const base = `/openings/${repertoire.slug}`
 
-  // La linea scelta (?line=<foglia>), oppure la prima con mosse nuove.
+  // La linea scelta (?line=<foglia>), oppure la prima con mosse nuove; se
+  // sono gia' state studiate tutte, la prima: lo studio resta sempre
+  // disponibile, come ripasso.
   const [searchParams] = useSearchParams()
-  const [leafId, setLeafId] = useState<number | undefined>(() => {
+  const [leafId, setLeafId] = useState<number>(() => {
     const requested = Number(searchParams.get('line'))
     return tree.leaves.some((leaf) => leaf.id === requested)
       ? requested
-      : chooseLearnRun(tree, progress, color)
+      : (chooseLearnRun(tree, progress, color) ?? tree.leaves[0].id)
   })
   const [nonce, setNonce] = useState(0)
   const [fastForward, setFastForward] = useLocalToggle('openings-fast-forward', true)
@@ -60,7 +68,7 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
   })
   const { path, index, next, done, userTurn, hint } = run
 
-  function startLine(id: number | undefined) {
+  function startLine(id: number) {
     setLeafId(id)
     setNonce((n) => n + 1)
   }
@@ -76,7 +84,16 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
       : userTurn
         ? o.playMove(label)
         : o.opponentMoving
+  // A fine linea: la prossima con mosse nuove, altrimenti la successiva
+  // nell'ordine dell'albero (si ripassano tutte, una dopo l'altra).
+  const position = tree.leaves.findIndex((leaf) => leaf.id === leafId)
+  const toLearn = tree.leaves.filter((leaf) =>
+    runPath(tree, leaf.id).some(
+      (n) => n.is_main && isUserMove(n, color) && !progress.has(n.id),
+    ),
+  ).length
   const nextToLearn = done ? chooseLearnRun(tree, progress, color, leafId) : undefined
+  const nextInOrder = tree.leaves[(position + 1) % tree.leaves.length].id
 
   return (
     <OpeningPageLayout
@@ -131,60 +148,51 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
         />
       }
       right={
-        leafId === undefined ? (
-          <>
-            <p className="text-foreground text-sm">{o.allLearned}</p>
+        <>
+          <span className="text-muted-foreground text-xs tabular-nums">
+            {o.lineOf(position + 1, tree.leaves.length)} · {o.toLearn(toLearn)}
+          </span>
+          {toLearn === 0 && (
+            <p className="text-muted-foreground text-xs">{o.allLearnedReview}</p>
+          )}
+          <p
+            role="status"
+            className={`text-sm font-medium ${
+              hint
+                ? hint.alternative
+                  ? 'text-amber-700 dark:text-amber-300'
+                  : 'text-destructive'
+                : 'text-foreground'
+            }`}
+          >
+            {status}
+          </p>
+          {learn.isError && <p className="text-destructive text-xs">{o.saveError}</p>}
+          {userTurn && (
+            <Button
+              variant="outline"
+              className="w-fit"
+              onClick={() => next && run.handleMove(next.uci)}
+            >
+              {o.playForMe}
+            </Button>
+          )}
+          {done && (
             <div className="flex flex-wrap gap-2">
-              <Button asChild>
-                <Link to={base}>{o.train}</Link>
-              </Button>
+              {nextToLearn !== undefined ? (
+                <Button onClick={() => startLine(nextToLearn)}>{o.learnNext}</Button>
+              ) : (
+                <Button onClick={() => startLine(nextInOrder)}>{o.nextRun}</Button>
+              )}
               <Button asChild variant="outline">
-                <Link to={`${base}/lines`}>{o.browse}</Link>
+                <Link to={`${base}?line=${leafId}`}>{o.trainLine}</Link>
+              </Button>
+              <Button variant="outline" onClick={() => startLine(leafId)}>
+                {o.repeatLearn}
               </Button>
             </div>
-          </>
-        ) : (
-          <>
-            <p
-              role="status"
-              className={`text-sm font-medium ${
-                hint
-                  ? hint.alternative
-                    ? 'text-amber-700 dark:text-amber-300'
-                    : 'text-destructive'
-                  : 'text-foreground'
-              }`}
-            >
-              {status}
-            </p>
-            {learn.isError && <p className="text-destructive text-xs">{o.saveError}</p>}
-            {userTurn && (
-              <Button
-                variant="outline"
-                className="w-fit"
-                onClick={() => next && run.handleMove(next.uci)}
-              >
-                {o.playForMe}
-              </Button>
-            )}
-            {done && (
-              <div className="flex flex-wrap gap-2">
-                {nextToLearn !== undefined && (
-                  <Button onClick={() => startLine(nextToLearn)}>{o.learnNext}</Button>
-                )}
-                <Button
-                  asChild
-                  variant={nextToLearn === undefined ? 'default' : 'outline'}
-                >
-                  <Link to={`${base}?line=${leafId}`}>{o.trainLine}</Link>
-                </Button>
-                <Button variant="outline" onClick={() => startLine(leafId)}>
-                  {o.repeatLearn}
-                </Button>
-              </div>
-            )}
-          </>
-        )
+          )}
+        </>
       }
     />
   )
