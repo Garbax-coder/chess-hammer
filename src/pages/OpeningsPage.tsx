@@ -74,9 +74,14 @@ export default function OpeningsPage() {
                       {o.newMoves(coverage.userMoves - coverage.seen)}
                     </p>
                   </div>
-                  <Button asChild className="w-fit">
-                    <Link to={`/openings/${repertoire.slug}`}>{o.train}</Link>
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild>
+                      <Link to={`/openings/${repertoire.slug}`}>{o.train}</Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                      <Link to={`/openings/${repertoire.slug}/lines`}>{o.browse}</Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )

@@ -9,7 +9,7 @@ import OpeningDrillPage, { OPPONENT_DELAY_MS } from './OpeningDrillPage'
 const o = openingsTranslations.it
 const record = vi.fn()
 
-// Bianco: 1.e4 e5 2.Nf3, un solo Run.
+// Bianco: 1.e4 e5 2.Nf3 (Run 3) oppure 1.e4 c5 2.Nc3 (Run 5).
 function node(id: number, parent: number | null, ply: number, san: string, uci: string) {
   return { id, parent_id: parent, ply, uci, san, epd: `epd-${id}` } satisfies OpeningNode
 }
@@ -23,6 +23,8 @@ const repertoire: RepertoireWithNodes = {
     node(1, null, 1, 'e4', 'e2e4'),
     node(2, 1, 2, 'e5', 'e7e5'),
     node(3, 2, 3, 'Nf3', 'g1f3'),
+    node(4, 1, 2, 'c5', 'c7c5'),
+    node(5, 4, 3, 'Nc3', 'b1c3'),
   ],
 }
 
@@ -62,9 +64,9 @@ vi.mock('@/components/opening-board', () => ({
   ),
 }))
 
-function renderDrill() {
+function renderDrill(path = '/openings/italian-game') {
   render(
-    <MemoryRouter initialEntries={['/openings/italian-game']}>
+    <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route path="/openings/:slug" element={<OpeningDrillPage />} />
       </Routes>
@@ -116,6 +118,18 @@ describe('OpeningDrillPage', () => {
     // Si ricomincia: di nuovo la prima mossa.
     fireEvent.click(screen.getByRole('button', { name: o.repeatRun }))
     expect(screen.getByRole('status')).toHaveTextContent(o.yourMove)
+  })
+
+  it('trains the line chosen from the browse page', () => {
+    renderDrill('/openings/italian-game?line=5')
+    fireEvent.click(screen.getByRole('button', { name: 'e2e4' }))
+    act(() => vi.advanceTimersByTime(OPPONENT_DELAY_MS))
+    // L'avversario segue la linea scelta (1...c5), non la prima (1...e5).
+    fireEvent.click(screen.getByRole('button', { name: 'b1c3' }))
+    expect(record).toHaveBeenLastCalledWith(
+      expect.objectContaining({ nodeId: 5, runLeafId: 5, result: 'correct' }),
+    )
+    expect(screen.getByRole('status')).toHaveTextContent(o.runDone)
   })
 
   it('shows the repertoire name in the user language', () => {

@@ -1,6 +1,6 @@
 import { Chess } from 'chess.js'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { OpeningBoard } from '@/components/opening-board'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -103,9 +103,17 @@ function OpeningDrill({
   const { data: stats } = useUserStats()
   const record = useRecordOpeningMove()
   const color = repertoire.color
-  const [run, setRun] = useState<RunState>(() =>
-    newRun(chooseRun(tree, progress, color, new Date())!),
-  )
+  // Una linea scelta dalla pagina di consultazione (?line=<foglia>), oppure
+  // quella con piu' mosse da fare.
+  const [searchParams] = useSearchParams()
+  const [run, setRun] = useState<RunState>(() => {
+    const requested = Number(searchParams.get('line'))
+    return newRun(
+      tree.leaves.some((leaf) => leaf.id === requested)
+        ? requested
+        : chooseRun(tree, progress, color, new Date())!,
+    )
+  })
 
   const path = useMemo(() => runPath(tree, run.leafId), [tree, run.leafId])
   const fen = useMemo(() => {
@@ -170,12 +178,20 @@ function OpeningDrill({
           <p className="text-muted-foreground text-xs">
             {o.color[color]} · {o.runs(coverage.runs)}
           </p>
-          <Link
-            to="/openings"
-            className="text-primary w-fit text-xs underline-offset-4 hover:underline"
-          >
-            {o.back}
-          </Link>
+          <div className="flex gap-3 text-xs">
+            <Link
+              to="/openings"
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              {o.back}
+            </Link>
+            <Link
+              to={`/openings/${repertoire.slug}/lines`}
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              {o.browse}
+            </Link>
+          </div>
         </div>
 
         <Card size="sm">

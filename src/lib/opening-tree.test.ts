@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildOpeningTree,
+  chainFrom,
   chooseRun,
+  moveLabel,
   moveState,
   openingCoverage,
+  runMastery,
   runPath,
   sameMove,
   type OpeningNode,
@@ -41,6 +44,18 @@ function progress(
 }
 
 describe('buildOpeningTree / runPath', () => {
+  it('lists the Runs in the order of the tree, not of their ids', () => {
+    const shuffled = buildOpeningTree([
+      node(1, null, 1, 'e4'),
+      node(9, 1, 2, 'e5'),
+      node(4, 9, 3, 'Nf3'),
+      node(2, 1, 2, 'c5'),
+      node(3, 2, 3, 'Nf3'),
+    ])
+    // Fratelli per id (c5 = 2 prima di e5 = 9), poi in profondita'.
+    expect(shuffled.leaves.map((l) => l.id)).toEqual([3, 4])
+  })
+
   it('finds the Runs as the leaves, and their moves from the start', () => {
     expect(tree.leaves.map((l) => l.id)).toEqual([3, 5])
     expect(runPath(tree, 5).map((n) => n.san)).toEqual(['e4', 'c5', 'Nf3'])
@@ -107,5 +122,31 @@ describe('sameMove', () => {
   it('compares UCI moves, promotion included', () => {
     expect(sameMove('e7e8Q', 'e7e8q')).toBe(true)
     expect(sameMove('e7e8n', 'e7e8q')).toBe(false)
+  })
+})
+
+describe('chainFrom / moveLabel', () => {
+  it('follows a line until it branches', () => {
+    // 1.e4 si dirama subito (e5 / c5): la catena e' solo 1.e4.
+    expect(chainFrom(tree, tree.byId.get(1)!).map((n) => n.id)).toEqual([1])
+    expect(chainFrom(tree, tree.byId.get(2)!).map((n) => n.id)).toEqual([2, 3])
+  })
+
+  it('numbers White moves, and Black moves that start a row', () => {
+    expect(moveLabel(tree.byId.get(1)!, true)).toBe('1.e4')
+    expect(moveLabel(tree.byId.get(2)!, true)).toBe('1...e5')
+    expect(moveLabel(tree.byId.get(2)!, false)).toBe('e5')
+    expect(moveLabel(tree.byId.get(3)!, false)).toBe('2.Nf3')
+  })
+})
+
+describe('runMastery', () => {
+  it('counts the user moves of one Run', () => {
+    const map = new Map([
+      [1, progress(1, 3, '2026-11-01T00:00:00Z')],
+      [5, progress(5, 0, '2026-10-25T10:00:00Z')],
+    ])
+    expect(runMastery(tree, 5, map, 'w', now)).toEqual({ mastered: 1, due: 1, total: 2 })
+    expect(runMastery(tree, 3, map, 'w', now)).toEqual({ mastered: 1, due: 0, total: 2 })
   })
 })

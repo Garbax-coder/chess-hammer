@@ -29,6 +29,7 @@ const StatsPage = lazy(() => import('@/pages/StatsPage'))
 const ThemePracticePage = lazy(() => import('@/pages/ThemePracticePage'))
 const OpeningsPage = lazy(() => import('@/pages/OpeningsPage'))
 const OpeningDrillPage = lazy(() => import('@/pages/OpeningDrillPage'))
+const OpeningLinesPage = lazy(() => import('@/pages/OpeningLinesPage'))
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
 const TermsPage = lazy(() => import('@/pages/TermsPage'))
 const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'))
@@ -153,6 +154,14 @@ function App() {
           element={
             <Protected>
               <OpeningDrillPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/openings/:slug/lines"
+          element={
+            <Protected>
+              <OpeningLinesPage />
             </Protected>
           }
         />

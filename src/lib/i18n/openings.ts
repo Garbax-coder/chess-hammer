@@ -30,6 +30,20 @@ export interface OpeningsTranslations {
   movesTitle: string
   progressTitle: string
   saveError: string
+  browse: string
+  treeTitle: string
+  linesTitle: string
+  startPosition: string
+  legendTitle: string
+  legend: { new: string; learning: string; due: string; mastered: string }
+  collapse: string
+  expand: string
+  opponentMove: string
+  neverPlayed: string
+  moveStats: (attempts: number, firstTryPercent: number) => string
+  nextReview: (date: string) => string
+  dueNow: string
+  trainLine: string
   /** Nomi dei repertori di catalogo, per slug (altrimenti il nome inglese). */
   names: Record<string, string>
 }
@@ -61,6 +75,26 @@ const it: OpeningsTranslations = {
   movesTitle: 'Mosse della linea',
   progressTitle: 'Progressi',
   saveError: 'La mossa non è stata salvata: controlla la connessione.',
+  browse: 'Consulta',
+  treeTitle: 'Albero delle varianti',
+  linesTitle: 'Linee',
+  startPosition: 'Posizione iniziale',
+  legendTitle: 'Le tue mosse',
+  legend: {
+    new: 'Nuova',
+    learning: 'In apprendimento',
+    due: 'Da ripassare',
+    mastered: 'Consolidata',
+  },
+  collapse: 'Comprimi il ramo',
+  expand: 'Espandi il ramo',
+  opponentMove: 'Mossa dell’avversario',
+  neverPlayed: 'Non ancora allenata',
+  moveStats: (attempts, pct) =>
+    `${attempts} ${attempts === 1 ? 'tentativo' : 'tentativi'} · ${pct}% al primo colpo`,
+  nextReview: (date) => `Prossimo ripasso: ${date}`,
+  dueNow: 'Da ripassare ora',
+  trainLine: 'Allena questa linea',
   names: {
     'italian-game': 'Partita Italiana',
     'queens-gambit': 'Gambetto di Donna',
@@ -94,6 +128,21 @@ const en: OpeningsTranslations = {
   movesTitle: 'Moves of the line',
   progressTitle: 'Progress',
   saveError: 'The move was not saved: check your connection.',
+  browse: 'Browse',
+  treeTitle: 'Variation tree',
+  linesTitle: 'Lines',
+  startPosition: 'Starting position',
+  legendTitle: 'Your moves',
+  legend: { new: 'New', learning: 'Learning', due: 'Due', mastered: 'Mastered' },
+  collapse: 'Collapse branch',
+  expand: 'Expand branch',
+  opponentMove: 'Opponent move',
+  neverPlayed: 'Not trained yet',
+  moveStats: (attempts, pct) =>
+    `${attempts} ${attempts === 1 ? 'attempt' : 'attempts'} · ${pct}% on the first try`,
+  nextReview: (date) => `Next review: ${date}`,
+  dueNow: 'Due now',
+  trainLine: 'Train this line',
   names: {},
 }
 
@@ -124,6 +173,21 @@ const fr: OpeningsTranslations = {
   movesTitle: 'Coups de la ligne',
   progressTitle: 'Progrès',
   saveError: 'Le coup n’a pas été enregistré : vérifiez la connexion.',
+  browse: 'Consulter',
+  treeTitle: 'Arbre des variantes',
+  linesTitle: 'Lignes',
+  startPosition: 'Position initiale',
+  legendTitle: 'Vos coups',
+  legend: { new: 'Nouveau', learning: 'En cours', due: 'À revoir', mastered: 'Maîtrisé' },
+  collapse: 'Replier la branche',
+  expand: 'Déplier la branche',
+  opponentMove: 'Coup de l’adversaire',
+  neverPlayed: 'Pas encore entraîné',
+  moveStats: (attempts, pct) =>
+    `${attempts} ${attempts === 1 ? 'essai' : 'essais'} · ${pct} % du premier coup`,
+  nextReview: (date) => `Prochaine révision : ${date}`,
+  dueNow: 'À revoir maintenant',
+  trainLine: 'Entraîner cette ligne',
   names: {
     'italian-game': 'Partie italienne',
     'queens-gambit': 'Gambit dame',
@@ -157,6 +221,26 @@ const es: OpeningsTranslations = {
   movesTitle: 'Jugadas de la línea',
   progressTitle: 'Progreso',
   saveError: 'La jugada no se ha guardado: comprueba la conexión.',
+  browse: 'Consultar',
+  treeTitle: 'Árbol de variantes',
+  linesTitle: 'Líneas',
+  startPosition: 'Posición inicial',
+  legendTitle: 'Tus jugadas',
+  legend: {
+    new: 'Nueva',
+    learning: 'Aprendiendo',
+    due: 'Para repasar',
+    mastered: 'Dominada',
+  },
+  collapse: 'Contraer la rama',
+  expand: 'Expandir la rama',
+  opponentMove: 'Jugada del rival',
+  neverPlayed: 'Aún sin entrenar',
+  moveStats: (attempts, pct) =>
+    `${attempts} ${attempts === 1 ? 'intento' : 'intentos'} · ${pct} % a la primera`,
+  nextReview: (date) => `Próximo repaso: ${date}`,
+  dueNow: 'Para repasar ahora',
+  trainLine: 'Entrenar esta línea',
   names: {
     'italian-game': 'Apertura italiana',
     'queens-gambit': 'Gambito de dama',
@@ -191,6 +275,21 @@ const de: OpeningsTranslations = {
   movesTitle: 'Züge der Linie',
   progressTitle: 'Fortschritt',
   saveError: 'Der Zug wurde nicht gespeichert: prüfe die Verbindung.',
+  browse: 'Ansehen',
+  treeTitle: 'Variantenbaum',
+  linesTitle: 'Linien',
+  startPosition: 'Ausgangsstellung',
+  legendTitle: 'Deine Züge',
+  legend: { new: 'Neu', learning: 'Im Lernen', due: 'Fällig', mastered: 'Gefestigt' },
+  collapse: 'Zweig einklappen',
+  expand: 'Zweig ausklappen',
+  opponentMove: 'Zug des Gegners',
+  neverPlayed: 'Noch nicht trainiert',
+  moveStats: (attempts, pct) =>
+    `${attempts} ${attempts === 1 ? 'Versuch' : 'Versuche'} · ${pct} % im ersten Versuch`,
+  nextReview: (date) => `Nächste Wiederholung: ${date}`,
+  dueNow: 'Jetzt fällig',
+  trainLine: 'Diese Linie trainieren',
   names: {
     'italian-game': 'Italienische Partie',
     'queens-gambit': 'Damengambit',

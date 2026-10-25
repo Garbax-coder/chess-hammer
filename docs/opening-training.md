@@ -206,6 +206,12 @@ Fatto (2026-10-25):
   `src/lib/i18n/openings.ts`.
 - **Prove** SQL in `supabase/tests/opening-training.sql` e tabelle aggiunte
   a `supabase/tests/table-grants.sql`.
+- **Consultazione** `/openings/:slug/lines` (2026-10-25): albero delle
+  varianti comprimibile con la padronanza di ogni mossa dell'utente
+  (heatmap: nuova, in apprendimento, da ripassare, consolidata), scacchiera
+  di sola lettura sulla mossa selezionata con tentativi, % al primo colpo e
+  prossimo ripasso, ed elenco delle linee nell'ordine dell'albero, ognuna da
+  allenare da sola (`/openings/:slug?line=<foglia>`).
 
 Da fare prima del merge:
 
@@ -220,5 +226,5 @@ Da fare prima del merge:
 Idee per i passi successivi: modalità Learn; alternative accettate
 (`is_main`); avanzamento rapido del tronco già consolidato; errori ripetuti a
 fine sessione; pesi dall'Opening Explorer (serve un token); cicli Woodpecker
-sui Run; vista ad albero con heatmap; import PGN dagli studi Lichess.
+sui Run; import PGN dagli studi Lichess.
 

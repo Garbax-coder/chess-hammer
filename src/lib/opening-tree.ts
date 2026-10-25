@@ -36,7 +36,16 @@ export function buildOpeningTree(nodes: OpeningNode[]): OpeningTree {
     children.set(node.parent_id, [...(children.get(node.parent_id) ?? []), node])
   }
   for (const list of children.values()) list.sort((a, b) => a.id - b.id)
-  const leaves = nodes.filter((n) => !children.has(n.id)).sort((a, b) => a.id - b.id)
+  // Le foglie nell'ordine dell'albero (dall'alto in basso), come si leggono
+  // nella vista ad albero.
+  const leaves: OpeningNode[] = []
+  const visit = (parentId: number | null) => {
+    for (const child of children.get(parentId) ?? []) {
+      if (children.has(child.id)) visit(child.id)
+      else leaves.push(child)
+    }
+  }
+  visit(null)
   return { byId, children, leaves }
 }
 
@@ -139,4 +148,46 @@ export function openingCoverage(
 /** La mossa giocata corrisponde a quella del repertorio (promozione compresa). */
 export function sameMove(playedUci: string, expectedUci: string): boolean {
   return playedUci.toLowerCase() === expectedUci.toLowerCase()
+}
+
+/**
+ * Le mosse da `node` in avanti finche' la linea non si dirama: nella vista ad
+ * albero una catena di mosse senza alternative sta su una riga sola, e le
+ * diramazioni dell'ultima mossa diventano rami annidati.
+ */
+export function chainFrom(tree: OpeningTree, node: OpeningNode): OpeningNode[] {
+  const chain = [node]
+  let children = tree.children.get(node.id) ?? []
+  while (children.length === 1) {
+    chain.push(children[0])
+    children = tree.children.get(children[0].id) ?? []
+  }
+  return chain
+}
+
+/**
+ * La mossa in notazione: "1.e4", "1...e5" quando una riga comincia con una
+ * mossa del Nero, altrimenti solo "e5".
+ */
+export function moveLabel(node: OpeningNode, startsRow: boolean): string {
+  const number = Math.ceil(node.ply / 2)
+  if (node.ply % 2 === 1) return `${number}.${node.san}`
+  return startsRow ? `${number}...${node.san}` : node.san
+}
+
+/** Padronanza di un Run: quante mosse dell'utente sono consolidate. */
+export function runMastery(
+  tree: OpeningTree,
+  leafId: number,
+  progress: Map<number, OpeningProgress>,
+  color: OpeningColor,
+  now: Date,
+): { mastered: number; due: number; total: number } {
+  const userMoves = runPath(tree, leafId).filter((n) => isUserMove(n, color))
+  const states = userMoves.map((n) => moveState(progress.get(n.id), now))
+  return {
+    mastered: states.filter((s) => s === 'mastered').length,
+    due: states.filter((s) => s === 'due').length,
+    total: userMoves.length,
+  }
 }
