@@ -35,13 +35,12 @@ describe('AppShell mobile menu', () => {
     expect(links).toEqual([
       itTranslations.nav.dashboard,
       itTranslations.nav.train,
-      itTranslations.nav.history,
-      itTranslations.nav.stats,
       openingsTranslations.it.navLabel,
+      itTranslations.nav.stats,
       itTranslations.nav.faq,
     ])
 
-    fireEvent.click(within(menu).getByRole('link', { name: itTranslations.nav.history }))
+    fireEvent.click(within(menu).getByRole('link', { name: itTranslations.nav.stats }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

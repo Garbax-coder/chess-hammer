@@ -1,15 +1,52 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
+import { openingsTranslations } from '@/lib/i18n/openings'
 import { it as itTranslations } from '@/lib/i18n/translations'
+import type { OpeningStatsData } from '@/lib/opening-stats'
+import type { OpeningProgress } from '@/lib/opening-tree'
+import type { RepertoireWithNodes } from '@/lib/openings'
 import type { TrainingStatsData } from '@/lib/training-stats'
 import StatsPage from './StatsPage'
 
 const t = itTranslations
+const o = openingsTranslations.it
 let data: TrainingStatsData
+
+// Bianco: 1.e4 e5 2.Nf3 (Run 3) oppure 1.e4 c5 2.Nc3 (Run 5).
+const repertoire: RepertoireWithNodes = {
+  id: 'r1',
+  slug: 'italian-game',
+  name: 'Italian Game',
+  eco: 'C50',
+  color: 'w',
+  owner_id: null,
+  nodes: [
+    { id: 1, parent_id: null, ply: 1, uci: 'e2e4', san: 'e4', epd: 'a', is_main: true },
+    { id: 2, parent_id: 1, ply: 2, uci: 'e7e5', san: 'e5', epd: 'b', is_main: true },
+    { id: 3, parent_id: 2, ply: 3, uci: 'g1f3', san: 'Nf3', epd: 'c', is_main: true },
+    { id: 4, parent_id: 1, ply: 2, uci: 'c7c5', san: 'c5', epd: 'd', is_main: true },
+    { id: 5, parent_id: 4, ply: 3, uci: 'b1c3', san: 'Nc3', epd: 'e', is_main: true },
+  ],
+}
+let openingStats: OpeningStatsData = { nodes: [], days: [], cycles: [] }
+const mastered: OpeningProgress = {
+  node_id: 1,
+  attempts: 6,
+  first_try_correct: 6,
+  streak: 6,
+  last_seen_at: '2026-10-24T10:00:00Z',
+  due_at: '2099-01-01T00:00:00Z',
+}
 
 vi.mock('@/lib/language-context', () => ({
   useTranslations: () => itTranslations,
+  useLanguage: () => ({ language: 'it' }),
+}))
+vi.mock('@/hooks/use-openings', () => ({
+  useRepertoires: () => ({ data: [repertoire] }),
+  useOpeningProgress: () => ({ data: new Map([[1, mastered]]) }),
+  useOpeningStats: () => ({ data: openingStats }),
 }))
 vi.mock('@/hooks/use-training-stats', () => ({
   useTrainingStats: () => ({ data, isLoading: false }),
@@ -175,5 +212,50 @@ describe('StatsPage free practice tab', () => {
     renderStats()
     fireEvent.click(screen.getByRole('tab', { name: t.stats.tabs.practice }))
     expect(screen.getByText(t.stats.practiceEmpty)).toBeInTheDocument()
+  })
+})
+
+describe('StatsPage openings tab', () => {
+  it('shows the opening totals, the activity, each repertoire and the hardest moves', () => {
+    const today = new Date().toISOString().slice(0, 10)
+    openingStats = {
+      // 1.e4: 6 giuste su 6; 2.Nc3: 2 sbagliate su 4.
+      nodes: [
+        { node_id: 1, attempts: 6, wrong: 0, avg_ms: 2000 },
+        { node_id: 5, attempts: 4, wrong: 2, avg_ms: 5000 },
+      ],
+      days: [{ day: today, attempts: 10, correct: 8 }],
+      cycles: [{ repertoire_id: 'r1', cycles: 2, best_ms: 60000 }],
+    }
+    renderStats()
+    fireEvent.click(screen.getByRole('tab', { name: o.statsTab }))
+    const panel = screen.getByRole('tabpanel')
+    expect(within(panel).getByText(o.statsSubtitle)).toBeInTheDocument()
+
+    const overview = within(panel)
+      .getByText(t.stats.overviewTitle)
+      .closest('[data-slot="card"]') as HTMLElement
+    expect(within(overview).getByText('10')).toBeInTheDocument()
+    expect(within(overview).getByText('80%')).toBeInTheDocument()
+    // (6 x 2 s + 4 x 5 s) / 10 = 3,2 s.
+    expect(within(overview).getByText('3 s')).toBeInTheDocument()
+
+    expect(within(panel).getByText(o.statsActivityNote(1, 10))).toBeInTheDocument()
+    expect(
+      within(panel).getByRole('link', { name: o.names['italian-game'] }),
+    ).toHaveAttribute('href', '/openings/italian-game/lines')
+    // Solo 2.Nc3 ha errori: la mossa piu' difficile, aperta nella consultazione.
+    expect(within(panel).getByRole('link', { name: '1.e4 c5 2.Nc3' })).toHaveAttribute(
+      'href',
+      '/openings/italian-game/lines?move=5',
+    )
+    expect(within(panel).getByText(o.statsHardestLine(50, 4))).toBeInTheDocument()
+  })
+
+  it('says when no opening move was trained yet', () => {
+    openingStats = { nodes: [], days: [], cycles: [] }
+    renderStats()
+    fireEvent.click(screen.getByRole('tab', { name: o.statsTab }))
+    expect(screen.getByText(o.statsEmpty)).toBeInTheDocument()
   })
 })

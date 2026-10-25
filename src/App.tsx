@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { AdminRoute } from '@/components/admin/admin-route'
 import { ProtectedRoute } from '@/components/protected-route'
 import { ScrollToTopOnNavigate } from '@/components/scroll-to-top'
@@ -19,7 +19,6 @@ const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'))
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
 const NewSessionPage = lazy(() => import('@/pages/NewSessionPage'))
 const TrainPage = lazy(() => import('@/pages/TrainPage'))
-const SessionsHistoryPage = lazy(() => import('@/pages/SessionsHistoryPage'))
 const SessionDetailPage = lazy(() => import('@/pages/SessionDetailPage'))
 const SessionSummaryPage = lazy(() => import('@/pages/SessionSummaryPage'))
 const RoundSummaryPage = lazy(() => import('@/pages/RoundSummaryPage'))
@@ -90,14 +89,8 @@ function App() {
             </Protected>
           }
         />
-        <Route
-          path="/sessions"
-          element={
-            <Protected>
-              <SessionsHistoryPage />
-            </Protected>
-          }
-        />
+        {/* Lo storico delle sessioni e' nella dashboard: i vecchi link ci portano. */}
+        <Route path="/sessions" element={<Navigate to="/dashboard" replace />} />
         <Route
           path="/sessions/:id"
           element={

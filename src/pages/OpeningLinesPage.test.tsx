@@ -211,6 +211,11 @@ describe('OpeningLinesPage', () => {
     notes = new Map()
   })
 
+  it('opens on the move given in the address (from the statistics)', () => {
+    renderLines('/openings/italian-game/lines?move=5')
+    expect(board.lastMoveUci).toBe('b1c3')
+  })
+
   it('moves through the tree with the arrow keys', () => {
     renderLines()
     const key = (k: string) => fireEvent.keyDown(window, { key: k })

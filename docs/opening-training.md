@@ -325,21 +325,38 @@ Nota: `0101_opening_catalog.sql` è stata rigenerata dopo essere stata
 applicata in sviluppo (alternative). È idempotente: in sviluppo si riapplica
 eseguendo il file; in produzione arriva una volta sola, al merge.
 
-Da fare prima del merge:
+Integrazione nel resto dell'app (2026-10-25):
 
-- **Esportazione dei dati** (profilo): includere `opening_node_progress`,
-  `opening_attempts`, `opening_cycles`, `opening_node_notes`,
-  `opening_hidden_repertoires` e i repertori personali.
-- **Informativa privacy**: verificare se i tentativi sulle aperture vanno
-  citati tra i dati di allenamento, aggiungere alle preferenze salvate nel
-  browser la visualizzazione dei nomi delle varianti, dei commenti e di
-  Stockfish e l'avanzamento rapido, e aggiornare la
-  versione legale.
+- **Navigazione**: Dashboard, Tattica (ex Allenamento), Aperture,
+  Statistiche, FAQ. La sezione Storico è stata tolta (le sessioni sono nella
+  dashboard); `/sessions` rimanda alla dashboard.
+- **Dashboard**: card delle aperture (`OpeningsOverviewCard`) con mosse
+  consolidate, da ripassare e nuove su tutta la libreria e il repertorio da
+  cui ripartire.
+- **Statistiche**: scheda "Aperture" (`?tab=openings`) con totali, attività
+  degli ultimi 30 giorni, tabella per repertorio e le mosse più difficili
+  (aperte in Consulta con `?move=<id>`). I tentativi arrivano già aggregati
+  da `opening_stats()` (migrazione `0109_opening_stats.sql`).
+- **FAQ** (sezione Aperture), **home** (sezione aperture, domanda nelle FAQ
+  pubbliche, titolo e descrizione per i motori di ricerca), **Crediti**
+  (dataset `lichess-org/chess-openings`, CC0).
+- **Esportazione dei dati**: repertori personali con le mosse, progressi,
+  tentativi (nel periodo scelto), cicli, commenti e repertori tolti dalla
+  libreria; nel JSON e come fogli dell'Excel.
+- **Privacy**: dati sulle aperture e preferenze nel browser; data e
+  `SITE_LEGAL_VERSION` a 2026-10-25, quindi chi aveva accettato la versione
+  precedente vede l'avviso con la novità.
+- **Test e2e**: studio di una linea (con la card in dashboard), repertorio da
+  zero con due mosse, dati delle aperture nell'esportazione.
+- I testi delle aperture sono in `src/lib/i18n/openings-text.ts` (solo dati,
+  letti anche dagli e2e); l'hook `useOpeningsTranslations` in `openings.ts`.
+
+Al merge:
+
+- **Migrazioni in produzione** prima del frontend: da `0100` a `0109`
+  (`supabase db push`), poi le prove SQL in sviluppo restano il riferimento.
 - **Anteprima Vercel**: controllare che le variabili "Preview" puntino al
   progetto Supabase di sviluppo.
-- Un test e2e del Drill.
-- Citare `lichess-org/chess-openings` nella pagina Crediti (CC0 non lo
-  richiede, ma è corretto).
 
 Idee per i passi successivi: pesi dall'Opening Explorer (serve un token)
 per scegliere le risposte dell'avversario; import diretto da uno studio

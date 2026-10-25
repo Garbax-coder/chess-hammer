@@ -13,6 +13,7 @@ import {
   fetchOpeningNames,
   fetchOpeningNotes,
   fetchOpeningProgress,
+  fetchOpeningStats,
   fetchRepertoires,
   importOpeningRepertoire,
   learnOpeningMove,
@@ -133,6 +134,16 @@ function useRefreshRepertoires() {
 export function useImportRepertoire() {
   const refresh = useRefreshRepertoires()
   return useMutation({ mutationFn: importOpeningRepertoire, onSuccess: refresh })
+}
+
+/** Le statistiche delle aperture (pagina Statistiche). */
+export function useOpeningStats() {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: ['opening-stats', user?.id],
+    queryFn: fetchOpeningStats,
+    enabled: !!user,
+  })
 }
 
 export function useCreateRepertoire() {

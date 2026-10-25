@@ -11,7 +11,7 @@ export default function PrivacyEn() {
   return (
     <>
       <p>
-        Last updated: October 24, 2026. This notice describes what personal data{' '}
+        Last updated: October 25, 2026. This notice describes what personal data{' '}
         {SITE_DOMAIN} ("Chess Hammer", "the Service") collects, why, and what rights you
         have over it, under Regulation (EU) 2016/679 (GDPR).
       </p>
@@ -35,6 +35,12 @@ export default function PrivacyEn() {
         <li>
           <b>Training data:</b> the puzzles shown to you, your attempts (solved/failed,
           time taken), your ELO rating, and the training sessions you create.
+        </li>
+        <li>
+          <b>Opening data:</b> the repertoires you create, import or copy (name, moves,
+          comments), your personal comments on moves, your answers in training
+          (right/wrong, time taken), your progress and completed cycles, and the
+          repertoires you remove from your library.
         </li>
         <li>
           <b>Preferences:</b> language, light/dark theme, app style, board style and piece
@@ -163,6 +169,10 @@ export default function PrivacyEn() {
       <ul>
         <li>your sign-in session (to keep you logged in, managed by Supabase Auth);</li>
         <li>language, theme, sound, board style, piece set, analysis engine settings;</li>
+        <li>
+          opening preferences (variation names and comments shown, fast-forward, Stockfish
+          in Browse);
+        </li>
         <li>
           a copy of the current session's puzzle list, so it isn't downloaded in full on
           every visit (deleted when you sign out).

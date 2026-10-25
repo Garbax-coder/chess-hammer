@@ -32,6 +32,13 @@ export interface MarketingCopy {
     steps: { title: string; text: string }[]
     featuresTitle: string
     features: { title: string; text: string }[]
+    openings: {
+      eyebrow: string
+      title: string
+      text: string
+      points: string[]
+      caption: string
+    }
     guideTeaser: { title: string; text: string; cta: string }
     finalTitle: string
     finalCta: string
@@ -69,9 +76,9 @@ const it: MarketingCopy = {
   },
   seo: {
     home: {
-      title: 'Chess Hammer — Trainer di tattica per scacchi, gratis',
+      title: 'Chess Hammer — Tattica e aperture a scacchi, gratis',
       description:
-        'Allena la tattica a scacchi con il metodo Woodpecker: gli stessi puzzle Lichess per tre giri, sempre più veloce. Gratis, senza pubblicità, analisi Stockfish.',
+        'Allena la tattica con il metodo Woodpecker sui puzzle Lichess e le aperture con repertori a ripetizione dilazionata. Gratis, senza pubblicità.',
     },
     guide: {
       title: 'Metodo Woodpecker: guida e allenamento online gratis | Chess Hammer',
@@ -106,6 +113,10 @@ const it: MarketingCopy = {
     {
       q: 'Serve installare qualcosa?',
       a: 'No: Chess Hammer funziona nel browser, da computer e da telefono. Basta un account con email o Google.',
+    },
+    {
+      q: 'Posso allenare anche le aperture?',
+      a: 'Sì: crei o importi i tuoi repertori e li alleni una linea alla volta, con ripasso a intervalli crescenti, albero delle varianti e statistiche. I nomi delle aperture vengono dal dataset pubblico di Lichess.',
     },
   ],
   landing: {
@@ -156,6 +167,18 @@ const it: MarketingCopy = {
         text: 'Finita la quota del giorno, ripassi i puzzle sbagliati senza toccare la sessione ufficiale.',
       },
     ],
+    openings: {
+      eyebrow: 'Aperture',
+      title: 'Le tue aperture, finché non le giochi a memoria',
+      text: 'Costruisci il tuo repertorio e allenalo una linea alla volta, contro un avversario che risponde da solo. Ogni mossa torna a ripasso proprio quando stai per dimenticarla.',
+      points: [
+        'Repertori pronti, da zero, da un codice ECO o importati da PGN e studi Lichess',
+        'Studia con la freccia, poi allenati senza aiuto: conta il primo tentativo',
+        'Ripasso a intervalli crescenti, da 4 ore a 60 giorni',
+        'Albero delle varianti con nomi, commenti e analisi Stockfish',
+      ],
+      caption: 'Partita Italiana · 1.e4 e5 2.Nf3 Nc6 3.Bc4',
+    },
     guideTeaser: {
       title: 'Perché ripetere gli stessi puzzle funziona?',
       text: 'La guida al metodo Woodpecker: da dove nasce, come sono organizzati i tre giri e cosa cambia rispetto ai puzzle casuali.',
@@ -235,9 +258,9 @@ const en: MarketingCopy = {
   },
   seo: {
     home: {
-      title: 'Chess Hammer — Free chess tactics trainer',
+      title: 'Chess Hammer — Free chess tactics and openings trainer',
       description:
-        'Train chess tactics with the Woodpecker Method: the same Lichess puzzles over three rounds, faster each time. Free, ad-free, with Stockfish analysis.',
+        'Train chess tactics with the Woodpecker Method on Lichess puzzles, and your openings with spaced-repetition repertoires. Free and ad-free.',
     },
     guide: {
       title: 'The Woodpecker Method: guide and free online training | Chess Hammer',
@@ -272,6 +295,10 @@ const en: MarketingCopy = {
     {
       q: 'Do I need to install anything?',
       a: 'No: Chess Hammer runs in the browser, on desktop and mobile. All you need is an account with email or Google.',
+    },
+    {
+      q: 'Can I train openings too?',
+      a: 'Yes: create or import your repertoires and train them one line at a time, with reviews at growing intervals, a variation tree and stats. Opening names come from the public Lichess dataset.',
     },
   ],
   landing: {
@@ -322,6 +349,18 @@ const en: MarketingCopy = {
         text: 'Once the daily quota is done, review the puzzles you missed without touching the official session.',
       },
     ],
+    openings: {
+      eyebrow: 'Openings',
+      title: 'Your openings, until you play them from memory',
+      text: 'Build your repertoire and train it one line at a time, against an opponent who replies on its own. Each move comes back for review just when you’re about to forget it.',
+      points: [
+        'Ready-made repertoires, from scratch, from an ECO code or imported from PGN and Lichess studies',
+        'Learn with the arrow, then train without help: the first try counts',
+        'Reviews at growing intervals, from 4 hours to 60 days',
+        'Variation tree with names, comments and Stockfish analysis',
+      ],
+      caption: 'Italian Game · 1.e4 e5 2.Nf3 Nc6 3.Bc4',
+    },
     guideTeaser: {
       title: 'Why does repeating the same puzzles work?',
       text: 'The guide to the Woodpecker Method: where it comes from, how the three rounds are organized and how it differs from random puzzles.',

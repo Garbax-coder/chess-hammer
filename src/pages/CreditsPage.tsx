@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
 import { SiteFooter } from '@/components/site-footer'
+import { useOpeningsTranslations } from '@/lib/i18n/openings'
 import { useTranslations } from '@/lib/language-context'
 import { SITE_GITHUB_URL } from '@/lib/site-info'
 import { THIRD_PARTY_PACKAGES } from '@/lib/third-party-licenses'
 
 export default function CreditsPage() {
   const t = useTranslations()
+  const o = useOpeningsTranslations()
 
   return (
     <main className="flex min-h-svh flex-col">
@@ -36,6 +38,21 @@ export default function CreditsPage() {
           <h2 className="text-foreground text-base font-medium">{t.credits.puzzlesTitle}</h2>
           <p className="text-muted-foreground text-sm leading-relaxed">
             {t.credits.puzzlesBody}
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-1.5">
+          <h2 className="text-foreground text-base font-medium">{o.creditsTitle}</h2>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            {o.creditsBody}{' '}
+            <a
+              href="https://github.com/lichess-org/chess-openings"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              github.com/lichess-org/chess-openings ↗
+            </a>
           </p>
         </section>
 

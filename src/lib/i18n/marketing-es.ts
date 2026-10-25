@@ -10,9 +10,9 @@ export const es: MarketingCopy = {
   },
   seo: {
     home: {
-      title: 'Chess Hammer — Entrenador de táctica de ajedrez gratis',
+      title: 'Chess Hammer — Táctica y aperturas de ajedrez gratis',
       description:
-        'Entrena la táctica de ajedrez con el método Woodpecker: los mismos puzzles de Lichess en tres rondas, cada vez más rápido. Gratis, sin publicidad.',
+        'Entrena la táctica con el método Woodpecker en puzzles de Lichess y tus aperturas con repetición espaciada. Gratis y sin publicidad.',
     },
     guide: {
       title: 'Método Woodpecker: guía y entrenamiento online gratis | Chess Hammer',
@@ -47,6 +47,10 @@ export const es: MarketingCopy = {
     {
       q: '¿Hay que instalar algo?',
       a: 'No: Chess Hammer funciona en el navegador, en el ordenador y en el móvil. Basta con una cuenta con correo o Google.',
+    },
+    {
+      q: '¿Puedo entrenar también las aperturas?',
+      a: 'Sí: creas o importas tus repertorios y los entrenas línea a línea, con repasos a intervalos crecientes, árbol de variantes y estadísticas. Los nombres de las aperturas vienen del conjunto de datos público de Lichess.',
     },
   ],
   landing: {
@@ -97,6 +101,18 @@ export const es: MarketingCopy = {
         text: 'Al completar la cuota del día, repasa los puzzles fallados sin tocar la sesión oficial.',
       },
     ],
+    openings: {
+      eyebrow: 'Aperturas',
+      title: 'Tus aperturas, hasta jugarlas de memoria',
+      text: 'Construye tu repertorio y entrénalo línea a línea, contra un rival que responde solo. Cada jugada vuelve a repaso justo cuando estás a punto de olvidarla.',
+      points: [
+        'Repertorios ya preparados, desde cero, desde un código ECO o importados de PGN y estudios de Lichess',
+        'Estudia con la flecha y luego entrena sin ayuda: cuenta el primer intento',
+        'Repasos a intervalos crecientes, de 4 horas a 60 días',
+        'Árbol de variantes con nombres, comentarios y análisis de Stockfish',
+      ],
+      caption: 'Partida Italiana · 1.e4 e5 2.Cf3 Cc6 3.Ac4',
+    },
     guideTeaser: {
       title: '¿Por qué funciona repetir los mismos puzzles?',
       text: 'La guía del método Woodpecker: de dónde viene, cómo se organizan las tres rondas y qué cambia frente a los puzzles al azar.',

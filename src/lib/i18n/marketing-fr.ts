@@ -10,9 +10,9 @@ export const fr: MarketingCopy = {
   },
   seo: {
     home: {
-      title: 'Chess Hammer — Entraîneur de tactique aux échecs, gratuit',
+      title: 'Chess Hammer — Tactique et ouvertures aux échecs, gratuit',
       description:
-        'Entraînez votre tactique aux échecs avec la méthode Woodpecker : les mêmes puzzles Lichess en trois cycles, de plus en plus vite. Gratuit, sans publicité.',
+        'Entraînez la tactique avec la méthode Woodpecker sur des puzzles Lichess et vos ouvertures avec la répétition espacée. Gratuit, sans publicité.',
     },
     guide: {
       title: 'Méthode Woodpecker : guide et entraînement gratuit | Chess Hammer',
@@ -47,6 +47,10 @@ export const fr: MarketingCopy = {
     {
       q: 'Faut-il installer quelque chose ?',
       a: 'Non : Chess Hammer fonctionne dans le navigateur, sur ordinateur comme sur téléphone. Il suffit d’un compte avec e-mail ou Google.',
+    },
+    {
+      q: 'Puis-je aussi entraîner les ouvertures ?',
+      a: 'Oui : créez ou importez vos répertoires et entraînez-les une ligne à la fois, avec des révisions à intervalles croissants, un arbre des variantes et des statistiques. Les noms des ouvertures viennent du jeu de données public de Lichess.',
     },
   ],
   landing: {
@@ -97,6 +101,18 @@ export const fr: MarketingCopy = {
         text: 'Une fois le quota du jour atteint, revoyez les puzzles ratés sans toucher à la session officielle.',
       },
     ],
+    openings: {
+      eyebrow: 'Ouvertures',
+      title: 'Vos ouvertures, jusqu’à les jouer de mémoire',
+      text: 'Construisez votre répertoire et entraînez-le une ligne à la fois, contre un adversaire qui répond tout seul. Chaque coup revient en révision juste quand vous alliez l’oublier.',
+      points: [
+        'Répertoires prêts à l’emploi, de zéro, depuis un code ECO ou importés depuis un PGN ou une étude Lichess',
+        'Étudiez avec la flèche, puis entraînez-vous sans aide : le premier essai compte',
+        'Révisions à intervalles croissants, de 4 heures à 60 jours',
+        'Arbre des variantes avec noms, commentaires et analyse Stockfish',
+      ],
+      caption: 'Partie italienne · 1.e4 e5 2.Cf3 Cc6 3.Fc4',
+    },
     guideTeaser: {
       title: 'Pourquoi répéter les mêmes puzzles fonctionne ?',
       text: 'Le guide de la méthode Woodpecker : d’où elle vient, comment sont organisés les trois cycles et ce qui change par rapport aux puzzles au hasard.',

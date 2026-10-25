@@ -1,4 +1,4 @@
--- Prova delle migrazioni 0100-0108 (allenamento sulle aperture). Da
+-- Prova delle migrazioni 0100-0109 (allenamento sulle aperture). Da
 -- eseguire SOLO sul progetto di sviluppo: tutto avviene in una transazione
 -- annullata alla fine.
 --   psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/opening-training.sql
@@ -293,6 +293,15 @@ begin
   exception when insufficient_privilege then null;
   end;
 
+  -- Statistiche (0109): le mosse giocate da A, aggregate.
+  if jsonb_array_length(public.opening_stats() -> 'nodes') = 0
+     or jsonb_array_length(public.opening_stats() -> 'days') = 0
+     or (select sum((n ->> 'attempts')::int)
+           from jsonb_array_elements(public.opening_stats() -> 'nodes') n)
+        <> (select count(*) from public.opening_attempts) then
+    raise exception 'statistiche: tentativi mancanti %', public.opening_stats();
+  end if;
+
   -- Esito non valido.
   begin
     perform public.record_opening_move((select e4 from ids), (select leaf from ids), 'e2e4', 'boh', 1);
@@ -315,6 +324,7 @@ begin
      or exists (select 1 from public.opening_cycles)
      or exists (select 1 from public.opening_node_notes)
      or exists (select 1 from public.opening_hidden_repertoires)
+     or jsonb_array_length(public.opening_stats() -> 'nodes') > 0
      or exists (select 1 from public.opening_repertoires
                  where id = (select repertoire_id from ids_import)) then
     raise exception 'B vede i progressi di A';
@@ -344,7 +354,8 @@ begin
      or has_function_privilege('anon', 'public.learn_opening_move(bigint)', 'execute')
      or has_function_privilege('anon',
        'public.set_opening_move_alternative(bigint, boolean)', 'execute')
-     or has_function_privilege('anon', 'public.create_opening_repertoire(text, text)', 'execute') then
+     or has_function_privilege('anon', 'public.create_opening_repertoire(text, text)', 'execute')
+     or has_function_privilege('anon', 'public.opening_stats()', 'execute') then
     raise exception 'anon puo'' registrare o modificare mosse';
   end if;
   raise notice 'opening-training: tutti i controlli superati';

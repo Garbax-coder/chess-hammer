@@ -82,11 +82,15 @@ function OpeningLines({
   const { data: stats } = useUserStats()
   // I nomi arrivano a parte: finche' non ci sono la pagina funziona senza.
   const { data: names = NO_NAMES } = useOpeningNames()
-  const [selection, setSelectedId] = useState<number | null>(null)
-  // Una mossa appena eliminata non e' piu' nell'albero: si torna all'inizio.
-  const selectedId = selection !== null && tree.byId.has(selection) ? selection : null
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  // ?move=<id>: si apre su quella mossa (es. dalle statistiche).
+  const [selection, setSelectedId] = useState<number | null>(
+    () => Number(searchParams.get('move')) || null,
+  )
+  // Una mossa appena eliminata (o inesistente) non e' nell'albero: si torna
+  // all'inizio.
+  const selectedId = selection !== null && tree.byId.has(selection) ? selection : null
   // Modifica delle linee: solo per i repertori personali (?edit=1 dopo una copia).
   const [editMode, setEditMode] = useState(
     () => !!repertoire.owner_id && searchParams.get('edit') === '1',

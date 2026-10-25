@@ -15,8 +15,7 @@ export const de: Translations = {
   },
   nav: {
     dashboard: 'Dashboard',
-    train: 'Training',
-    history: 'Verlauf',
+    train: 'Taktik',
     stats: 'Statistiken',
     faq: 'FAQ',
     menu: 'Menü',
@@ -276,7 +275,6 @@ export const de: Translations = {
     openTheme: (theme) => `Die ${theme}-Puzzles im freien Üben wiederholen`,
   },
   sessionsHistory: {
-    title: 'Session-Verlauf',
     empty: 'Noch keine Session erstellt.',
     puzzlesRound: (total, round) => `${total} Puzzles — Durchgang ${round}/3`,
     createdOn: (date) => `Erstellt am ${date}`,
@@ -512,8 +510,7 @@ export const de: Translations = {
       'Wir haben unsere Nutzungsbedingungen und Datenschutzerklärung aktualisiert',
     updatedIntro: 'Das ändert sich:',
     changes: [
-      'Wir messen mit Sentry die Ladezeiten der Seiten und der Anfragen an den Server, um Langsames zu finden: ohne E-Mail-Adresse, Namen oder IP-Adresse, nach 30 Tagen gelöscht.',
-      'Der Verantwortliche kann die Daten deines Kontos für Support und Betrieb des Dienstes schreibgeschützt einsehen, in einem Bereich, auf den nur er Zugriff hat.',
+      "Neu ist das Eröffnungstraining: Wir speichern die Repertoires, die du erstellst oder importierst, deine Kommentare zu Zügen, deine Antworten, Fortschritte und Zyklen. Sie sind im Datenexport enthalten und werden mit dem Konto gelöscht.",
     ],
     continuing:
       'Wenn du Chess Hammer weiter nutzt, akzeptierst du die aktualisierten Texte.',

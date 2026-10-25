@@ -39,7 +39,6 @@ export default function OpeningsPage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-foreground flex items-center gap-2 text-lg font-semibold tracking-tight">
           {o.title}
-          <Badge variant="outline">{o.draftBadge}</Badge>
         </h1>
         <p className="text-muted-foreground text-sm">{o.subtitle}</p>
         <div className="mt-2 flex flex-wrap gap-2">

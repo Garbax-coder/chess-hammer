@@ -1,7 +1,8 @@
-import { ArrowRight, BarChart3, Brain, Cpu, RotateCcw } from 'lucide-react'
+import { ArrowRight, BarChart3, Brain, Check, Cpu, RotateCcw } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { MarketingFaq, MarketingNav } from '@/components/marketing/marketing-nav'
+import { StaticBoard } from '@/components/marketing/static-board'
 import { TryPuzzle } from '@/components/marketing/try-puzzle'
 import { SiteFooter } from '@/components/site-footer'
 import { Button } from '@/components/ui/button'
@@ -13,6 +14,8 @@ import { MARKETING_PATHS } from '@/lib/marketing'
 import { marketingMeta } from '@/lib/seo'
 
 const FEATURE_ICONS = [RotateCcw, Cpu, BarChart3, Brain]
+// La Partita Italiana dopo 3.Bc4, con la freccia dell'ultima mossa.
+const OPENING_FEN = 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3'
 
 export default function LandingPage({ lang }: { lang: Language }) {
   const copy = marketingCopy[lang]
@@ -113,7 +116,41 @@ export default function LandingPage({ lang }: { lang: Language }) {
           </div>
         </section>
 
-        <section className="px-4 py-16 sm:py-20">
+        <section id="openings" className="scroll-mt-4 px-4 py-16 sm:py-20">
+          <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
+            <div className="flex flex-col gap-5">
+              <p className="text-primary text-sm font-semibold tracking-wide uppercase">
+                {copy.landing.openings.eyebrow}
+              </p>
+              <h2 className="text-3xl font-semibold tracking-tight text-balance">
+                {copy.landing.openings.title}
+              </h2>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                {copy.landing.openings.text}
+              </p>
+              <ul className="flex flex-col gap-3">
+                {copy.landing.openings.points.map((point) => (
+                  <li key={point} className="flex gap-3">
+                    <Check className="text-primary mt-0.5 size-5 shrink-0" aria-hidden />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <figure className="bg-card mx-auto flex w-full max-w-md flex-col gap-2 rounded-2xl border p-3 shadow-sm">
+              <StaticBoard
+                fen={OPENING_FEN}
+                arrows={[{ from: 'f1', to: 'c4' }]}
+                className="w-full"
+              />
+              <figcaption className="text-muted-foreground px-1 text-xs">
+                {copy.landing.openings.caption}
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section className="bg-muted/50 px-4 py-16 sm:py-20">
           <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2">
             <div className="bg-card flex flex-col items-start gap-4 rounded-2xl border p-8 lg:self-start">
               <h2 className="text-2xl font-semibold tracking-tight text-balance">

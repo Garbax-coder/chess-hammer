@@ -10,9 +10,9 @@ export const de: MarketingCopy = {
   },
   seo: {
     home: {
-      title: 'Chess Hammer — Kostenloser Trainer für Schachtaktik',
+      title: 'Chess Hammer — Kostenloser Trainer für Taktik und Eröffnungen',
       description:
-        'Trainiere Schachtaktik mit der Woodpecker-Methode: dieselben Lichess-Puzzles in drei Durchgängen, jedes Mal schneller. Kostenlos, werbefrei, mit Stockfish.',
+        'Trainiere Taktik mit der Woodpecker-Methode an Lichess-Puzzles und deine Eröffnungen mit verteilter Wiederholung. Kostenlos und werbefrei.',
     },
     guide: {
       title: 'Woodpecker-Methode: Anleitung und Gratis-Training | Chess Hammer',
@@ -47,6 +47,10 @@ export const de: MarketingCopy = {
     {
       q: 'Muss ich etwas installieren?',
       a: 'Nein: Chess Hammer läuft im Browser, am Computer und auf dem Handy. Du brauchst nur ein Konto mit E-Mail oder Google.',
+    },
+    {
+      q: 'Kann ich auch Eröffnungen trainieren?',
+      a: 'Ja: Erstelle oder importiere deine Repertoires und trainiere sie Linie für Linie, mit Wiederholungen in wachsenden Abständen, Variantenbaum und Statistiken. Die Eröffnungsnamen stammen aus dem öffentlichen Lichess-Datensatz.',
     },
   ],
   landing: {
@@ -97,6 +101,18 @@ export const de: MarketingCopy = {
         text: 'Ist das Tagesziel erreicht, wiederholst du verfehlte Puzzles, ohne die offizielle Session zu verändern.',
       },
     ],
+    openings: {
+      eyebrow: 'Eröffnungen',
+      title: 'Deine Eröffnungen, bis du sie auswendig spielst',
+      text: 'Baue dein Repertoire auf und trainiere es Linie für Linie gegen einen Gegner, der von selbst antwortet. Jeder Zug kommt genau dann zur Wiederholung, wenn du ihn gerade vergessen würdest.',
+      points: [
+        'Fertige Repertoires, neu erstellt, aus einem ECO-Code oder importiert aus PGN und Lichess-Studien',
+        'Lerne mit dem Pfeil, dann trainiere ohne Hilfe: Der erste Versuch zählt',
+        'Wiederholungen in wachsenden Abständen, von 4 Stunden bis 60 Tagen',
+        'Variantenbaum mit Namen, Kommentaren und Stockfish-Analyse',
+      ],
+      caption: 'Italienische Partie · 1.e4 e5 2.Sf3 Sc6 3.Lc4',
+    },
     guideTeaser: {
       title: 'Warum wirkt es, dieselben Puzzles zu wiederholen?',
       text: 'Die Anleitung zur Woodpecker-Methode: woher sie kommt, wie die drei Durchgänge aufgebaut sind und was sie von zufälligen Puzzles unterscheidet.',

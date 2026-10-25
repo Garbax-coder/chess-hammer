@@ -1,4 +1,5 @@
 import type { CatalogNode, OpeningColor } from '@/lib/opening-catalog'
+import type { OpeningStatsData } from '@/lib/opening-stats'
 import type { OpeningNode, OpeningProgress } from '@/lib/opening-tree'
 import { supabase } from '@/lib/supabase'
 
@@ -167,6 +168,13 @@ export async function importOpeningRepertoire(params: {
 export async function deleteOpeningRepertoire(id: string): Promise<void> {
   const { error } = await supabase.from('opening_repertoires').delete().eq('id', id)
   if (error) throw error
+}
+
+/** Le statistiche delle aperture dell'utente, gia' aggregate (0109). */
+export async function fetchOpeningStats(): Promise<OpeningStatsData> {
+  const { data, error } = await supabase.rpc('opening_stats')
+  if (error) throw error
+  return data as OpeningStatsData
 }
 
 /** Un repertorio personale vuoto, da costruire; restituisce lo slug. */

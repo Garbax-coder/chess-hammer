@@ -1,7 +1,9 @@
 import { Link, useSearchParams } from 'react-router-dom'
+import { OpeningStatsPanel } from '@/components/opening-stats-panel'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTrainingStats } from '@/hooks/use-training-stats'
+import { useOpeningsTranslations } from '@/lib/i18n/openings'
 import { useTranslations } from '@/lib/language-context'
 import { formatAverage } from '@/lib/session-stats'
 import { sessionStatusVariant } from '@/lib/session-status'
@@ -18,18 +20,21 @@ import { themePracticePath, type ThemePuzzleSource } from '@/lib/theme-puzzles'
 
 const percent = (value: number) => `${Math.round(value)}%`
 
-type StatsTab = 'training' | 'practice'
-const TABS: StatsTab[] = ['training', 'practice']
+type StatsTab = 'training' | 'practice' | 'openings'
+const TABS: StatsTab[] = ['training', 'practice', 'openings']
 
-// Statistiche dell'utente in due schede: allenamento ufficiale (totali, per
-// giro, per sessione, categorie) e pratica libera (totali, per sessione,
-// categorie). Tutto viene da una sola richiesta gia' aggregata
-// (useTrainingStats); la scheda scelta resta nell'indirizzo (?tab=practice).
+// Statistiche dell'utente in tre schede: allenamento ufficiale (totali, per
+// giro, per sessione, categorie), pratica libera (totali, per sessione,
+// categorie) e aperture (OpeningStatsPanel). Le prime due vengono da una sola
+// richiesta gia' aggregata (useTrainingStats); la scheda scelta resta
+// nell'indirizzo (?tab=practice, ?tab=openings).
 export default function StatsPage() {
   const t = useTranslations()
+  const o = useOpeningsTranslations()
   const { data, isLoading } = useTrainingStats()
   const [searchParams, setSearchParams] = useSearchParams()
-  const tab: StatsTab = searchParams.get('tab') === 'practice' ? 'practice' : 'training'
+  const requested = searchParams.get('tab')
+  const tab: StatsTab = TABS.find((id) => id === requested) ?? 'training'
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8">
@@ -59,13 +64,22 @@ export default function StatsPage() {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {t.stats.tabs[id]}
+              {id === 'openings' ? o.statsTab : t.stats.tabs[id]}
             </button>
           ))}
         </div>
       </div>
 
-      {isLoading || !data ? (
+      {tab === 'openings' ? (
+        <div
+          role="tabpanel"
+          id="stats-panel-openings"
+          aria-labelledby="stats-tab-openings"
+          className="flex flex-col gap-6"
+        >
+          <OpeningStatsPanel />
+        </div>
+      ) : isLoading || !data ? (
         <p className="text-muted-foreground text-sm">{t.common.loading}</p>
       ) : (
         <div
