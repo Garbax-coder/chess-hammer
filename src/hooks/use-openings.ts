@@ -5,8 +5,10 @@ import type { OpeningProgress } from '@/lib/opening-tree'
 import {
   addOpeningMove,
   copyOpeningRepertoire,
+  createOpeningRepertoire,
   deleteOpeningMove,
   deleteOpeningRepertoire,
+  fetchHiddenRepertoires,
   fetchOpeningCycles,
   fetchOpeningNames,
   fetchOpeningNotes,
@@ -19,6 +21,7 @@ import {
   saveOpeningCycle,
   saveOpeningNote,
   setOpeningMoveAlternative,
+  setRepertoireHidden,
   type OpeningCycle,
 } from '@/lib/openings'
 
@@ -130,6 +133,42 @@ function useRefreshRepertoires() {
 export function useImportRepertoire() {
   const refresh = useRefreshRepertoires()
   return useMutation({ mutationFn: importOpeningRepertoire, onSuccess: refresh })
+}
+
+export function useCreateRepertoire() {
+  const refresh = useRefreshRepertoires()
+  return useMutation({ mutationFn: createOpeningRepertoire, onSuccess: refresh })
+}
+
+function hiddenRepertoiresKey(userId: string | undefined) {
+  return ['opening-hidden-repertoires', userId]
+}
+
+/** I repertori del catalogo che l'utente ha tolto dalla sua libreria. */
+export function useHiddenRepertoires() {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: hiddenRepertoiresKey(user?.id),
+    queryFn: fetchHiddenRepertoires,
+    enabled: !!user,
+    staleTime: Infinity,
+    select: (ids) => new Set(ids),
+  })
+}
+
+export function useSetRepertoireHidden() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (params: { repertoireId: string; hidden: boolean }) =>
+      setRepertoireHidden({ ...params, userId: user!.id }),
+    onSuccess: (_data, { repertoireId, hidden }) => {
+      queryClient.setQueryData<string[]>(hiddenRepertoiresKey(user?.id), (ids) => [
+        ...(ids ?? []).filter((id) => id !== repertoireId),
+        ...(hidden ? [repertoireId] : []),
+      ])
+    },
+  })
 }
 
 export function useDeleteRepertoire() {

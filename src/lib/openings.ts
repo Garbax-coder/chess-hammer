@@ -169,6 +169,45 @@ export async function deleteOpeningRepertoire(id: string): Promise<void> {
   if (error) throw error
 }
 
+/** Un repertorio personale vuoto, da costruire; restituisce lo slug. */
+export async function createOpeningRepertoire(params: {
+  name: string
+  color: 'w' | 'b'
+}): Promise<{ id: string; slug: string }> {
+  const { data, error } = await supabase.rpc('create_opening_repertoire', {
+    p_name: params.name,
+    p_color: params.color,
+  })
+  if (error) throw error
+  return data as { id: string; slug: string }
+}
+
+/** I repertori del catalogo tolti dalla libreria dell'utente (0108). */
+export async function fetchHiddenRepertoires(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('opening_hidden_repertoires')
+    .select('repertoire_id')
+  if (error) throw error
+  return data.map((row) => row.repertoire_id)
+}
+
+/** Toglie dalla libreria (o rimette) un repertorio del catalogo. */
+export async function setRepertoireHidden(params: {
+  userId: string
+  repertoireId: string
+  hidden: boolean
+}): Promise<void> {
+  const { error } = params.hidden
+    ? await supabase
+        .from('opening_hidden_repertoires')
+        .upsert({ user_id: params.userId, repertoire_id: params.repertoireId })
+    : await supabase
+        .from('opening_hidden_repertoires')
+        .delete()
+        .eq('repertoire_id', params.repertoireId)
+  if (error) throw error
+}
+
 /** I commenti personali dell'utente sulle mosse (migrazione 0106). */
 export async function fetchOpeningNotes(): Promise<{ node_id: number; note: string }[]> {
   const { data, error } = await supabase

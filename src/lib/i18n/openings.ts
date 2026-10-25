@@ -139,6 +139,17 @@ export interface OpeningsTranslations {
   personal: string
   deleteRepertoire: string
   confirmDelete: string
+  scratchButton: string
+  scratchTitle: string
+  scratchIntro: string
+  scratchCreate: string
+  hideRepertoire: string
+  hiddenTitle: (n: number) => string
+  showHidden: string
+  restoreRepertoire: string
+  cancelDelete: string
+  noLinesYet: string
+  addLines: string
   /** Nomi dei repertori di catalogo, per slug (altrimenti il nome inglese). */
   names: Record<string, string>
 }
@@ -306,6 +317,19 @@ const it: OpeningsTranslations = {
   personal: 'Personale',
   deleteRepertoire: 'Elimina',
   confirmDelete: 'Conferma: elimina il repertorio e i suoi progressi',
+  scratchButton: 'Crea da zero',
+  scratchTitle: 'Crea un repertorio da zero',
+  scratchIntro:
+    'Scegli nome e colore: il repertorio parte vuoto e lo costruisci mossa per mossa sulla scacchiera, le tue e quelle dell’avversario.',
+  scratchCreate: 'Crea e inizia a costruire',
+  hideRepertoire: 'Togli dalla libreria',
+  hiddenTitle: (n) =>
+    `${n} ${n === 1 ? 'repertorio tolto' : 'repertori tolti'} dalla libreria`,
+  showHidden: 'Mostra',
+  restoreRepertoire: 'Rimetti nella libreria',
+  cancelDelete: 'Annulla',
+  noLinesYet: 'Questo repertorio non ha ancora linee.',
+  addLines: 'Aggiungile in Consulta',
   names: {
     'italian-game': 'Partita Italiana',
     'queens-gambit': 'Gambetto di Donna',
@@ -468,6 +492,19 @@ const en: OpeningsTranslations = {
   personal: 'Personal',
   deleteRepertoire: 'Delete',
   confirmDelete: 'Confirm: delete the repertoire and its progress',
+  scratchButton: 'Create from scratch',
+  scratchTitle: 'Create a repertoire from scratch',
+  scratchIntro:
+    'Choose a name and a color: the repertoire starts empty and you build it move by move on the board, yours and your opponent’s.',
+  scratchCreate: 'Create and start building',
+  hideRepertoire: 'Remove from library',
+  hiddenTitle: (n) =>
+    `${n} ${n === 1 ? 'repertoire' : 'repertoires'} removed from the library`,
+  showHidden: 'Show',
+  restoreRepertoire: 'Put back in the library',
+  cancelDelete: 'Cancel',
+  noLinesYet: 'This repertoire has no lines yet.',
+  addLines: 'Add them in Browse',
   names: {},
 }
 
@@ -629,6 +666,19 @@ const fr: OpeningsTranslations = {
   personal: 'Personnel',
   deleteRepertoire: 'Supprimer',
   confirmDelete: 'Confirmer : supprimer le répertoire et ses progrès',
+  scratchButton: 'Créer de zéro',
+  scratchTitle: 'Créer un répertoire de zéro',
+  scratchIntro:
+    'Choisissez un nom et une couleur : le répertoire part vide et vous le construisez coup par coup sur l’échiquier, les vôtres et ceux de l’adversaire.',
+  scratchCreate: 'Créer et commencer',
+  hideRepertoire: 'Retirer de la bibliothèque',
+  hiddenTitle: (n) =>
+    `${n} ${n === 1 ? 'répertoire retiré' : 'répertoires retirés'} de la bibliothèque`,
+  showHidden: 'Afficher',
+  restoreRepertoire: 'Remettre dans la bibliothèque',
+  cancelDelete: 'Annuler',
+  noLinesYet: 'Ce répertoire n’a pas encore de lignes.',
+  addLines: 'Ajoutez-les dans Consulter',
   names: {
     'italian-game': 'Partie italienne',
     'queens-gambit': 'Gambit dame',
@@ -797,6 +847,19 @@ const es: OpeningsTranslations = {
   personal: 'Personal',
   deleteRepertoire: 'Eliminar',
   confirmDelete: 'Confirmar: eliminar el repertorio y su progreso',
+  scratchButton: 'Crear desde cero',
+  scratchTitle: 'Crear un repertorio desde cero',
+  scratchIntro:
+    'Elige nombre y color: el repertorio empieza vacío y lo construyes jugada a jugada en el tablero, las tuyas y las del rival.',
+  scratchCreate: 'Crear y empezar',
+  hideRepertoire: 'Quitar de la biblioteca',
+  hiddenTitle: (n) =>
+    `${n} ${n === 1 ? 'repertorio quitado' : 'repertorios quitados'} de la biblioteca`,
+  showHidden: 'Mostrar',
+  restoreRepertoire: 'Volver a la biblioteca',
+  cancelDelete: 'Cancelar',
+  noLinesYet: 'Este repertorio aún no tiene líneas.',
+  addLines: 'Añádelas en Consultar',
   names: {
     'italian-game': 'Apertura italiana',
     'queens-gambit': 'Gambito de dama',
@@ -962,6 +1025,19 @@ const de: OpeningsTranslations = {
   personal: 'Persönlich',
   deleteRepertoire: 'Löschen',
   confirmDelete: 'Bestätigen: Repertoire und Fortschritt löschen',
+  scratchButton: 'Neu erstellen',
+  scratchTitle: 'Repertoire neu erstellen',
+  scratchIntro:
+    'Wähle Name und Farbe: Das Repertoire beginnt leer und du baust es Zug für Zug auf dem Brett auf, deine und die des Gegners.',
+  scratchCreate: 'Erstellen und loslegen',
+  hideRepertoire: 'Aus der Bibliothek entfernen',
+  hiddenTitle: (n) =>
+    `${n} ${n === 1 ? 'Repertoire' : 'Repertoires'} aus der Bibliothek entfernt`,
+  showHidden: 'Anzeigen',
+  restoreRepertoire: 'Zurück in die Bibliothek',
+  cancelDelete: 'Abbrechen',
+  noLinesYet: 'Dieses Repertoire hat noch keine Linien.',
+  addLines: 'Füge sie unter Ansehen hinzu',
   names: {
     'italian-game': 'Italienische Partie',
     'queens-gambit': 'Damengambit',

@@ -13,11 +13,12 @@ describe('isOpeningBoardPath', () => {
     }
   })
 
-  it('leaves out the list, the import and ECO pages and the rest of the app', () => {
+  it('leaves out the list, the creation pages and the rest of the app', () => {
     for (const path of [
       '/openings',
       '/openings/import',
       '/openings/eco',
+      '/openings/new',
       '/train',
       '/openings/x/other',
     ]) {

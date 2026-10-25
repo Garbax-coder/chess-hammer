@@ -37,11 +37,15 @@ vi.mock('@/lib/language-context', async () => {
   return { useTranslations: () => italian, useLanguage: () => ({ language: 'it' }) }
 })
 const deleteRepertoire = vi.fn()
+const setHidden = vi.fn()
 let repertoires = [repertoire]
+let hidden = new Set<string>()
 vi.mock('@/hooks/use-openings', () => ({
   useRepertoires: () => ({ data: repertoires, isLoading: false }),
   useDeleteRepertoire: () => ({ mutate: deleteRepertoire, isPending: false }),
   useOpeningProgress: () => ({ data: new Map([[2, mastered]]) }),
+  useHiddenRepertoires: () => ({ data: hidden }),
+  useSetRepertoireHidden: () => ({ mutate: setHidden, isPending: false }),
 }))
 
 describe('OpeningsPage', () => {
@@ -87,7 +91,44 @@ describe('OpeningsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: o.deleteRepertoire }))
     expect(deleteRepertoire).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: o.confirmDelete }))
-    expect(deleteRepertoire).toHaveBeenCalledWith('r2')
+    expect(deleteRepertoire).toHaveBeenCalledWith('r2', expect.anything())
     repertoires = [repertoire]
+  })
+
+  it('links the three ways to create a repertoire', () => {
+    render(
+      <MemoryRouter>
+        <OpeningsPage />
+      </MemoryRouter>,
+    )
+    expect(screen.getByRole('link', { name: o.scratchButton })).toHaveAttribute(
+      'href',
+      '/openings/new',
+    )
+  })
+
+  it('removes a catalog repertoire from the library and puts it back', () => {
+    const { unmount } = render(
+      <MemoryRouter>
+        <OpeningsPage />
+      </MemoryRouter>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: o.hideRepertoire }))
+    expect(setHidden).toHaveBeenCalledWith({ repertoireId: 'r1', hidden: true })
+    unmount()
+
+    // Tolto: non c'e' piu' la card, solo l'elenco dei tolti.
+    hidden = new Set(['r1'])
+    render(
+      <MemoryRouter>
+        <OpeningsPage />
+      </MemoryRouter>,
+    )
+    expect(screen.queryByRole('link', { name: o.train })).not.toBeInTheDocument()
+    expect(screen.getByText(o.hiddenTitle(1), { exact: false })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: o.showHidden }))
+    fireEvent.click(screen.getByRole('button', { name: o.restoreRepertoire }))
+    expect(setHidden).toHaveBeenLastCalledWith({ repertoireId: 'r1', hidden: false })
+    hidden = new Set()
   })
 })

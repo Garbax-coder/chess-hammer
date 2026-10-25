@@ -5,7 +5,7 @@
  * spostare la scacchiera.
  */
 export function isOpeningBoardPath(pathname: string): boolean {
-  return /^\/openings\/(?!(import|eco)\/?$)[^/]+(\/(learn|lines|cycles))?\/?$/.test(
+  return /^\/openings\/(?!(import|eco|new)\/?$)[^/]+(\/(learn|lines|cycles))?\/?$/.test(
     pathname,
   )
 }

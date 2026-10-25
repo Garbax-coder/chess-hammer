@@ -1,4 +1,4 @@
--- Prova delle migrazioni 0100-0107 (allenamento sulle aperture). Da
+-- Prova delle migrazioni 0100-0108 (allenamento sulle aperture). Da
 -- eseguire SOLO sul progetto di sviluppo: tutto avviene in una transazione
 -- annullata alla fine.
 --   psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/opening-training.sql
@@ -270,6 +270,29 @@ begin
     raise exception 'copia: mosse o note mancanti %', r;
   end if;
 
+  -- Libreria (0108): repertorio vuoto da costruire, catalogo nascosto.
+  r := public.create_opening_repertoire('  Da zero  ', 'b');
+  if (select name || color || source from public.opening_repertoires where id = (r ->> 'id')::uuid)
+     <> 'Da zerobDa zero'
+     or exists (select 1 from public.opening_nodes where repertoire_id = (r ->> 'id')::uuid) then
+    raise exception 'repertorio da zero inatteso %', r;
+  end if;
+  perform public.add_opening_move((r ->> 'id')::uuid, null, 'e2e4', 'e4', 'x');
+  begin
+    perform public.create_opening_repertoire('', 'w');
+    raise exception 'nome vuoto accettato';
+  exception when raise_exception then
+    if sqlerrm not like 'Nome del repertorio non valido%' then raise; end if;
+  end;
+  insert into public.opening_hidden_repertoires (user_id, repertoire_id)
+  select (select user_a from ids), id from public.opening_repertoires where slug = 'italian-game';
+  begin
+    insert into public.opening_hidden_repertoires (user_id, repertoire_id)
+    select (select user_b from ids), id from public.opening_repertoires where slug = 'caro-kann';
+    raise exception 'nascosto un repertorio per un altro utente';
+  exception when insufficient_privilege then null;
+  end;
+
   -- Esito non valido.
   begin
     perform public.record_opening_move((select e4 from ids), (select leaf from ids), 'e2e4', 'boh', 1);
@@ -291,6 +314,7 @@ begin
      or exists (select 1 from public.opening_attempts)
      or exists (select 1 from public.opening_cycles)
      or exists (select 1 from public.opening_node_notes)
+     or exists (select 1 from public.opening_hidden_repertoires)
      or exists (select 1 from public.opening_repertoires
                  where id = (select repertoire_id from ids_import)) then
     raise exception 'B vede i progressi di A';
@@ -319,7 +343,8 @@ begin
        'public.record_opening_move(bigint, bigint, text, text, integer)', 'execute')
      or has_function_privilege('anon', 'public.learn_opening_move(bigint)', 'execute')
      or has_function_privilege('anon',
-       'public.set_opening_move_alternative(bigint, boolean)', 'execute') then
+       'public.set_opening_move_alternative(bigint, boolean)', 'execute')
+     or has_function_privilege('anon', 'public.create_opening_repertoire(text, text)', 'execute') then
     raise exception 'anon puo'' registrare o modificare mosse';
   end if;
   raise notice 'opening-training: tutti i controlli superati';

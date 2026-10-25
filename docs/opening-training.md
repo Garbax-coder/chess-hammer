@@ -309,6 +309,18 @@ Fatto (2026-10-25):
   sotto il limite di 3.000. Limite noto: il dataset dà nomi, non
   frequenze; per scegliere le mosse più giocate servirà l'Opening Explorer.
 
+- **Repertorio da zero** `/openings/new` (pulsante "Crea da zero"): nome e
+  colore, funzione `create_opening_repertoire` (migrazione
+  `0108_opening_library.sql`, stesso limite di 20 repertori personali); si
+  apre la Consulta in modifica e il repertorio si costruisce mossa per
+  mossa. Studio, Allenamento e Cicli di un repertorio senza linee mandano
+  alla Consulta.
+- **Rimozione dalla libreria**: sulla card di ogni repertorio, in alto a
+  destra. Un repertorio personale (importato, da ECO, da zero o copiato) si
+  elimina, con conferma, insieme ai suoi progressi. Uno del catalogo si
+  toglie dalla libreria dell'utente (tabella `opening_hidden_repertoires`,
+  0108) e si rimette dall'elenco "repertori tolti" in fondo alla pagina.
+
 Nota: `0101_opening_catalog.sql` è stata rigenerata dopo essere stata
 applicata in sviluppo (alternative). È idempotente: in sviluppo si riapplica
 eseguendo il file; in produzione arriva una volta sola, al merge.
@@ -316,8 +328,8 @@ eseguendo il file; in produzione arriva una volta sola, al merge.
 Da fare prima del merge:
 
 - **Esportazione dei dati** (profilo): includere `opening_node_progress`,
-  `opening_attempts`, `opening_cycles`, `opening_node_notes` e i repertori
-  personali.
+  `opening_attempts`, `opening_cycles`, `opening_node_notes`,
+  `opening_hidden_repertoires` e i repertori personali.
 - **Informativa privacy**: verificare se i tentativi sulle aperture vanno
   citati tra i dati di allenamento, aggiungere alle preferenze salvate nel
   browser la visualizzazione dei nomi delle varianti, dei commenti e di

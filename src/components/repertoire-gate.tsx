@@ -48,7 +48,22 @@ export function RepertoireGate({
       </main>
     )
   }
-  if (!repertoire || !tree || (!allowEmpty && tree.leaves.length === 0)) {
+  if (repertoire && tree && !allowEmpty && tree.leaves.length === 0) {
+    // Un repertorio appena creato da zero: le linee si aggiungono in Consulta.
+    const editable = !!repertoire.owner_id
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center gap-3">
+        <p className="text-muted-foreground text-sm">{o.noLinesYet}</p>
+        <Link
+          to={`/openings/${repertoire.slug}/lines${editable ? '?edit=1' : ''}`}
+          className="text-primary text-sm underline-offset-4 hover:underline"
+        >
+          {o.addLines}
+        </Link>
+      </main>
+    )
+  }
+  if (!repertoire || !tree) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-3">
         <p className="text-muted-foreground text-sm">{o.notFound}</p>
