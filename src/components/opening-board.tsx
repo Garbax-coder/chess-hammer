@@ -34,8 +34,8 @@ export function OpeningBoard({
   fen: string
   orientation: 'white' | 'black'
   interactive: boolean
-  /** UCI della mossa giocata (es. e2e4, e7e8q). */
-  onMove: (uci: string) => void
+  /** UCI della mossa giocata (es. e2e4, e7e8q); true se il chiamante la accetta. */
+  onMove: (uci: string) => boolean
   /** Freccia della mossa giusta, dopo un errore. */
   hintUci?: string
   lastMoveUci?: string
@@ -63,9 +63,11 @@ export function OpeningBoard({
       .find((m) => m.from === from && m.to === to)
     if (!move) return false
     setSelection(null)
-    onMove(`${from}${to}${move.promotion ? 'q' : ''}`)
-    // La posizione la aggiorna il chiamante (se la mossa e' giusta).
-    return false
+    // Trascinando, una mossa accettata resta dove e' stata lasciata: se la
+    // si rifiutasse, il pezzo tornerebbe alla casa di partenza e rifarebbe il
+    // movimento quando il chiamante aggiorna la posizione. Una mossa
+    // sbagliata invece torna indietro.
+    return onMove(`${from}${to}${move.promotion ? 'q' : ''}`)
   }
 
   function handleSquareClick({ square }: { square: string }) {

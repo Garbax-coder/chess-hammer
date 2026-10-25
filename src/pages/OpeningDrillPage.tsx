@@ -133,8 +133,8 @@ function OpeningDrill({
     if (userTurn) turnStartedAt.current = Date.now()
   }, [userTurn, run.index])
 
-  function handleMove(uci: string) {
-    if (!next || !userTurn) return
+  function handleMove(uci: string): boolean {
+    if (!next || !userTurn) return false
     const ok = sameMove(uci, next.uci)
     if (!run.results.some((r) => r.nodeId === next.id)) {
       record.mutate({
@@ -147,6 +147,7 @@ function OpeningDrill({
       setRun((r) => ({ ...r, results: [...r.results, { nodeId: next.id, ok }] }))
     }
     setRun((r) => (ok ? { ...r, index: r.index + 1, hint: null } : { ...r, hint: next }))
+    return ok
   }
 
   const coverage = openingCoverage(tree, progress, color, new Date())
