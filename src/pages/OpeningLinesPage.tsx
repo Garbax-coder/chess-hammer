@@ -6,6 +6,7 @@ import { AnalysisPanel } from '@/components/analysis-panel'
 import { EvalBar } from '@/components/eval-bar'
 import { OpeningBoard } from '@/components/opening-board'
 import { OpeningCommentDialog } from '@/components/opening-comment-dialog'
+import { OpeningMoveMenu, type MoveMenuTarget } from '@/components/opening-move-menu'
 import { OpeningPageHeader } from '@/components/opening-page-header'
 import { OpeningPageLayout } from '@/components/opening-page-layout'
 import { RepertoireGate } from '@/components/repertoire-gate'
@@ -293,6 +294,29 @@ function OpeningLines({
   // Solo finche' resta selezionata la mossa da cui e' stata giocata.
   const shownMove = pendingMove?.parentId === selectedId ? pendingMove : null
 
+  // Il menu di una mossa dell'albero (tasto destro o tocco lungo).
+  const [menuTarget, setMenuTarget] = useState<MoveMenuTarget | null>(null)
+
+  function deleteFromMenu(node: OpeningNode) {
+    deleteMove.mutate(node.id, {
+      onSuccess: () => {
+        setMenuTarget(null)
+        // Se la mossa selezionata era nel seguito eliminato, si torna alla
+        // mossa precedente a quella eliminata.
+        for (
+          let id = selectedId;
+          id !== null;
+          id = tree.byId.get(id)?.parent_id ?? null
+        ) {
+          if (id === node.id) {
+            setSelectedId(node.parent_id)
+            break
+          }
+        }
+      },
+    })
+  }
+
   function handleDelete() {
     if (!selected) return
     deleteMove.mutate(selected.id, {
@@ -315,6 +339,25 @@ function OpeningLines({
 
   return (
     <>
+      <OpeningMoveMenu
+        target={menuTarget}
+        editable={!!repertoire.owner_id}
+        canToggleMistake={
+          !!menuTarget &&
+          (!!menuTarget.node.is_mistake || !tree.mistakes.has(menuTarget.node.id))
+        }
+        deleting={deleteMove.isPending}
+        onComment={(node) => {
+          setMenuTarget(null)
+          setCommentNode(node)
+        }}
+        onDelete={deleteFromMenu}
+        onToggleMistake={(node) => {
+          setMenuTarget(null)
+          setMistake.mutate({ nodeId: node.id, mistake: !node.is_mistake })
+        }}
+        onClose={() => setMenuTarget(null)}
+      />
       <OpeningCommentDialog
         moveLabel={commentNode ? moveLabel(commentNode, true) : null}
         initial={commentNode ? (comments.get(commentNode.id) ?? '') : ''}
@@ -567,7 +610,7 @@ function OpeningLines({
                   onSelect={setSelectedId}
                   names={treeNames ? names : NO_NAMES}
                   comments={treeComments ? comments : NO_COMMENTS}
-                  onMoveContextMenu={setCommentNode}
+                  onMoveContextMenu={(node, point) => setMenuTarget({ node, ...point })}
                 />
               </CardContent>
             </Card>

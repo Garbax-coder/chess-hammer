@@ -101,6 +101,9 @@ export interface OpeningsTranslations {
   commentTitle: (move: string) => string
   commentPlaceholder: string
   commentHint: string
+  moveMenu: (move: string) => string
+  commentMove: string
+  menuCopyHint: string
   saveComment: string
   deleteComment: string
   cancel: string
@@ -289,8 +292,8 @@ const it: OpeningsTranslations = {
   ],
   mistakePlayed: (played, main) =>
     `${played}? è un errore noto: in questa linea si gioca ${main}.`,
-  markMistake: 'Segna come linea sbagliata',
-  unmarkMistake: 'Non è un errore',
+  markMistake: 'Segna come errore',
+  unmarkMistake: 'Segna come non errore',
   mistakeLabel: 'Linea sbagliata',
   inMistakeLine:
     'Fa parte di una linea sbagliata: si mostra nello studio come errore da evitare, non si allena.',
@@ -354,7 +357,11 @@ const it: OpeningsTranslations = {
   showComments: 'Commenti',
   commentTitle: (move) => `Commento su ${move}`,
   commentPlaceholder: 'Scrivi un commento su questa mossa…',
-  commentHint: 'Tasto destro (o tocco lungo) su una mossa per commentarla.',
+  commentHint:
+    'Tasto destro (o tocco lungo) su una mossa: commentala, eliminala o segnala come errore.',
+  moveMenu: (move) => `Azioni sulla mossa ${move}`,
+  commentMove: 'Commenta la mossa',
+  menuCopyHint: 'Per modificare il repertorio, crea una copia personale.',
   saveComment: 'Salva',
   deleteComment: 'Elimina il commento',
   cancel: 'Annulla',
@@ -362,7 +369,7 @@ const it: OpeningsTranslations = {
   doneEditing: 'Fine modifiche',
   editHint:
     'Gioca una mossa sulla scacchiera per aggiungerla dopo quella selezionata (o all’inizio, se non ne hai selezionata nessuna): le tue e quelle dell’avversario, per allungare una linea o aprirne una nuova.',
-  deleteMove: 'Elimina la mossa e il seguito',
+  deleteMove: 'Elimina la mossa e quello che segue',
   confirmDeleteMove: 'Conferma: elimina',
   alternativeNoContinuation:
     'Dopo un’alternativa non si aggiungono mosse: rendila una linea per continuare.',
@@ -566,8 +573,8 @@ const en: OpeningsTranslations = {
   ],
   mistakePlayed: (played, main) =>
     `${played}? is a known mistake: in this line you play ${main}.`,
-  markMistake: 'Mark as a wrong line',
-  unmarkMistake: 'Not a mistake',
+  markMistake: 'Mark as a mistake',
+  unmarkMistake: 'Mark as not a mistake',
   mistakeLabel: 'Wrong line',
   inMistakeLine:
     'Part of a wrong line: Learn shows it as a mistake to avoid, it is not trained.',
@@ -626,7 +633,11 @@ const en: OpeningsTranslations = {
   showComments: 'Comments',
   commentTitle: (move) => `Comment on ${move}`,
   commentPlaceholder: 'Write a comment on this move…',
-  commentHint: 'Right-click (or long-press) a move to comment on it.',
+  commentHint:
+    'Right-click (or long-press) a move: comment on it, delete it or mark it as a mistake.',
+  moveMenu: (move) => `Actions on ${move}`,
+  commentMove: 'Comment on the move',
+  menuCopyHint: 'To edit the repertoire, make a personal copy.',
   saveComment: 'Save',
   deleteComment: 'Delete the comment',
   cancel: 'Cancel',
@@ -835,8 +846,8 @@ const fr: OpeningsTranslations = {
   ],
   mistakePlayed: (played, main) =>
     `${played}? est une erreur connue : dans cette ligne on joue ${main}.`,
-  markMistake: 'Marquer comme ligne fautive',
-  unmarkMistake: 'Pas une erreur',
+  markMistake: 'Marquer comme erreur',
+  unmarkMistake: 'Marquer comme non erreur',
   mistakeLabel: 'Ligne fautive',
   inMistakeLine:
     'Fait partie d’une ligne fautive : Étudier la montre comme erreur à éviter, elle n’est pas entraînée.',
@@ -895,7 +906,11 @@ const fr: OpeningsTranslations = {
   showComments: 'Commentaires',
   commentTitle: (move) => `Commentaire sur ${move}`,
   commentPlaceholder: 'Écrivez un commentaire sur ce coup…',
-  commentHint: 'Clic droit (ou appui long) sur un coup pour le commenter.',
+  commentHint:
+    'Clic droit (ou appui long) sur un coup : commentez-le, supprimez-le ou marquez-le comme erreur.',
+  moveMenu: (move) => `Actions sur ${move}`,
+  commentMove: 'Commenter le coup',
+  menuCopyHint: 'Pour modifier le répertoire, créez une copie personnelle.',
   saveComment: 'Enregistrer',
   deleteComment: 'Supprimer le commentaire',
   cancel: 'Annuler',
@@ -1108,8 +1123,8 @@ const es: OpeningsTranslations = {
   ],
   mistakePlayed: (played, main) =>
     `${played}? es un error conocido: en esta línea se juega ${main}.`,
-  markMistake: 'Marcar como línea errónea',
-  unmarkMistake: 'No es un error',
+  markMistake: 'Marcar como error',
+  unmarkMistake: 'Marcar como no error',
   mistakeLabel: 'Línea errónea',
   inMistakeLine:
     'Forma parte de una línea errónea: Estudiar la muestra como error a evitar, no se entrena.',
@@ -1173,7 +1188,11 @@ const es: OpeningsTranslations = {
   showComments: 'Comentarios',
   commentTitle: (move) => `Comentario sobre ${move}`,
   commentPlaceholder: 'Escribe un comentario sobre esta jugada…',
-  commentHint: 'Clic derecho (o pulsación larga) en una jugada para comentarla.',
+  commentHint:
+    'Clic derecho (o pulsación larga) en una jugada: coméntala, elimínala o márcala como error.',
+  moveMenu: (move) => `Acciones sobre ${move}`,
+  commentMove: 'Comentar la jugada',
+  menuCopyHint: 'Para editar el repertorio, crea una copia personal.',
   saveComment: 'Guardar',
   deleteComment: 'Eliminar el comentario',
   cancel: 'Cancelar',
@@ -1387,8 +1406,8 @@ const de: OpeningsTranslations = {
   ],
   mistakePlayed: (played, main) =>
     `${played}? ist ein bekannter Fehler: In dieser Linie spielt man ${main}.`,
-  markMistake: 'Als falsche Linie markieren',
-  unmarkMistake: 'Kein Fehler',
+  markMistake: 'Als Fehler markieren',
+  unmarkMistake: 'Als kein Fehler markieren',
   mistakeLabel: 'Falsche Linie',
   inMistakeLine:
     'Teil einer falschen Linie: Lernen zeigt sie als zu vermeidenden Fehler, sie wird nicht trainiert.',
@@ -1447,7 +1466,11 @@ const de: OpeningsTranslations = {
   showComments: 'Kommentare',
   commentTitle: (move) => `Kommentar zu ${move}`,
   commentPlaceholder: 'Schreibe einen Kommentar zu diesem Zug…',
-  commentHint: 'Rechtsklick (oder langes Tippen) auf einen Zug, um ihn zu kommentieren.',
+  commentHint:
+    'Rechtsklick (oder langes Tippen) auf einen Zug: kommentieren, löschen oder als Fehler markieren.',
+  moveMenu: (move) => `Aktionen für ${move}`,
+  commentMove: 'Zug kommentieren',
+  menuCopyHint: 'Um das Repertoire zu bearbeiten, erstelle eine persönliche Kopie.',
   saveComment: 'Speichern',
   deleteComment: 'Kommentar löschen',
   cancel: 'Abbrechen',
