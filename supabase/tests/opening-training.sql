@@ -1,4 +1,4 @@
--- Prova delle migrazioni 0100-0105 (allenamento sulle aperture). Da
+-- Prova delle migrazioni 0100-0106 (allenamento sulle aperture). Da
 -- eseguire SOLO sul progetto di sviluppo: tutto avviene in una transazione
 -- annullata alla fine.
 --   psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/opening-training.sql
@@ -178,6 +178,66 @@ begin
   end if;
   insert into ids_import select (r ->> 'id')::uuid;
 
+  -- Modifica delle linee (0106) sul repertorio importato: 1.e4 e5 2.Nf3.
+  declare
+    rep uuid := (r ->> 'id')::uuid;
+    e5 bigint := (select id from public.opening_nodes where repertoire_id = (r ->> 'id')::uuid and san = 'e5');
+    nf3 bigint := (select id from public.opening_nodes where repertoire_id = (r ->> 'id')::uuid and san = 'Nf3');
+    m jsonb;
+    bc4 bigint;
+  begin
+    -- Una seconda mossa del Bianco dopo 1...e5: alternativa.
+    m := public.add_opening_move(rep, e5, 'f1c4', 'Bc4', 'x');
+    bc4 := (m ->> 'id')::bigint;
+    if (m ->> 'is_main')::boolean or m ->> 'path' <> 'e2e4.e7e5.f1c4' then
+      raise exception 'aggiunta di un''alternativa: nodo inatteso %', m;
+    end if;
+    -- La stessa mossa di nuovo: si restituisce quella che c'e'.
+    if (public.add_opening_move(rep, e5, 'f1c4', 'Bc4', 'x') ->> 'id')::bigint <> bc4 then
+      raise exception 'mossa esistente aggiunta di nuovo';
+    end if;
+    begin
+      perform public.add_opening_move(rep, bc4, 'b8c6', 'Nc6', 'x');
+      raise exception 'seguito dopo un''alternativa accettato';
+    exception when raise_exception then
+      if sqlerrm not like 'Un''alternativa non ha seguito%' then raise; end if;
+    end;
+    -- Togliendo 2.Nf3 l'alternativa 2.Bc4 diventa principale.
+    perform public.add_opening_move(rep, nf3, 'b8c6', 'Nc6', 'x');
+    perform public.delete_opening_move(nf3);
+    if exists (select 1 from public.opening_nodes where repertoire_id = rep and san = 'Nc6')
+       or not (select is_main from public.opening_nodes where id = bc4) then
+      raise exception 'eliminazione: seguito rimasto o alternativa non promossa';
+    end if;
+    -- Togliendo 2.Bc4 resta 1...e5 senza seguito: si toglie, resta 1.e4.
+    perform public.delete_opening_move(bc4);
+    if (select count(*) from public.opening_nodes where repertoire_id = rep) <> 1 then
+      raise exception 'eliminazione: mosse dell''avversario senza seguito rimaste';
+    end if;
+    -- Il catalogo non si modifica.
+    begin
+      perform public.delete_opening_move((select e4 from ids));
+      raise exception 'mossa del catalogo eliminata';
+    exception when raise_exception then
+      if sqlerrm not like 'Mossa non modificabile%' then raise; end if;
+    end;
+  end;
+
+  -- Copia personale del catalogo, con le note dell'utente.
+  insert into public.opening_node_notes (user_id, node_id, note)
+  values ((select user_a from ids), (select e4 from ids), 'Apre il centro');
+  r := public.copy_opening_repertoire(
+    (select id from public.opening_repertoires where slug = 'italian-game'), 'La mia italiana');
+  if (select count(*) from public.opening_nodes where repertoire_id = (r ->> 'id')::uuid)
+     <> (select count(*) from public.opening_nodes n join public.opening_repertoires c
+          on c.id = n.repertoire_id where c.slug = 'italian-game')
+     or (select note from public.opening_node_notes nn
+           join public.opening_nodes n on n.id = nn.node_id
+          where n.repertoire_id = (r ->> 'id')::uuid and n.path = 'e2e4'::extensions.ltree)
+        <> 'Apre il centro' then
+    raise exception 'copia: mosse o note mancanti %', r;
+  end if;
+
   -- Esito non valido.
   begin
     perform public.record_opening_move((select e4 from ids), (select leaf from ids), 'e2e4', 'boh', 1);
@@ -198,6 +258,7 @@ begin
   if exists (select 1 from public.opening_node_progress)
      or exists (select 1 from public.opening_attempts)
      or exists (select 1 from public.opening_cycles)
+     or exists (select 1 from public.opening_node_notes)
      or exists (select 1 from public.opening_repertoires
                  where id = (select repertoire_id from ids_import)) then
     raise exception 'B vede i progressi di A';

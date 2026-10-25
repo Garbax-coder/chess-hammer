@@ -34,7 +34,7 @@ const repertoire: RepertoireWithNodes = {
     node(2, 1, 2, 'e5', 'e7e5'),
     node(3, 2, 3, 'Nf3', 'g1f3'),
     node(4, 1, 2, 'c5', 'c7c5'),
-    node(5, 4, 3, 'Nc3', 'b1c3'),
+    { ...node(5, 4, 3, 'Nc3', 'b1c3'), comment: 'Dal PGN: sviluppo' },
   ],
 }
 function learned(nodeId: number): OpeningProgress {
@@ -59,6 +59,7 @@ vi.mock('@/hooks/use-openings', () => ({
     data: new Map([[3, { eco: 'C40', name: "King's Knight Opening" }]]),
   }),
   useLearnOpeningMove: () => ({ mutate: learn, isError: false }),
+  useOpeningNotes: () => ({ data: new Map([[1, 'Il centro, subito']]) }),
 }))
 vi.mock('@/hooks/use-user-stats', () => ({ useUserStats: () => ({ data: undefined }) }))
 vi.mock('@/components/opening-board', () => ({
@@ -167,5 +168,17 @@ describe('OpeningLearnPage', () => {
     renderLearn('/openings/italian-game/learn?line=5')
     expect(screen.getByRole('status')).toHaveTextContent(o.playMove('1.e4'))
     window.localStorage.removeItem('openings-fast-forward')
+  })
+
+  it('shows the comment of the move just played', () => {
+    renderLearn('/openings/italian-game/learn?line=5')
+    expect(screen.queryByText('Il centro, subito')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'e2e4' }))
+    // La nota personale su 1.e4.
+    expect(screen.getByText('Il centro, subito')).toBeInTheDocument()
+    act(() => vi.advanceTimersByTime(500))
+    fireEvent.click(screen.getByRole('button', { name: 'b1c3' }))
+    // Il commento del PGN su 2.Nc3.
+    expect(screen.getByText('Dal PGN: sviluppo')).toBeInTheDocument()
   })
 })

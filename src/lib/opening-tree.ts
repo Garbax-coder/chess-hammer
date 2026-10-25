@@ -14,6 +14,8 @@ export interface OpeningNode {
   epd: string
   /** False per un'alternativa accettata: valida nel Drill, mai allenata. */
   is_main: boolean
+  /** Commento della mossa (es. dal PGN importato). */
+  comment?: string | null
 }
 
 export interface OpeningProgress {
@@ -289,4 +291,16 @@ export function nameChange(
 /** Le alternative accettate al posto della mossa `node` (stessa posizione). */
 export function alternativesTo(tree: OpeningTree, node: OpeningNode): OpeningNode[] {
   return (tree.children.get(node.parent_id) ?? []).filter((n) => !n.is_main)
+}
+
+/**
+ * Il commento da mostrare su una mossa: quello personale dell'utente se c'e'
+ * (anche vuoto: nasconde l'originale), altrimenti quello della mossa (PGN).
+ */
+export function commentOf(
+  node: OpeningNode,
+  notes: Map<number, string>,
+): string | undefined {
+  const text = notes.has(node.id) ? notes.get(node.id) : node.comment
+  return text?.trim() || undefined
 }

@@ -5,12 +5,14 @@ import {
   deleteOpeningRepertoire,
   fetchOpeningCycles,
   fetchOpeningNames,
+  fetchOpeningNotes,
   fetchOpeningProgress,
   fetchRepertoires,
   importOpeningRepertoire,
   learnOpeningMove,
   recordOpeningMove,
   saveOpeningCycle,
+  saveOpeningNote,
   type OpeningCycle,
 } from '@/lib/openings'
 
@@ -127,4 +129,39 @@ export function useImportRepertoire() {
 export function useDeleteRepertoire() {
   const refresh = useRefreshRepertoires()
   return useMutation({ mutationFn: deleteOpeningRepertoire, onSuccess: refresh })
+}
+
+function openingNotesKey(userId: string | undefined) {
+  return ['opening-notes', userId]
+}
+
+// I commenti personali cambiano solo quando l'utente li scrive: la cache si
+// aggiorna da sola (useSaveOpeningNote).
+export function useOpeningNotes() {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: openingNotesKey(user?.id),
+    queryFn: fetchOpeningNotes,
+    enabled: !!user,
+    staleTime: Infinity,
+    select: (rows) => new Map(rows.map((row) => [row.node_id, row.note])),
+  })
+}
+
+export function useSaveOpeningNote() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (params: { nodeId: number; note: string | null }) =>
+      saveOpeningNote({ ...params, userId: user!.id }),
+    onSuccess: (_data, { nodeId, note }) => {
+      queryClient.setQueryData<{ node_id: number; note: string }[]>(
+        openingNotesKey(user?.id),
+        (rows) => [
+          ...(rows ?? []).filter((row) => row.node_id !== nodeId),
+          ...(note === null ? [] : [{ node_id: nodeId, note }]),
+        ],
+      )
+    },
+  })
 }

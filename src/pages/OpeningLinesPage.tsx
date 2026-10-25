@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { OpeningBoard } from '@/components/opening-board'
+import { OpeningCommentDialog } from '@/components/opening-comment-dialog'
 import { OpeningPageHeader } from '@/components/opening-page-header'
 import { OpeningPageLayout } from '@/components/opening-page-layout'
 import { RepertoireGate } from '@/components/repertoire-gate'
@@ -18,12 +19,17 @@ import {
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useLocalToggle } from '@/hooks/use-local-toggle'
-import { useOpeningNames } from '@/hooks/use-openings'
+import {
+  useOpeningNames,
+  useOpeningNotes,
+  useSaveOpeningNote,
+} from '@/hooks/use-openings'
 import { useUserStats } from '@/hooks/use-user-stats'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
 import { MOVE_STATE_CLASSES } from '@/lib/opening-move-style'
 import { useTranslations } from '@/lib/language-context'
 import {
+  commentOf,
   isUserMove,
   moveLabel,
   moveState,
@@ -38,6 +44,7 @@ import {
 import type { RepertoireWithNodes } from '@/lib/openings'
 
 const NO_NAMES = new Map<number, OpeningName>()
+const NO_COMMENTS = new Map<number, string>()
 
 // Consultazione di un repertorio: l'albero delle varianti con la padronanza
 // di ogni mossa (heatmap), la posizione della mossa selezionata e le linee,
@@ -64,9 +71,34 @@ function OpeningLines({
   // I nomi arrivano a parte: finche' non ci sono la pagina funziona senza.
   const { data: names = NO_NAMES } = useOpeningNames()
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  // Nomi delle varianti, da mostrare o no in ciascuna delle due card.
+  // Nomi delle varianti, da mostrare o no in ciascuna delle due card, e
+  // commenti nell'albero.
   const [treeNames, setTreeNames] = useLocalToggle('openings-tree-names', true)
   const [lineNames, setLineNames] = useLocalToggle('openings-line-names', true)
+  const [treeComments, setTreeComments] = useLocalToggle('openings-tree-comments', true)
+  // Commenti: quelli personali hanno la precedenza su quelli del PGN.
+  const { data: notes = NO_COMMENTS } = useOpeningNotes()
+  const saveNote = useSaveOpeningNote()
+  const [commentNode, setCommentNode] = useState<OpeningNode | null>(null)
+  const comments = useMemo(() => {
+    const map = new Map<number, string>()
+    for (const node of tree.byId.values()) {
+      const text = commentOf(node, notes)
+      if (text) map.set(node.id, text)
+    }
+    return map
+  }, [tree, notes])
+
+  function saveComment(text: string) {
+    if (!commentNode) return
+    // Vuoto: si toglie la nota; se la mossa ha un commento del PGN, una nota
+    // vuota lo nasconde.
+    const note = text === '' ? (commentNode.comment ? '' : null) : text
+    saveNote.mutate(
+      { nodeId: commentNode.id, note },
+      { onSuccess: () => setCommentNode(null) },
+    )
+  }
   const now = new Date()
   const color = repertoire.color
   const selected = selectedId === null ? undefined : tree.byId.get(selectedId)
@@ -82,134 +114,157 @@ function OpeningLines({
   const firstChild = (tree.children.get(selectedId) ?? [])[0]
 
   return (
-    <OpeningPageLayout
-      variant="browse"
-      left={
-        <>
-          <OpeningPageHeader
-            repertoire={repertoire}
-            mode="lines"
-            subtitle={`${o.color[color]} · ${o.runs(tree.leaves.length)}`}
+    <>
+      <OpeningCommentDialog
+        moveLabel={commentNode ? moveLabel(commentNode, true) : null}
+        initial={commentNode ? (comments.get(commentNode.id) ?? '') : ''}
+        saving={saveNote.isPending}
+        onSave={saveComment}
+        onDelete={() => saveComment('')}
+        onClose={() => setCommentNode(null)}
+      />
+      <OpeningPageLayout
+        variant="browse"
+        left={
+          <>
+            <OpeningPageHeader
+              repertoire={repertoire}
+              mode="lines"
+              subtitle={`${o.color[color]} · ${o.runs(tree.leaves.length)}`}
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label={t.puzzleBoard.prevMove}
+                disabled={!selected}
+                onClick={() => setSelectedId(selected?.parent_id ?? null)}
+              >
+                <ChevronLeft />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label={t.puzzleBoard.nextMove}
+                disabled={!firstChild}
+                onClick={() => firstChild && setSelectedId(firstChild.id)}
+              >
+                <ChevronRight />
+              </Button>
+            </div>
+            <SelectedMove
+              node={selected}
+              comment={selected ? comments.get(selected.id) : undefined}
+              tree={tree}
+              names={names}
+              color={color}
+              progress={progress}
+              now={now}
+            />
+          </>
+        }
+        board={
+          <OpeningBoard
+            fen={fen}
+            orientation={color === 'w' ? 'white' : 'black'}
+            interactive={false}
+            onMove={() => false}
+            lastMoveUci={selected?.uci}
+            boardTheme={stats?.board_theme}
+            pieceSet={stats?.piece_set}
           />
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label={t.puzzleBoard.prevMove}
-              disabled={!selected}
-              onClick={() => setSelectedId(selected?.parent_id ?? null)}
-            >
-              <ChevronLeft />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label={t.puzzleBoard.nextMove}
-              disabled={!firstChild}
-              onClick={() => firstChild && setSelectedId(firstChild.id)}
-            >
-              <ChevronRight />
-            </Button>
-          </div>
-          <SelectedMove
-            node={selected}
-            tree={tree}
-            names={names}
-            color={color}
-            progress={progress}
-            now={now}
-          />
-        </>
-      }
-      board={
-        <OpeningBoard
-          fen={fen}
-          orientation={color === 'w' ? 'white' : 'black'}
-          interactive={false}
-          onMove={() => false}
-          lastMoveUci={selected?.uci}
-          boardTheme={stats?.board_theme}
-          pieceSet={stats?.piece_set}
-        />
-      }
-      right={
-        <>
-          <Card>
-            <CardHeader className="gap-2">
-              <CardTitle>{o.treeTitle}</CardTitle>
-              <CardAction>
-                <NamesSwitch
-                  id="tree-names"
-                  checked={treeNames}
-                  onChange={setTreeNames}
-                />
-              </CardAction>
-              <MoveStateLegend />
-            </CardHeader>
-            <CardContent>
-              <OpeningTreeView
-                tree={tree}
-                color={color}
-                progress={progress}
-                now={now}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-                names={treeNames ? names : NO_NAMES}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{o.linesTitle}</CardTitle>
-              <CardAction>
-                <NamesSwitch
-                  id="line-names"
-                  checked={lineNames}
-                  onChange={setLineNames}
-                />
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              <ol className="flex flex-col divide-y">
-                {tree.leaves.map((leaf) => (
-                  <LineRow
-                    key={leaf.id}
-                    slug={repertoire.slug}
-                    tree={tree}
-                    names={lineNames ? names : NO_NAMES}
-                    leaf={leaf}
-                    color={color}
-                    progress={progress}
-                    now={now}
-                    selected={leaf.id === selectedId}
-                    onSelect={() => setSelectedId(leaf.id)}
+        }
+        right={
+          <>
+            <Card>
+              <CardHeader className="gap-2">
+                <CardTitle>{o.treeTitle}</CardTitle>
+                <CardAction className="flex flex-col items-end gap-1.5">
+                  <LabeledSwitch
+                    id="tree-names"
+                    label={o.showNames}
+                    checked={treeNames}
+                    onChange={setTreeNames}
                   />
-                ))}
-              </ol>
-            </CardContent>
-          </Card>
-        </>
-      }
-    />
+                  <LabeledSwitch
+                    id="tree-comments"
+                    label={o.showComments}
+                    checked={treeComments}
+                    onChange={setTreeComments}
+                  />
+                </CardAction>
+                <MoveStateLegend />
+                <p className="text-muted-foreground text-xs">{o.commentHint}</p>
+              </CardHeader>
+              <CardContent>
+                <OpeningTreeView
+                  tree={tree}
+                  color={color}
+                  progress={progress}
+                  now={now}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                  names={treeNames ? names : NO_NAMES}
+                  comments={treeComments ? comments : NO_COMMENTS}
+                  onMoveContextMenu={setCommentNode}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>{o.linesTitle}</CardTitle>
+                <CardAction>
+                  <LabeledSwitch
+                    id="line-names"
+                    label={o.showNames}
+                    checked={lineNames}
+                    onChange={setLineNames}
+                  />
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                <ol className="flex flex-col divide-y">
+                  {tree.leaves.map((leaf) => (
+                    <LineRow
+                      key={leaf.id}
+                      slug={repertoire.slug}
+                      tree={tree}
+                      names={lineNames ? names : NO_NAMES}
+                      leaf={leaf}
+                      color={color}
+                      progress={progress}
+                      now={now}
+                      selected={leaf.id === selectedId}
+                      onSelect={() => setSelectedId(leaf.id)}
+                    />
+                  ))}
+                </ol>
+              </CardContent>
+            </Card>
+          </>
+        }
+      />
+    </>
   )
 }
 
-function NamesSwitch({
+function LabeledSwitch({
   id,
+  label,
   checked,
   onChange,
 }: {
   id: string
+  label: string
   checked: boolean
   onChange: (checked: boolean) => void
 }) {
-  const o = useOpeningsTranslations()
   return (
     <div className="flex items-center gap-2">
       <Switch id={id} checked={checked} onCheckedChange={onChange} />
       <Label htmlFor={id} className="text-muted-foreground text-xs font-normal">
-        {o.showNames}
+        {label}
       </Label>
     </div>
   )
@@ -221,6 +276,7 @@ function NamesSwitch({
  */
 function SelectedMove({
   node,
+  comment,
   tree,
   names,
   color,
@@ -228,6 +284,7 @@ function SelectedMove({
   now,
 }: {
   node: OpeningNode | undefined
+  comment: string | undefined
   tree: OpeningTree
   names: Map<number, OpeningName>
   color: 'w' | 'b'
@@ -277,6 +334,7 @@ function SelectedMove({
             : o.nextReview(new Date(row.due_at).toLocaleDateString(t.meta.locale))}
         </p>
       )}
+      {comment && <p className="mt-1 text-sky-700 dark:text-sky-300">{comment}</p>}
     </div>
   )
 }

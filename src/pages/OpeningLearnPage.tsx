@@ -11,11 +11,16 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useLocalToggle } from '@/hooks/use-local-toggle'
 import { useOpeningRun } from '@/hooks/use-opening-run'
-import { useLearnOpeningMove, useOpeningNames } from '@/hooks/use-openings'
+import {
+  useLearnOpeningMove,
+  useOpeningNames,
+  useOpeningNotes,
+} from '@/hooks/use-openings'
 import { useUserStats } from '@/hooks/use-user-stats'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
 import {
   chooseLearnRun,
+  commentOf,
   isUserMove,
   moveLabel,
   nameAt,
@@ -39,6 +44,7 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
   const o = useOpeningsTranslations()
   const { data: stats } = useUserStats()
   const { data: names } = useOpeningNames()
+  const { data: notes } = useOpeningNotes()
   const learn = useLearnOpeningMove()
   const color = repertoire.color
   const base = `/openings/${repertoire.slug}`
@@ -86,6 +92,8 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
         : o.opponentMoving
   // A fine linea: la prossima con mosse nuove, altrimenti la successiva
   // nell'ordine dell'albero (si ripassano tutte, una dopo l'altra).
+  const lastPlayed = path[index - 1]
+  const lastComment = lastPlayed ? commentOf(lastPlayed, notes ?? new Map()) : undefined
   const position = tree.leaves.findIndex((leaf) => leaf.id === leafId)
   const toLearn = tree.leaves.filter((leaf) =>
     runPath(tree, leaf.id).some(
@@ -167,6 +175,12 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
           >
             {status}
           </p>
+          {/* Il commento della mossa appena giocata (dal PGN o personale). */}
+          {lastComment && (
+            <p className="border-l-2 border-sky-500/60 pl-2 text-sm text-sky-800 dark:text-sky-200">
+              {lastComment}
+            </p>
+          )}
           {learn.isError && <p className="text-destructive text-xs">{o.saveError}</p>}
           {userTurn && (
             <Button

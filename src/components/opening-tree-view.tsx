@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight, MessageSquare } from 'lucide-react'
 import { Fragment, useState } from 'react'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
 import { MOVE_STATE_CLASSES } from '@/lib/opening-move-style'
@@ -31,6 +31,8 @@ export function OpeningTreeView({
   selectedId,
   onSelect,
   names = new Map(),
+  comments = new Map(),
+  onMoveContextMenu,
 }: {
   tree: OpeningTree
   color: OpeningColor
@@ -40,6 +42,10 @@ export function OpeningTreeView({
   onSelect: (nodeId: number) => void
   /** Nomi delle aperture per mossa: scritti dove il nome cambia. */
   names?: Map<number, OpeningName>
+  /** Commenti da mostrare, per mossa (gia' risolti: vedi commentOf). */
+  comments?: Map<number, string>
+  /** Tasto destro (o tocco lungo) su una mossa: per commentarla. */
+  onMoveContextMenu?: (node: OpeningNode) => void
 }) {
   const [collapsed, setCollapsed] = useState<ReadonlySet<number>>(new Set())
   const roots = tree.children.get(null) ?? []
@@ -61,6 +67,8 @@ export function OpeningTreeView({
     selectedId,
     onSelect,
     names,
+    comments,
+    onMoveContextMenu,
     collapsed,
     toggle,
   }
@@ -79,6 +87,8 @@ interface LineProps {
   selectedId: number | null
   onSelect: (nodeId: number) => void
   names: Map<number, OpeningName>
+  comments: Map<number, string>
+  onMoveContextMenu?: (node: OpeningNode) => void
   collapsed: ReadonlySet<number>
   toggle: (nodeId: number) => void
 }
@@ -110,12 +120,19 @@ function Line({ start, ...props }: LineProps & { start: OpeningNode }) {
         )}
         {chain.map((node, index) => {
           const name = nameChange(props.tree, node, props.names)
+          const comment = props.comments.get(node.id)
           return (
             <Fragment key={node.id}>
               <Move node={node} startsRow={index === 0} {...props} />
               {name && (
                 <span className="text-muted-foreground px-1 text-[0.7rem] italic">
                   {name}
+                </span>
+              )}
+              {comment && (
+                <span className="flex items-baseline gap-1 px-1 text-[0.7rem] text-sky-700 dark:text-sky-300">
+                  <MessageSquare className="size-3 shrink-0 self-center" aria-hidden />
+                  {comment}
                 </span>
               )}
             </Fragment>
@@ -147,6 +164,7 @@ function Move({
   now,
   selectedId,
   onSelect,
+  onMoveContextMenu,
 }: LineProps & { node: OpeningNode; startsRow: boolean }) {
   const o = useOpeningsTranslations()
   const alternative = !node.is_main
@@ -159,6 +177,11 @@ function Move({
       aria-current={selected ? 'true' : undefined}
       title={alternative ? o.alternativeLabel : state ? o.legend[state] : o.opponentMove}
       onClick={() => onSelect(node.id)}
+      onContextMenu={(event) => {
+        if (!onMoveContextMenu) return
+        event.preventDefault()
+        onMoveContextMenu(node)
+      }}
       className={`rounded px-1 py-0.5 font-mono text-xs tabular-nums transition-colors ${
         alternative
           ? 'border-muted-foreground/60 text-muted-foreground border border-dashed'

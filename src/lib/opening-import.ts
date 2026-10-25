@@ -31,7 +31,15 @@ export function previewImport(pgn: string, color: OpeningColor): Preview {
   if (parsed.lines.length === 0) return base
   try {
     const report = buildRepertoire(
-      { slug: 'import', name: '', eco: null, color, source: null, lines: parsed.lines },
+      {
+        slug: 'import',
+        name: '',
+        eco: null,
+        color,
+        source: null,
+        lines: parsed.lines,
+        comments: parsed.comments,
+      },
       { lenient: true },
     )
     const parents = new Set(report.nodes.map((n) => n.parentPath))

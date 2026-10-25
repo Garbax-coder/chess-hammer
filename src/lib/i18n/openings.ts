@@ -45,6 +45,13 @@ export interface OpeningsTranslations {
   dueNow: string
   trainLine: string
   showNames: string
+  showComments: string
+  commentTitle: (move: string) => string
+  commentPlaceholder: string
+  commentHint: string
+  saveComment: string
+  deleteComment: string
+  cancel: string
   learn: string
   learnLine: string
   learnIntro: string
@@ -154,6 +161,13 @@ const it: OpeningsTranslations = {
   dueNow: 'Da ripassare ora',
   trainLine: 'Allena questa linea',
   showNames: 'Nomi delle varianti',
+  showComments: 'Commenti',
+  commentTitle: (move) => `Commento su ${move}`,
+  commentPlaceholder: 'Scrivi un commento su questa mossa…',
+  commentHint: 'Tasto destro (o tocco lungo) su una mossa per commentarla.',
+  saveComment: 'Salva',
+  deleteComment: 'Elimina il commento',
+  cancel: 'Annulla',
   learn: 'Studia',
   learnLine: 'Studia questa linea',
   learnIntro:
@@ -274,6 +288,13 @@ const en: OpeningsTranslations = {
   dueNow: 'Due now',
   trainLine: 'Train this line',
   showNames: 'Variation names',
+  showComments: 'Comments',
+  commentTitle: (move) => `Comment on ${move}`,
+  commentPlaceholder: 'Write a comment on this move…',
+  commentHint: 'Right-click (or long-press) a move to comment on it.',
+  saveComment: 'Save',
+  deleteComment: 'Delete the comment',
+  cancel: 'Cancel',
   learn: 'Learn',
   learnLine: 'Learn this line',
   learnIntro:
@@ -390,6 +411,13 @@ const fr: OpeningsTranslations = {
   dueNow: 'À revoir maintenant',
   trainLine: 'Entraîner cette ligne',
   showNames: 'Noms des variantes',
+  showComments: 'Commentaires',
+  commentTitle: (move) => `Commentaire sur ${move}`,
+  commentPlaceholder: 'Écrivez un commentaire sur ce coup…',
+  commentHint: 'Clic droit (ou appui long) sur un coup pour le commenter.',
+  saveComment: 'Enregistrer',
+  deleteComment: 'Supprimer le commentaire',
+  cancel: 'Annuler',
   learn: 'Apprendre',
   learnLine: 'Apprendre cette ligne',
   learnIntro:
@@ -515,6 +543,13 @@ const es: OpeningsTranslations = {
   dueNow: 'Para repasar ahora',
   trainLine: 'Entrenar esta línea',
   showNames: 'Nombres de las variantes',
+  showComments: 'Comentarios',
+  commentTitle: (move) => `Comentario sobre ${move}`,
+  commentPlaceholder: 'Escribe un comentario sobre esta jugada…',
+  commentHint: 'Clic derecho (o pulsación larga) en una jugada para comentarla.',
+  saveComment: 'Guardar',
+  deleteComment: 'Eliminar el comentario',
+  cancel: 'Cancelar',
   learn: 'Aprender',
   learnLine: 'Aprender esta línea',
   learnIntro:
@@ -636,6 +671,13 @@ const de: OpeningsTranslations = {
   dueNow: 'Jetzt fällig',
   trainLine: 'Diese Linie trainieren',
   showNames: 'Namen der Varianten',
+  showComments: 'Kommentare',
+  commentTitle: (move) => `Kommentar zu ${move}`,
+  commentPlaceholder: 'Schreibe einen Kommentar zu diesem Zug…',
+  commentHint: 'Rechtsklick (oder langes Tippen) auf einen Zug, um ihn zu kommentieren.',
+  saveComment: 'Speichern',
+  deleteComment: 'Kommentar löschen',
+  cancel: 'Abbrechen',
   learn: 'Lernen',
   learnLine: 'Diese Linie lernen',
   learnIntro:

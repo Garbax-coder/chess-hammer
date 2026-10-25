@@ -5,6 +5,7 @@ import {
   chainFrom,
   chooseLearnRun,
   chooseRun,
+  commentOf,
   fastForwardIndex,
   moveLabel,
   moveState,
@@ -247,5 +248,15 @@ describe('alternativesTo', () => {
     // Non e' un Run, e non conta tra le mosse da allenare.
     expect(withAlternative.leaves.map((l) => l.id)).toEqual([3, 5])
     expect(openingCoverage(withAlternative, new Map(), 'w', now).userMoves).toBe(3)
+  })
+})
+
+describe('commentOf', () => {
+  it('prefers the personal note, and an empty one hides the original comment', () => {
+    const withComment = { ...node(9, null, 1, 'd4'), comment: 'From the PGN' }
+    expect(commentOf(withComment, new Map())).toBe('From the PGN')
+    expect(commentOf(withComment, new Map([[9, 'Mine']]))).toBe('Mine')
+    expect(commentOf(withComment, new Map([[9, '']]))).toBeUndefined()
+    expect(commentOf(node(1, null, 1, 'e4'), new Map())).toBeUndefined()
   })
 })

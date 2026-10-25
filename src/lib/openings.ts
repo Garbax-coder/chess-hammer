@@ -20,7 +20,7 @@ export interface RepertoireWithNodes extends OpeningRepertoire {
   nodes: OpeningNode[]
 }
 
-const NODE_COLUMNS = 'id, parent_id, ply, uci, san, epd, is_main'
+const NODE_COLUMNS = 'id, parent_id, ply, uci, san, epd, is_main, comment'
 
 /** Tutti i repertori leggibili, con le mosse (servono per la copertura). */
 export async function fetchRepertoires(): Promise<RepertoireWithNodes[]> {
@@ -156,6 +156,7 @@ export async function importOpeningRepertoire(params: {
       san: n.san,
       epd: n.epd,
       is_main: n.isMain,
+      comment: n.comment ?? null,
     })),
   })
   if (error) throw error
@@ -165,5 +166,32 @@ export async function importOpeningRepertoire(params: {
 /** Cancella un repertorio personale, con mosse, progressi e cicli. */
 export async function deleteOpeningRepertoire(id: string): Promise<void> {
   const { error } = await supabase.from('opening_repertoires').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** I commenti personali dell'utente sulle mosse (migrazione 0106). */
+export async function fetchOpeningNotes(): Promise<{ node_id: number; note: string }[]> {
+  const { data, error } = await supabase
+    .from('opening_node_notes')
+    .select('node_id, note')
+  if (error) throw error
+  return data
+}
+
+/** Salva il commento personale su una mossa; null lo toglie. */
+export async function saveOpeningNote(params: {
+  userId: string
+  nodeId: number
+  note: string | null
+}): Promise<void> {
+  const { error } =
+    params.note === null
+      ? await supabase.from('opening_node_notes').delete().eq('node_id', params.nodeId)
+      : await supabase.from('opening_node_notes').upsert({
+          user_id: params.userId,
+          node_id: params.nodeId,
+          note: params.note,
+          updated_at: new Date().toISOString(),
+        })
   if (error) throw error
 }

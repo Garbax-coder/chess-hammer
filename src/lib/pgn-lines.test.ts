@@ -49,4 +49,15 @@ describe('pgnLines', () => {
   it('gives no lines for an empty text', () => {
     expect(pgnLines('  ').lines).toEqual([])
   })
+
+  it('ties each comment to the move before it, without the Lichess annotations', () => {
+    const { comments } = pgnLines(
+      '{Intro} 1. e4 {Best by test [%cal Ge2e4]} e5 2. Nf3 (2. Bc4 {Bishop opening} Nf6) Nc6 {Main} {line} *',
+    )
+    expect(comments).toEqual({
+      e4: 'Best by test',
+      'e4 e5 Bc4': 'Bishop opening',
+      'e4 e5 Nf3 Nc6': 'Main line',
+    })
+  })
 })

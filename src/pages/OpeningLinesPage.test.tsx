@@ -34,6 +34,8 @@ const e4: OpeningProgress = {
   due_at: '2099-01-01T00:00:00Z',
 }
 let board: { fen: string; lastMoveUci?: string }
+const saveNote = vi.fn()
+let notes = new Map<number, string>()
 
 vi.mock('@/lib/language-context', () => ({
   useTranslations: () => itTranslations,
@@ -42,6 +44,8 @@ vi.mock('@/lib/language-context', () => ({
 vi.mock('@/hooks/use-openings', () => ({
   useRepertoires: () => ({ data: [repertoire], isLoading: false }),
   useOpeningProgress: () => ({ data: new Map([[1, e4]]) }),
+  useOpeningNotes: () => ({ data: notes }),
+  useSaveOpeningNote: () => ({ mutate: saveNote, isPending: false }),
   useOpeningNames: () => ({
     data: new Map([
       [3, { eco: 'C40', name: "King's Knight Opening" }],
@@ -135,5 +139,27 @@ describe('OpeningLinesPage', () => {
     // La scelta resta per la prossima visita.
     expect(window.localStorage.getItem('openings-tree-names')).toBe('false')
     expect(window.localStorage.getItem('openings-line-names')).toBe('false')
+  })
+
+  it('comments a move with a right-click, and hides the comments with the switch', () => {
+    notes = new Map([[3, 'Il cavallo, prima dell’alfiere']])
+    // Salvataggio riuscito: la finestra si chiude.
+    saveNote.mockImplementation((_params, options) => options.onSuccess())
+    renderLines()
+    expect(screen.getByText('Il cavallo, prima dell’alfiere')).toBeInTheDocument()
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: '2.Nc3' }))
+    const box = screen.getByRole('textbox', { name: o.commentTitle('2.Nc3') })
+    fireEvent.change(box, { target: { value: ' Contro la Siciliana ' } })
+    fireEvent.click(screen.getByRole('button', { name: o.saveComment }))
+    expect(saveNote).toHaveBeenCalledWith(
+      { nodeId: 5, note: 'Contro la Siciliana' },
+      expect.anything(),
+    )
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('switch', { name: o.showComments }))
+    expect(screen.queryByText('Il cavallo, prima dell’alfiere')).not.toBeInTheDocument()
+    notes = new Map()
   })
 })

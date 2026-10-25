@@ -22,6 +22,8 @@ export interface RepertoireSource {
    * Drill sono valide ma non si allenano (niente seguito, niente Run).
    */
   alternatives?: string[]
+  /** Commenti per mossa: chiave = mosse SAN dall'inizio fino a quella. */
+  comments?: Record<string, string>
 }
 
 export interface CatalogNode {
@@ -35,6 +37,7 @@ export interface CatalogNode {
   epd: string
   /** False per un'alternativa accettata. */
   isMain: boolean
+  comment?: string
 }
 
 export function epdOf(fen: string): string {
@@ -114,6 +117,7 @@ export function buildRepertoire(
       }
       const uci = `${move.from}${move.to}${move.promotion ?? ''}`
       const ply = index + 1
+      const comment = source.comments?.[sans.slice(0, index + 1).join(' ')]
       const childPath: string = path ? `${path}.${uci}` : uci
       const existing = nodes.get(childPath)
       const isLast = index === sans.length - 1
@@ -131,7 +135,7 @@ export function buildRepertoire(
         if (asAlternative && isLast) {
           nodes.set(
             childPath,
-            node(childPath, path, ply, uci, move.san, chess.fen(), false),
+            node(childPath, path, ply, uci, move.san, chess.fen(), false, comment),
           )
           return
         }
@@ -142,7 +146,7 @@ export function buildRepertoire(
         }
         nodes.set(
           childPath,
-          node(childPath, path, ply, uci, move.san, chess.fen(), false),
+          node(childPath, path, ply, uci, move.san, chess.fen(), false, comment),
         )
         alternatives++
         return
@@ -153,8 +157,13 @@ export function buildRepertoire(
         )
       }
       if (!existing) {
-        nodes.set(childPath, node(childPath, path, ply, uci, move.san, chess.fen(), true))
+        nodes.set(
+          childPath,
+          node(childPath, path, ply, uci, move.san, chess.fen(), true, comment),
+        )
         if (userMove) mainUserMove.set(parentKey, childPath)
+      } else if (comment && !existing.comment) {
+        existing.comment = comment
       }
       path = childPath
     }
@@ -200,8 +209,18 @@ function node(
   san: string,
   fen: string,
   isMain: boolean,
+  comment?: string,
 ): CatalogNode {
-  return { path, parentPath, ply, uci, san, epd: epdOf(fen), isMain }
+  return {
+    path,
+    parentPath,
+    ply,
+    uci,
+    san,
+    epd: epdOf(fen),
+    isMain,
+    ...(comment ? { comment } : {}),
+  }
 }
 
 /** I nodi di un repertorio del catalogo (modo rigido: un errore blocca). */

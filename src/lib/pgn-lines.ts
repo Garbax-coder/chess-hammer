@@ -2,9 +2,10 @@
 // percorso dalla posizione iniziale alla fine di una variante diventa una
 // linea (mosse SAN separate da spazi), la linea principale per prima. Un PGN
 // con piu' partite (es. i capitoli di uno studio Lichess) da' le linee di
-// tutte. Commenti, annotazioni ($1, !, ?), numeri di mossa e risultati si
-// ignorano; le partite che non partono dalla posizione iniziale (tag FEN) si
-// saltano. La legalita' delle mosse la controlla chi costruisce il
+// tutte. I commenti {…} si legano alla mossa che li precede (senza le
+// annotazioni tecniche di Lichess come [%cal …] o [%clk …]); annotazioni
+// ($1, !, ?), numeri di mossa e risultati si ignorano; le partite che non
+// partono dalla posizione iniziale (tag FEN) si saltano. La legalita' delle mosse la controlla chi costruisce il
 // repertorio (buildRepertoire).
 
 export interface PgnLines {
@@ -13,6 +14,8 @@ export interface PgnLines {
   headers: Record<string, string>
   /** Partite saltate perche' partono da un'altra posizione. */
   skipped: number
+  /** Commenti per mossa: chiave = mosse SAN dall'inizio fino a quella. */
+  comments: Record<string, string>
 }
 
 const RESULT = /^(1-0|0-1|1\/2-1\/2|\*)$/
@@ -43,25 +46,45 @@ function splitGames(text: string): { headers: Record<string, string>; moves: str
   return games.filter((g) => g.moves.trim() !== '')
 }
 
-/** Segnaposto del risultato: chiude una partita (anche senza tag dopo). */
-const END = '#end'
+type Token =
+  | { kind: 'move'; san: string }
+  | { kind: 'open' | 'close' | 'end' }
+  | { kind: 'comment'; text: string }
 
-/** Le mosse e le parentesi delle varianti, senza commenti e annotazioni. */
-function tokenize(moves: string): string[] {
+/** Il testo di un commento, senza le annotazioni [%…] di Lichess. */
+function cleanComment(raw: string): string {
+  return raw
+    .replace(/\[%[^\]]*\]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** Mosse, parentesi delle varianti, commenti e fine partita. */
+function tokenize(moves: string): Token[] {
+  const comments: string[] = []
   const clean = moves
-    .replace(/\{[^}]*\}/g, ' ') // commenti tra graffe
+    // Ogni commento diventa un segnaposto, per non spezzarlo negli spazi.
+    .replace(/\{([^}]*)\}/g, (_match, text: string) => {
+      comments.push(text)
+      return ` \u0001${comments.length - 1} `
+    })
     .replace(/;[^\n]*/g, ' ') // commenti fino a fine riga
     .replace(/\(/g, ' ( ')
     .replace(/\)/g, ' ) ')
-  const tokens: string[] = []
+  const tokens: Token[] = []
   for (const raw of clean.split(/\s+/)) {
+    if (raw.startsWith('\u0001')) {
+      const text = cleanComment(comments[Number(raw.slice(1))])
+      if (text) tokens.push({ kind: 'comment', text })
+      continue
+    }
     if (RESULT.test(raw)) {
-      tokens.push(END)
+      tokens.push({ kind: 'end' })
       continue
     }
     if (!raw || MOVE_NUMBER.test(raw) || /^\$\d+$/.test(raw)) continue
     if (raw === '(' || raw === ')') {
-      tokens.push(raw)
+      tokens.push({ kind: raw === '(' ? 'open' : 'close' })
       continue
     }
     // "12.Nf3" scritto attaccato, annotazioni "!?" in coda, arrocco con lo zero.
@@ -70,7 +93,7 @@ function tokenize(moves: string): string[] {
       .replace(/[!?]+$/, '')
       .replace(/^0-0-0/, 'O-O-O')
       .replace(/^0-0/, 'O-O')
-    if (san) tokens.push(san)
+    if (san) tokens.push({ kind: 'move', san })
   }
   return tokens
 }
@@ -78,26 +101,37 @@ function tokenize(moves: string): string[] {
 /**
  * Le linee di una sequenza di mosse con varianti, da `start` (indice nei
  * token) fino alla parentesi che la chiude. Una variante si apre dopo la
- * mossa che sostituisce: parte dalla posizione prima di quella mossa.
+ * mossa che sostituisce: parte dalla posizione prima di quella mossa. Un
+ * commento va alla mossa appena giocata in questa sequenza.
  */
 function walk(
-  tokens: string[],
+  tokens: Token[],
   start: number,
   prefix: string[],
+  comments: Record<string, string>,
 ): { lines: string[][]; end: number } {
   const main = [...prefix]
   const variations: string[][] = []
+  let played = 0
   let i = start
   while (i < tokens.length) {
     const token = tokens[i]
-    if (token === ')') return { lines: [main, ...variations], end: i + 1 }
-    if (token === '(') {
-      const sub = walk(tokens, i + 1, main.slice(0, -1))
+    if (token.kind === 'close') return { lines: [main, ...variations], end: i + 1 }
+    if (token.kind === 'open') {
+      const sub = walk(tokens, i + 1, main.slice(0, -1), comments)
       variations.push(...sub.lines)
       i = sub.end
       continue
     }
-    main.push(token)
+    if (token.kind === 'comment') {
+      if (played > 0) {
+        const key = main.join(' ')
+        comments[key] = comments[key] ? `${comments[key]} ${token.text}` : token.text
+      }
+    } else if (token.kind === 'move') {
+      main.push(token.san)
+      played++
+    }
     i++
   }
   return { lines: [main, ...variations], end: i }
@@ -107,6 +141,7 @@ export function pgnLines(text: string): PgnLines {
   const games = splitGames(text)
   let skipped = 0
   const lines: string[] = []
+  const comments: Record<string, string> = {}
   for (const game of games) {
     if (game.headers.FEN || game.headers.SetUp === '1') {
       skipped++
@@ -116,12 +151,17 @@ export function pgnLines(text: string): PgnLines {
     const tokens = tokenize(game.moves)
     let start = 0
     for (let i = 0; i <= tokens.length; i++) {
-      if (i < tokens.length && tokens[i] !== END) continue
-      for (const line of walk(tokens.slice(start, i), 0, []).lines) {
+      if (i < tokens.length && tokens[i].kind !== 'end') continue
+      for (const line of walk(tokens.slice(start, i), 0, [], comments).lines) {
         if (line.length > 0) lines.push(line.join(' '))
       }
       start = i + 1
     }
   }
-  return { lines: [...new Set(lines)], headers: games[0]?.headers ?? {}, skipped }
+  return {
+    lines: [...new Set(lines)],
+    headers: games[0]?.headers ?? {},
+    skipped,
+    comments,
+  }
 }
