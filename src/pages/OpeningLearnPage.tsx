@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { OpeningBoard } from '@/components/opening-board'
 import { MoveList } from '@/components/opening-move-list'
+import { OpeningPageHeader } from '@/components/opening-page-header'
+import { OpeningPageLayout } from '@/components/opening-page-layout'
 import { RepertoireGate, type RepertoireData } from '@/components/repertoire-gate'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -77,73 +79,60 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
   const nextToLearn = done ? chooseLearnRun(tree, progress, color, leafId) : undefined
 
   return (
-    <main className="flex w-full flex-1 flex-col items-center gap-4 px-4 py-8 lg:flex-row lg:items-start lg:justify-center lg:gap-6">
-      <aside className="order-2 flex w-full flex-col gap-4 lg:order-1 lg:w-64 lg:shrink-0">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-foreground text-base font-semibold tracking-tight">
-            {o.names[repertoire.slug] ?? repertoire.name} · {o.learn}
-          </h1>
-          <p className="text-muted-foreground text-xs">{o.color[color]}</p>
-          <div className="flex gap-3 text-xs">
-            <Link
-              to="/openings"
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              {o.back}
-            </Link>
-            <Link to={base} className="text-primary underline-offset-4 hover:underline">
-              {o.train}
-            </Link>
-            <Link
-              to={`${base}/lines`}
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              {o.browse}
-            </Link>
-            <Link
-              to={`/openings/${repertoire.slug}/cycles`}
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              {o.cycles}
-            </Link>
-          </div>
-        </div>
-
-        <p className="text-muted-foreground text-xs">{o.learnIntro}</p>
-
-        <div className="flex items-center gap-2">
-          <Switch
-            id="fast-forward"
-            checked={fastForward}
-            onCheckedChange={setFastForward}
+    <OpeningPageLayout
+      left={
+        <>
+          <OpeningPageHeader
+            repertoire={repertoire}
+            mode="learn"
+            title={o.learn}
+            subtitle={o.color[color]}
           />
-          <Label
-            htmlFor="fast-forward"
-            className="text-muted-foreground text-xs font-normal"
-          >
-            {o.fastForward}
-          </Label>
-        </div>
-
-        <Card size="sm">
-          <CardHeader>
-            <CardTitle className="text-sm">{o.movesTitle}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            {lineName && (
-              <p className="text-foreground text-xs font-medium">
-                <span className="text-muted-foreground font-mono">{lineName.eco}</span>{' '}
-                {lineName.name}
-              </p>
-            )}
-            <MoveList nodes={path.slice(0, index)} />
-          </CardContent>
-        </Card>
-      </aside>
-
-      <div className="order-1 flex w-full max-w-[min(36rem,calc(100svh-10rem))] flex-col gap-3 lg:order-2">
-        {leafId === undefined ? (
-          <div className="flex flex-col gap-3">
+          <p className="text-muted-foreground text-xs">{o.learnIntro}</p>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="fast-forward"
+              checked={fastForward}
+              onCheckedChange={setFastForward}
+            />
+            <Label
+              htmlFor="fast-forward"
+              className="text-muted-foreground text-xs font-normal"
+            >
+              {o.fastForward}
+            </Label>
+          </div>
+          <Card size="sm">
+            <CardHeader>
+              <CardTitle className="text-sm">{o.movesTitle}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+              {lineName && (
+                <p className="text-foreground text-xs font-medium">
+                  <span className="text-muted-foreground font-mono">{lineName.eco}</span>{' '}
+                  {lineName.name}
+                </p>
+              )}
+              <MoveList nodes={path.slice(0, index)} />
+            </CardContent>
+          </Card>
+        </>
+      }
+      board={
+        <OpeningBoard
+          fen={run.fen}
+          orientation={color === 'w' ? 'white' : 'black'}
+          interactive={userTurn}
+          onMove={run.handleMove}
+          hintUci={userTurn ? next.uci : undefined}
+          lastMoveUci={run.lastMoveUci}
+          boardTheme={stats?.board_theme}
+          pieceSet={stats?.piece_set}
+        />
+      }
+      right={
+        leafId === undefined ? (
+          <>
             <p className="text-foreground text-sm">{o.allLearned}</p>
             <div className="flex flex-wrap gap-2">
               <Button asChild>
@@ -153,7 +142,7 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
                 <Link to={`${base}/lines`}>{o.browse}</Link>
               </Button>
             </div>
-          </div>
+          </>
         ) : (
           <>
             <p
@@ -168,16 +157,6 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
             >
               {status}
             </p>
-            <OpeningBoard
-              fen={run.fen}
-              orientation={color === 'w' ? 'white' : 'black'}
-              interactive={userTurn}
-              onMove={run.handleMove}
-              hintUci={userTurn ? next.uci : undefined}
-              lastMoveUci={run.lastMoveUci}
-              boardTheme={stats?.board_theme}
-              pieceSet={stats?.piece_set}
-            />
             {learn.isError && <p className="text-destructive text-xs">{o.saveError}</p>}
             {userTurn && (
               <Button
@@ -205,8 +184,8 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
               </div>
             )}
           </>
-        )}
-      </div>
-    </main>
+        )
+      }
+    />
   )
 }

@@ -3,12 +3,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { OpeningBoard } from '@/components/opening-board'
+import { OpeningPageHeader } from '@/components/opening-page-header'
+import { OpeningPageLayout } from '@/components/opening-page-layout'
 import { RepertoireGate } from '@/components/repertoire-gate'
-import {
-  MOVE_STATE_CLASSES,
-  MoveStateLegend,
-  OpeningTreeView,
-} from '@/components/opening-tree-view'
+import { MoveStateLegend, OpeningTreeView } from '@/components/opening-tree-view'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -23,6 +21,7 @@ import { useLocalToggle } from '@/hooks/use-local-toggle'
 import { useOpeningNames } from '@/hooks/use-openings'
 import { useUserStats } from '@/hooks/use-user-stats'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
+import { MOVE_STATE_CLASSES } from '@/lib/opening-move-style'
 import { useTranslations } from '@/lib/language-context'
 import {
   isUserMove,
@@ -83,43 +82,46 @@ function OpeningLines({
   const firstChild = (tree.children.get(selectedId) ?? [])[0]
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-8 lg:flex-row lg:items-start">
-      <div className="flex w-full flex-col gap-3 lg:sticky lg:top-14 lg:w-[min(30rem,calc(100vh-12rem))] lg:shrink-0">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-foreground text-base font-semibold tracking-tight">
-            {o.names[repertoire.slug] ?? repertoire.name}
-          </h1>
-          <p className="text-muted-foreground text-xs">
-            {o.color[color]} · {o.runs(tree.leaves.length)}
-          </p>
-          <div className="flex gap-3 text-xs">
-            <Link
-              to="/openings"
-              className="text-primary underline-offset-4 hover:underline"
+    <OpeningPageLayout
+      variant="browse"
+      left={
+        <>
+          <OpeningPageHeader
+            repertoire={repertoire}
+            mode="lines"
+            subtitle={`${o.color[color]} · ${o.runs(tree.leaves.length)}`}
+          />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label={t.puzzleBoard.prevMove}
+              disabled={!selected}
+              onClick={() => setSelectedId(selected?.parent_id ?? null)}
             >
-              {o.back}
-            </Link>
-            <Link
-              to={`/openings/${repertoire.slug}/learn`}
-              className="text-primary underline-offset-4 hover:underline"
+              <ChevronLeft />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label={t.puzzleBoard.nextMove}
+              disabled={!firstChild}
+              onClick={() => firstChild && setSelectedId(firstChild.id)}
             >
-              {o.learn}
-            </Link>
-            <Link
-              to={`/openings/${repertoire.slug}`}
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              {o.train}
-            </Link>
-            <Link
-              to={`/openings/${repertoire.slug}/cycles`}
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              {o.cycles}
-            </Link>
+              <ChevronRight />
+            </Button>
           </div>
-        </div>
-
+          <SelectedMove
+            node={selected}
+            tree={tree}
+            names={names}
+            color={color}
+            progress={progress}
+            now={now}
+          />
+        </>
+      }
+      board={
         <OpeningBoard
           fen={fen}
           orientation={color === 'w' ? 'white' : 'black'}
@@ -129,87 +131,67 @@ function OpeningLines({
           boardTheme={stats?.board_theme}
           pieceSet={stats?.piece_set}
         />
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label={t.puzzleBoard.prevMove}
-            disabled={!selected}
-            onClick={() => setSelectedId(selected?.parent_id ?? null)}
-          >
-            <ChevronLeft />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label={t.puzzleBoard.nextMove}
-            disabled={!firstChild}
-            onClick={() => firstChild && setSelectedId(firstChild.id)}
-          >
-            <ChevronRight />
-          </Button>
-          <SelectedMove
-            node={selected}
-            tree={tree}
-            names={names}
-            color={color}
-            progress={progress}
-            now={now}
-          />
-        </div>
-      </div>
-
-      <div className="flex w-full min-w-0 flex-col gap-6">
-        <Card>
-          <CardHeader className="gap-2">
-            <CardTitle>{o.treeTitle}</CardTitle>
-            <CardAction>
-              <NamesSwitch id="tree-names" checked={treeNames} onChange={setTreeNames} />
-            </CardAction>
-            <MoveStateLegend />
-          </CardHeader>
-          <CardContent>
-            <OpeningTreeView
-              tree={tree}
-              color={color}
-              progress={progress}
-              now={now}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              names={treeNames ? names : NO_NAMES}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{o.linesTitle}</CardTitle>
-            <CardAction>
-              <NamesSwitch id="line-names" checked={lineNames} onChange={setLineNames} />
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            <ol className="flex flex-col divide-y">
-              {tree.leaves.map((leaf) => (
-                <LineRow
-                  key={leaf.id}
-                  slug={repertoire.slug}
-                  tree={tree}
-                  names={lineNames ? names : NO_NAMES}
-                  leaf={leaf}
-                  color={color}
-                  progress={progress}
-                  now={now}
-                  selected={leaf.id === selectedId}
-                  onSelect={() => setSelectedId(leaf.id)}
+      }
+      right={
+        <>
+          <Card>
+            <CardHeader className="gap-2">
+              <CardTitle>{o.treeTitle}</CardTitle>
+              <CardAction>
+                <NamesSwitch
+                  id="tree-names"
+                  checked={treeNames}
+                  onChange={setTreeNames}
                 />
-              ))}
-            </ol>
-          </CardContent>
-        </Card>
-      </div>
-    </main>
+              </CardAction>
+              <MoveStateLegend />
+            </CardHeader>
+            <CardContent>
+              <OpeningTreeView
+                tree={tree}
+                color={color}
+                progress={progress}
+                now={now}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                names={treeNames ? names : NO_NAMES}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{o.linesTitle}</CardTitle>
+              <CardAction>
+                <NamesSwitch
+                  id="line-names"
+                  checked={lineNames}
+                  onChange={setLineNames}
+                />
+              </CardAction>
+            </CardHeader>
+            <CardContent>
+              <ol className="flex flex-col divide-y">
+                {tree.leaves.map((leaf) => (
+                  <LineRow
+                    key={leaf.id}
+                    slug={repertoire.slug}
+                    tree={tree}
+                    names={lineNames ? names : NO_NAMES}
+                    leaf={leaf}
+                    color={color}
+                    progress={progress}
+                    now={now}
+                    selected={leaf.id === selectedId}
+                    onSelect={() => setSelectedId(leaf.id)}
+                  />
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
+        </>
+      }
+    />
   )
 }
 
@@ -332,7 +314,7 @@ function LineRow({
           {name.name}
         </p>
       )}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-2">
         <button
           type="button"
           aria-current={selected ? 'true' : undefined}
@@ -343,7 +325,7 @@ function LineRow({
         >
           {path.map((node, index) => moveLabel(node, index === 0)).join(' ')}
         </button>
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex w-28 flex-col gap-1">
             <div className="bg-muted h-1.5 overflow-hidden rounded-full">
               <div

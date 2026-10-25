@@ -2,7 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { openingsTranslations } from '@/lib/i18n/openings'
-import OpeningImportPage, { previewImport } from './OpeningImportPage'
+import { previewImport } from '@/lib/opening-import'
+import OpeningImportPage from './OpeningImportPage'
 
 const o = openingsTranslations.it
 const importMutate = vi.fn()

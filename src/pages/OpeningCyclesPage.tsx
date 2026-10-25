@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { OpeningBoard } from '@/components/opening-board'
+import { OpeningPageHeader } from '@/components/opening-page-header'
+import { OpeningPageLayout } from '@/components/opening-page-layout'
 import { RepertoireGate, type RepertoireData } from '@/components/repertoire-gate'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -59,7 +61,6 @@ function OpeningCycles({ repertoire, tree }: RepertoireData) {
   const record = useRecordOpeningMove()
   const save = useSaveOpeningCycle()
   const color = repertoire.color
-  const base = `/openings/${repertoire.slug}`
   const lines = tree.leaves
   const [state, setState] = useState<CycleState>(IDLE)
   const running = state.status === 'running'
@@ -85,13 +86,12 @@ function OpeningCycles({ repertoire, tree }: RepertoireData) {
 
   // A fine linea si passa da soli alla successiva; dopo l'ultima il ciclo
   // e' completo e si salva.
-  const runResults = useRef(run.results)
-  runResults.current = run.results
+  const runResults = run.results
   useEffect(() => {
     if (!running || !run.done) return
     const timer = setTimeout(() => {
       setState((s) => {
-        const results = [...s.results, ...runResults.current]
+        const results = [...s.results, ...runResults]
         if (s.lineIndex + 1 < lines.length) {
           return { ...s, lineIndex: s.lineIndex + 1, results }
         }
@@ -99,7 +99,7 @@ function OpeningCycles({ repertoire, tree }: RepertoireData) {
       })
     }, NEXT_LINE_DELAY_MS)
     return () => clearTimeout(timer)
-  }, [running, run.done, lines.length])
+  }, [running, run.done, runResults, lines.length])
 
   const savedFor = useRef(0)
   useEffect(() => {
@@ -145,113 +145,95 @@ function OpeningCycles({ repertoire, tree }: RepertoireData) {
   const before = saved ? cycles?.filter((c) => c.cycle < saved.cycle).at(-1) : lastCycle
 
   return (
-    <main className="flex w-full flex-1 flex-col items-center gap-4 px-4 py-8 lg:flex-row lg:items-start lg:justify-center lg:gap-6">
-      <aside className="order-2 flex w-full flex-col gap-4 lg:order-1 lg:w-72 lg:shrink-0">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-foreground text-base font-semibold tracking-tight">
-            {o.names[repertoire.slug] ?? repertoire.name} · {o.cycles}
-          </h1>
-          <p className="text-muted-foreground text-xs">
-            {o.color[color]} · {o.runs(lines.length)}
-          </p>
-          <div className="flex gap-3 text-xs">
-            <Link
-              to="/openings"
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              {o.back}
-            </Link>
-            <Link to={base} className="text-primary underline-offset-4 hover:underline">
-              {o.train}
-            </Link>
-            <Link
-              to={`${base}/lines`}
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              {o.browse}
-            </Link>
-          </div>
-        </div>
-        <p className="text-muted-foreground text-xs">{o.cyclesIntro}</p>
-        <CycleHistory cycles={cycles ?? []} locale={t.meta.locale} />
-      </aside>
+    <OpeningPageLayout
+      left={
+        <>
+          <OpeningPageHeader
+            repertoire={repertoire}
+            mode="cycles"
+            title={o.cycles}
+            subtitle={`${o.color[color]} · ${o.runs(lines.length)}`}
+          />
+          <p className="text-muted-foreground text-xs">{o.cyclesIntro}</p>
+          <CycleHistory cycles={cycles ?? []} locale={t.meta.locale} />
+        </>
+      }
+      board={
+        <OpeningBoard
+          fen={run.fen}
+          orientation={color === 'w' ? 'white' : 'black'}
+          interactive={run.userTurn}
+          onMove={run.handleMove}
+          hintUci={hint?.node.uci}
+          lastMoveUci={run.lastMoveUci}
+          boardTheme={stats?.board_theme}
+          pieceSet={stats?.piece_set}
+        />
+      }
+      right={
+        <>
+          {state.status === 'idle' && (
+            <div className="flex flex-col items-start gap-3">
+              <h2 className="text-foreground text-lg font-semibold">{o.cyclesTitle}</h2>
+              <Button onClick={start}>{o.startCycle(nextCycle)}</Button>
+            </div>
+          )}
 
-      <div className="order-1 flex w-full max-w-[min(36rem,calc(100svh-10rem))] flex-col gap-3 lg:order-2">
-        {state.status === 'idle' && (
-          <div className="flex flex-col items-start gap-3">
-            <h2 className="text-foreground text-lg font-semibold">{o.cyclesTitle}</h2>
-            {lastCycle && (
-              <p className="text-muted-foreground text-sm">
-                {o.previousCycle(formatMs(lastCycle.total_ms))}
-              </p>
-            )}
-            <Button onClick={start}>{o.startCycle(nextCycle)}</Button>
-          </div>
-        )}
-
-        {running && (
-          <>
-            <div className="flex items-baseline justify-between gap-2">
+          {running && (
+            <>
+              <span className="text-muted-foreground text-xs tabular-nums">
+                {o.cycleProgress(nextCycle, state.lineIndex + 1, lines.length)}
+              </span>
+              <span className="text-foreground text-3xl font-semibold tabular-nums">
+                {formatMs(now - state.startedAt)}
+              </span>
               <p
                 role="status"
                 className={`text-sm font-medium ${hint && !hint.alternative ? 'text-destructive' : 'text-foreground'}`}
               >
                 {status}
               </p>
-              <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-                {o.cycleProgress(nextCycle, state.lineIndex + 1, lines.length)} ·{' '}
-                <span className="text-foreground font-medium">
-                  {formatMs(now - state.startedAt)}
-                </span>
-              </span>
-            </div>
-            <OpeningBoard
-              fen={run.fen}
-              orientation={color === 'w' ? 'white' : 'black'}
-              interactive={run.userTurn}
-              onMove={run.handleMove}
-              hintUci={hint?.node.uci}
-              lastMoveUci={run.lastMoveUci}
-              boardTheme={stats?.board_theme}
-              pieceSet={stats?.piece_set}
-            />
-            {lastCycle && (
-              <p className="text-muted-foreground text-xs">
-                {o.previousCycle(formatMs(lastCycle.total_ms))}
-              </p>
-            )}
-          </>
-        )}
+            </>
+          )}
 
-        {state.status === 'done' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{o.cycleDone(saved?.cycle ?? nextCycle)}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <p className="text-foreground text-sm tabular-nums">
-                {o.cycleResult(
-                  formatMs(state.totalMs),
-                  state.results.filter((r) => r.ok).length,
-                  state.results.length,
-                )}
-              </p>
-              {before && (
-                <p className="text-muted-foreground text-sm">
-                  {state.totalMs <= before.total_ms
-                    ? o.faster(formatMs(before.total_ms - state.totalMs))
-                    : o.slower(formatMs(state.totalMs - before.total_ms))}
+          {state.status !== 'done' && lastCycle && (
+            <p className="text-muted-foreground text-xs">
+              {o.previousCycle(formatMs(lastCycle.total_ms))}
+            </p>
+          )}
+
+          {state.status === 'done' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{o.cycleDone(saved?.cycle ?? nextCycle)}</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                <p className="text-foreground text-sm tabular-nums">
+                  {o.cycleResult(
+                    formatMs(state.totalMs),
+                    state.results.filter((r) => r.ok).length,
+                    state.results.length,
+                  )}
                 </p>
-              )}
-              {save.isError && <p className="text-destructive text-xs">{o.saveError}</p>}
-              <Button className="w-fit" disabled={!saved} onClick={start}>
-                {o.startCycle((saved?.cycle ?? nextCycle) + 1)}
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </main>
+                {before && (
+                  <p className="text-muted-foreground text-sm">
+                    {state.totalMs <= before.total_ms
+                      ? o.faster(formatMs(before.total_ms - state.totalMs))
+                      : o.slower(formatMs(state.totalMs - before.total_ms))}
+                  </p>
+                )}
+                {save.isError && (
+                  <p className="text-destructive text-xs">{o.saveError}</p>
+                )}
+                <Button className="w-fit" disabled={!saved} onClick={start}>
+                  {o.startCycle((saved?.cycle ?? nextCycle) + 1)}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      }
+    />
   )
 }
 

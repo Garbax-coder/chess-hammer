@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { Fragment, useState } from 'react'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
+import { MOVE_STATE_CLASSES } from '@/lib/opening-move-style'
 import type { OpeningColor } from '@/lib/opening-catalog'
 import {
   chainFrom,
@@ -14,15 +15,6 @@ import {
   type OpeningProgress,
   type OpeningTree,
 } from '@/lib/opening-tree'
-
-// Colori della padronanza sulle mosse dell'utente (heatmap); le mosse
-// dell'avversario restano neutre.
-export const MOVE_STATE_CLASSES: Record<MoveState, string> = {
-  new: 'bg-muted text-muted-foreground',
-  learning: 'bg-amber-500/20 text-amber-800 dark:text-amber-200',
-  due: 'bg-red-500/20 text-red-800 dark:text-red-200',
-  mastered: 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-200',
-}
 
 const STATES: MoveState[] = ['new', 'learning', 'due', 'mastered']
 

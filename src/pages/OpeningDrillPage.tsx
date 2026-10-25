@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { OpeningBoard } from '@/components/opening-board'
 import { MoveList } from '@/components/opening-move-list'
+import { OpeningPageHeader } from '@/components/opening-page-header'
+import { OpeningPageLayout } from '@/components/opening-page-layout'
 import { RepertoireGate, type RepertoireData } from '@/components/repertoire-gate'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -177,84 +179,65 @@ function OpeningDrill({ repertoire, tree, progress }: RepertoireData) {
       : o.sessionLine(session.played.length, sessionLines)
 
   return (
-    <main className="flex w-full flex-1 flex-col items-center gap-4 px-4 py-8 lg:flex-row lg:items-start lg:justify-center lg:gap-6">
-      <aside className="order-2 flex w-full flex-col gap-4 lg:order-1 lg:w-64 lg:shrink-0">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-foreground text-base font-semibold tracking-tight">
-            {o.names[repertoire.slug] ?? repertoire.name}
-          </h1>
-          <p className="text-muted-foreground text-xs">
-            {o.color[color]} · {o.runs(coverage.runs)}
-          </p>
-          <div className="flex gap-3 text-xs">
-            <Link
-              to="/openings"
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              {o.back}
-            </Link>
-            <Link
-              to={`${base}/learn`}
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              {o.learn}
-            </Link>
-            <Link
-              to={`${base}/lines`}
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              {o.browse}
-            </Link>
-            <Link
-              to={`/openings/${repertoire.slug}/cycles`}
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              {o.cycles}
-            </Link>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Switch
-            id="fast-forward"
-            checked={fastForward}
-            onCheckedChange={setFastForward}
+    <OpeningPageLayout
+      left={
+        <>
+          <OpeningPageHeader
+            repertoire={repertoire}
+            mode="train"
+            subtitle={`${o.color[color]} · ${o.runs(coverage.runs)}`}
           />
-          <Label
-            htmlFor="fast-forward"
-            className="text-muted-foreground text-xs font-normal"
-          >
-            {o.fastForward}
-          </Label>
-        </div>
-
-        <Card size="sm">
-          <CardHeader>
-            <CardTitle className="text-sm">{o.progressTitle}</CardTitle>
-          </CardHeader>
-          <CardContent className="text-muted-foreground flex flex-col gap-1 text-xs tabular-nums">
-            <span>{o.mastered(coverage.mastered, coverage.userMoves)}</span>
-            <span>{o.runsMastered(coverage.runsMastered, coverage.runs)}</span>
-            <span>
-              {o.due(coverage.due)} · {o.newMoves(coverage.userMoves - coverage.seen)}
-            </span>
-          </CardContent>
-        </Card>
-
-        {session.phase !== 'done' && (
+          <div className="flex items-center gap-2">
+            <Switch
+              id="fast-forward"
+              checked={fastForward}
+              onCheckedChange={setFastForward}
+            />
+            <Label
+              htmlFor="fast-forward"
+              className="text-muted-foreground text-xs font-normal"
+            >
+              {o.fastForward}
+            </Label>
+          </div>
           <Card size="sm">
             <CardHeader>
-              <CardTitle className="text-sm">{o.movesTitle}</CardTitle>
+              <CardTitle className="text-sm">{o.progressTitle}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <MoveList nodes={run.path.slice(0, run.index)} results={run.results} />
+            <CardContent className="text-muted-foreground flex flex-col gap-1 text-xs tabular-nums">
+              <span>{o.mastered(coverage.mastered, coverage.userMoves)}</span>
+              <span>{o.runsMastered(coverage.runsMastered, coverage.runs)}</span>
+              <span>
+                {o.due(coverage.due)} · {o.newMoves(coverage.userMoves - coverage.seen)}
+              </span>
             </CardContent>
           </Card>
-        )}
-      </aside>
-
-      <div className="order-1 flex w-full max-w-[min(36rem,calc(100svh-10rem))] flex-col gap-3 lg:order-2">
-        {session.phase === 'done' ? (
+          {session.phase !== 'done' && (
+            <Card size="sm">
+              <CardHeader>
+                <CardTitle className="text-sm">{o.movesTitle}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MoveList nodes={run.path.slice(0, run.index)} results={run.results} />
+              </CardContent>
+            </Card>
+          )}
+        </>
+      }
+      board={
+        <OpeningBoard
+          fen={run.fen}
+          orientation={color === 'w' ? 'white' : 'black'}
+          interactive={run.userTurn}
+          onMove={run.handleMove}
+          hintUci={hint?.node.uci}
+          lastMoveUci={run.lastMoveUci}
+          boardTheme={stats?.board_theme}
+          pieceSet={stats?.piece_set}
+        />
+      }
+      right={
+        session.phase === 'done' ? (
           <SessionSummary
             lines={session.played.length}
             results={session.results}
@@ -266,33 +249,21 @@ function OpeningDrill({ repertoire, tree, progress }: RepertoireData) {
           />
         ) : (
           <>
-            <div className="flex items-baseline justify-between gap-2">
-              <p
-                role="status"
-                className={`text-sm font-medium ${
-                  hint
-                    ? hint.alternative
-                      ? 'text-amber-700 dark:text-amber-300'
-                      : 'text-destructive'
-                    : 'text-foreground'
-                }`}
-              >
-                {status}
-              </p>
-              <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-                {sessionLabel}
-              </span>
-            </div>
-            <OpeningBoard
-              fen={run.fen}
-              orientation={color === 'w' ? 'white' : 'black'}
-              interactive={run.userTurn}
-              onMove={run.handleMove}
-              hintUci={hint?.node.uci}
-              lastMoveUci={run.lastMoveUci}
-              boardTheme={stats?.board_theme}
-              pieceSet={stats?.piece_set}
-            />
+            <span className="text-muted-foreground text-xs tabular-nums">
+              {sessionLabel}
+            </span>
+            <p
+              role="status"
+              className={`text-sm font-medium ${
+                hint
+                  ? hint.alternative
+                    ? 'text-amber-700 dark:text-amber-300'
+                    : 'text-destructive'
+                  : 'text-foreground'
+              }`}
+            >
+              {status}
+            </p>
             {record.isError && <p className="text-destructive text-xs">{o.saveError}</p>}
             {run.done && (
               <div className="flex flex-col gap-2">
@@ -311,9 +282,9 @@ function OpeningDrill({ repertoire, tree, progress }: RepertoireData) {
               </div>
             )}
           </>
-        )}
-      </div>
-    </main>
+        )
+      }
+    />
   )
 }
 

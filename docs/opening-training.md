@@ -252,6 +252,13 @@ Fatto (2026-10-25):
   posizione iniziale. Repertori personali (al massimo 20, 3000 mosse
   ciascuno), cancellabili con i loro progressi.
 
+- **Layout a scacchiera fissa** (2026-10-25): Studio, Allenamento, Consulta e
+  Cicli usano `OpeningPageLayout`. Su desktop la pagina è alta quanto lo
+  schermo sotto l'intestazione e non scorre (niente piè di pagina su queste
+  pagine): la scacchiera al centro prende tutta l'altezza disponibile,
+  informazioni a sinistra, stato e comandi a destra, e le due colonne
+  scorrono per conto loro. Su mobile: scacchiera, comandi, informazioni.
+
 Nota: `0101_opening_catalog.sql` è stata rigenerata dopo essere stata
 applicata in sviluppo (alternative). È idempotente: in sviluppo si riapplica
 eseguendo il file; in produzione arriva una volta sola, al merge.
