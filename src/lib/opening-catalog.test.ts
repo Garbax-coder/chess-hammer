@@ -154,6 +154,26 @@ describe('buildRepertoire in lenient mode (PGN import)', () => {
     ])
   })
 
+  it('opens a new line with a second user move when asked (branches)', () => {
+    const report = buildRepertoire(
+      source(['e4 e5 Nf3 Nc6', 'e4 e5 Bc4 Bc5 c3', 'e4 c5 Nf3']),
+      { lenient: true, branches: true },
+    )
+    expect(report.alternatives).toBe(0)
+    expect(report.nodes.every((n) => n.isMain)).toBe(true)
+    // 2.Bc4 tiene il suo seguito.
+    expect(report.nodes.map((n) => n.san)).toContain('c3')
+  })
+
+  it('keeps a trailing opponent move when asked (keepOpponentEnds)', () => {
+    const report = buildRepertoire(source(['e4 e5 Nf3 Nc6', 'e4 c5']), {
+      lenient: true,
+      keepOpponentEnds: true,
+    })
+    expect(report.trimmed).toBe(0)
+    expect(report.nodes.map((n) => n.san)).toEqual(['e4', 'c5', 'e5', 'Nf3', 'Nc6'])
+  })
+
   it('still rejects an illegal move', () => {
     expect(() => buildRepertoire(source(['e4 e5 Ke3']), { lenient: true })).toThrow(
       /non legale/,

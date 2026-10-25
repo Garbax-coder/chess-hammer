@@ -84,7 +84,25 @@ export interface BuildReport {
  */
 export function buildRepertoire(
   source: RepertoireSource,
-  { lenient = false }: { lenient?: boolean } = {},
+  {
+    lenient = false,
+    branches = false,
+    keepOpponentEnds = false,
+  }: {
+    lenient?: boolean
+    /**
+     * Solo in modo tollerante: una seconda mossa dell'utente nella stessa
+     * posizione apre una linea nuova, con il suo seguito, invece di restare
+     * un'alternativa (es. un repertorio con tutte le varianti di un'apertura).
+     */
+    branches?: boolean
+    /**
+     * Solo in modo tollerante: una linea che finisce con una mossa
+     * dell'avversario resta com'e' (la risposta la aggiunge l'utente), invece
+     * di perdere quella mossa.
+     */
+    keepOpponentEnds?: boolean
+  } = {},
 ): BuildReport {
   const nodes = new Map<string, CatalogNode>()
   // Per ogni posizione (percorso del padre) la mossa principale dell'utente.
@@ -130,7 +148,8 @@ export function buildRepertoire(
       const userMove = colorAtPly(ply) === source.color
       const parentKey = path ?? ''
       const main = mainUserMove.get(parentKey)
-      if (!existing && userMove && main !== undefined && main !== childPath) {
+      const branch = branches && lenient
+      if (!existing && userMove && main !== undefined && main !== childPath && !branch) {
         // Una seconda mossa dell'utente nella stessa posizione.
         if (asAlternative && isLast) {
           nodes.set(
@@ -171,7 +190,8 @@ export function buildRepertoire(
 
   source.lines.forEach((line, lineIndex) => {
     let sans = line.trim().split(/\s+/).filter(Boolean)
-    if (sans.length > 0 && colorAtPly(sans.length) !== source.color) {
+    const opponentEnd = sans.length > 0 && colorAtPly(sans.length) !== source.color
+    if (opponentEnd && !(lenient && keepOpponentEnds)) {
       if (!lenient) {
         fail(
           `linea ${lineIndex + 1}: deve finire con una mossa di chi allena il repertorio`,

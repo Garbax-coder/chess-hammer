@@ -13,8 +13,14 @@ describe('isOpeningBoardPath', () => {
     }
   })
 
-  it('leaves out the list, the import page and the rest of the app', () => {
-    for (const path of ['/openings', '/openings/import', '/train', '/openings/x/other']) {
+  it('leaves out the list, the import and ECO pages and the rest of the app', () => {
+    for (const path of [
+      '/openings',
+      '/openings/import',
+      '/openings/eco',
+      '/train',
+      '/openings/x/other',
+    ]) {
       expect(isOpeningBoardPath(path)).toBe(false)
     }
   })

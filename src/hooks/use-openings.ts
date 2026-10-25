@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
+import { loadEcoLines } from '@/lib/opening-eco'
 import type { OpeningProgress } from '@/lib/opening-tree'
 import {
   addOpeningMove,
@@ -187,6 +188,11 @@ export function useDeleteOpeningMove() {
 export function useSetMoveAlternative() {
   const refresh = useRefreshRepertoires()
   return useMutation({ mutationFn: setOpeningMoveAlternative, onSuccess: refresh })
+}
+
+/** Il dataset delle aperture di Lichess, per creare un repertorio da ECO. */
+export function useEcoLines() {
+  return useQuery({ queryKey: ['eco-lines'], queryFn: loadEcoLines, staleTime: Infinity })
 }
 
 export function useCopyRepertoire() {

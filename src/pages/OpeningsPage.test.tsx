@@ -78,6 +78,10 @@ describe('OpeningsPage', () => {
       'href',
       '/openings/import',
     )
+    expect(screen.getByRole('link', { name: o.ecoButton })).toHaveAttribute(
+      'href',
+      '/openings/eco',
+    )
     expect(screen.getAllByText(o.personal)).toHaveLength(1)
     // Solo il repertorio personale si puo' eliminare, e prima si conferma.
     fireEvent.click(screen.getByRole('button', { name: o.deleteRepertoire }))

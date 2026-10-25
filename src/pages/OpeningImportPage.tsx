@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import {
+  OpeningColorToggle,
+  OpeningImportPreview,
+} from '@/components/opening-import-preview'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useImportRepertoire } from '@/hooks/use-openings'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
 import type { OpeningColor } from '@/lib/opening-catalog'
-import { MAX_IMPORT_MOVES, previewImport } from '@/lib/opening-import'
+import { canCreateFrom, previewImport } from '@/lib/opening-import'
 
 // Import di un repertorio personale da PGN: si incolla il testo (o si carica
 // un file), si sceglie il colore, l'anteprima dice cosa diventera' e
@@ -21,8 +24,7 @@ export default function OpeningImportPage() {
   const [color, setColor] = useState<OpeningColor>('w')
   const preview = useMemo(() => previewImport(pgn, color), [pgn, color])
   const nodes = preview.report?.nodes ?? []
-  const tooBig = nodes.length > MAX_IMPORT_MOVES
-  const canImport = preview.lines > 0 && !preview.error && !preview.illegal && !tooBig
+  const canImport = canCreateFrom(preview)
 
   async function loadFile(file: File | undefined) {
     if (file) setPgn(await file.text())
@@ -86,68 +88,10 @@ export default function OpeningImportPage() {
               onChange={(e) => setName(e.target.value)}
             />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium">{o.colorLabel}</span>
-            <div className="bg-muted flex w-fit gap-1 rounded-lg p-1">
-              {(['w', 'b'] as const).map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  aria-pressed={color === c}
-                  onClick={() => setColor(c)}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                    color === c
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {o.color[c]}
-                </button>
-              ))}
-            </div>
-          </div>
+          <OpeningColorToggle color={color} onChange={setColor} />
         </div>
 
-        {pgn.trim() !== '' && (
-          <Card size="sm">
-            <CardHeader>
-              <CardTitle className="text-sm">{o.previewTitle}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-1 text-sm">
-              {preview.illegal ? (
-                <p className="text-destructive">
-                  {o.illegalMove(preview.illegal.line, preview.illegal.move)}
-                </p>
-              ) : preview.error ? (
-                <p className="text-destructive">{preview.error}</p>
-              ) : preview.lines === 0 ? (
-                <p className="text-muted-foreground">{o.previewEmpty}</p>
-              ) : (
-                <p className="text-foreground">
-                  {o.previewLines(preview.lines, nodes.length)}
-                </p>
-              )}
-              {tooBig && (
-                <p className="text-destructive">{o.previewTooBig(MAX_IMPORT_MOVES)}</p>
-              )}
-              {!!preview.report?.alternatives && (
-                <p className="text-muted-foreground text-xs">
-                  {o.previewAlternatives(preview.report.alternatives)}
-                </p>
-              )}
-              {!!preview.report?.trimmed && (
-                <p className="text-muted-foreground text-xs">
-                  {o.previewTrimmed(preview.report.trimmed)}
-                </p>
-              )}
-              {preview.skipped > 0 && (
-                <p className="text-muted-foreground text-xs">
-                  {o.previewSkipped(preview.skipped)}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        {pgn.trim() !== '' && <OpeningImportPreview preview={preview} />}
 
         {importRepertoire.isError && (
           <p className="text-destructive text-sm">

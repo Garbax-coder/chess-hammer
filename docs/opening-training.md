@@ -292,6 +292,23 @@ Fatto (2026-10-25):
 - **Tastiera in Consulta**: ← e → indietro e avanti lungo la linea, ↑ e ↓
   tra le risposte alternative alla stessa mossa.
 
+- **Repertorio da ECO** `/openings/eco` (pulsante "Crea da ECO" in
+  `/openings`): si cerca un codice ECO (prefisso: "C5" = C50-C59) o un nome
+  (famiglia "Italian Game" o variante "Italian Game: Classical Variation",
+  senza accenti e maiuscole) nel dataset Lichess già nel repository
+  (`src/lib/opening-eco.ts`, i TSV caricati solo su quella pagina, circa
+  400 KB). Le varianti scelte passano dalla stessa anteprima e dalla stessa
+  funzione dell'import PGN (`import_opening_repertoire`, nessuna migrazione
+  nuova) e si apre la Consulta. Opzioni: "Tutte le varianti come linee"
+  (predefinita; spenta, una sola mossa dell'utente per posizione: vince
+  quella con più varianti dietro, le altre restano alternative) e "Tieni le
+  varianti che finiscono con una mossa dell'avversario" (molte prendono il
+  nome dalla mossa avversaria: la risposta la aggiunge l'utente in
+  modifica). Numeri: 3.865 varianti, 500 codici, 150 famiglie; il
+  repertorio più grande (Sicilian Defense, tutte le varianti) ha 773 mosse,
+  sotto il limite di 3.000. Limite noto: il dataset dà nomi, non
+  frequenze; per scegliere le mosse più giocate servirà l'Opening Explorer.
+
 Nota: `0101_opening_catalog.sql` è stata rigenerata dopo essere stata
 applicata in sviluppo (alternative). È idempotente: in sviluppo si riapplica
 eseguendo il file; in produzione arriva una volta sola, al merge.

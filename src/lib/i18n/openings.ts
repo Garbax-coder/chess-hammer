@@ -120,6 +120,22 @@ export interface OpeningsTranslations {
   previewTooBig: (max: number) => string
   importButton: string
   importError: string
+  ecoButton: string
+  ecoTitle: string
+  ecoIntro: string
+  ecoSearchLabel: string
+  ecoSearchPlaceholder: string
+  ecoLoading: string
+  ecoNoResults: string
+  ecoLines: (n: number) => string
+  ecoChange: string
+  ecoBranches: string
+  ecoBranchesHint: string
+  ecoOpponentEnds: string
+  ecoOpponentEndsHint: string
+  previewOpenEnds: (n: number) => string
+  ecoCreate: string
+  ecoCredit: string
   personal: string
   deleteRepertoire: string
   confirmDelete: string
@@ -267,6 +283,26 @@ const it: OpeningsTranslations = {
     `Troppe mosse: un repertorio importato ne ha al massimo ${max}.`,
   importButton: 'Importa',
   importError: 'Importazione non riuscita',
+  ecoButton: 'Crea da ECO',
+  ecoTitle: 'Crea un repertorio da ECO',
+  ecoIntro:
+    'Cerca un codice ECO (es. C50, o C5 per C50-C59) o il nome di un’apertura: le sue varianti con nome diventano le linee di un repertorio personale, da modificare come vuoi.',
+  ecoSearchLabel: 'Codice ECO o apertura',
+  ecoSearchPlaceholder: 'C50, Italian, Caro-Kann…',
+  ecoLoading: 'Caricamento delle aperture…',
+  ecoNoResults: 'Nessuna apertura trovata.',
+  ecoLines: (n) => `${n} ${n === 1 ? 'variante' : 'varianti'}`,
+  ecoChange: 'Cambia',
+  ecoBranches: 'Tutte le varianti come linee',
+  ecoBranchesHint:
+    'Spento: una sola tua mossa per posizione (quella della variante più generale), le altre restano alternative accettate.',
+  ecoOpponentEnds: 'Tieni le varianti che finiscono con una mossa dell’avversario',
+  ecoOpponentEndsHint:
+    'Molte varianti prendono il nome dalla mossa dell’avversario: tenendole, la tua risposta la aggiungi tu in Consulta (Modifica le linee). Spento, quella mossa si toglie.',
+  previewOpenEnds: (n) =>
+    `${n} ${n === 1 ? 'linea finisce' : 'linee finiscono'} con una mossa dell’avversario: aggiungi la tua risposta in Consulta`,
+  ecoCreate: 'Crea il repertorio',
+  ecoCredit: 'Aperture e nomi: lichess-org/chess-openings (CC0).',
   personal: 'Personale',
   deleteRepertoire: 'Elimina',
   confirmDelete: 'Conferma: elimina il repertorio e i suoi progressi',
@@ -409,6 +445,26 @@ const en: OpeningsTranslations = {
   previewTooBig: (max) => `Too many moves: an imported repertoire has at most ${max}.`,
   importButton: 'Import',
   importError: 'Import failed',
+  ecoButton: 'Create from ECO',
+  ecoTitle: 'Create a repertoire from ECO',
+  ecoIntro:
+    'Search an ECO code (e.g. C50, or C5 for C50-C59) or an opening name: its named variations become the lines of a personal repertoire, which you can edit as you like.',
+  ecoSearchLabel: 'ECO code or opening',
+  ecoSearchPlaceholder: 'C50, Italian, Caro-Kann…',
+  ecoLoading: 'Loading the openings…',
+  ecoNoResults: 'No opening found.',
+  ecoLines: (n) => `${n} ${n === 1 ? 'variation' : 'variations'}`,
+  ecoChange: 'Change',
+  ecoBranches: 'Every variation as a line',
+  ecoBranchesHint:
+    'Off: one move of yours per position (the one of the most general variation), the others stay accepted alternatives.',
+  ecoOpponentEnds: 'Keep the variations ending with an opponent move',
+  ecoOpponentEndsHint:
+    'Many variations are named after the opponent’s move: if you keep them, you add your reply in Browse (Edit the lines). Off, that move is removed.',
+  previewOpenEnds: (n) =>
+    `${n} ${n === 1 ? 'line ends' : 'lines end'} with an opponent move: add your reply in Browse`,
+  ecoCreate: 'Create the repertoire',
+  ecoCredit: 'Openings and names: lichess-org/chess-openings (CC0).',
   personal: 'Personal',
   deleteRepertoire: 'Delete',
   confirmDelete: 'Confirm: delete the repertoire and its progress',
@@ -550,6 +606,26 @@ const fr: OpeningsTranslations = {
   previewTooBig: (max) => `Trop de coups : un répertoire importé en a au maximum ${max}.`,
   importButton: 'Importer',
   importError: 'Import échoué',
+  ecoButton: 'Créer depuis l’ECO',
+  ecoTitle: 'Créer un répertoire depuis l’ECO',
+  ecoIntro:
+    'Cherchez un code ECO (ex. C50, ou C5 pour C50-C59) ou le nom d’une ouverture : ses variantes nommées deviennent les lignes d’un répertoire personnel, à modifier comme vous voulez.',
+  ecoSearchLabel: 'Code ECO ou ouverture',
+  ecoSearchPlaceholder: 'C50, Italian, Caro-Kann…',
+  ecoLoading: 'Chargement des ouvertures…',
+  ecoNoResults: 'Aucune ouverture trouvée.',
+  ecoLines: (n) => `${n} ${n === 1 ? 'variante' : 'variantes'}`,
+  ecoChange: 'Changer',
+  ecoBranches: 'Toutes les variantes comme lignes',
+  ecoBranchesHint:
+    'Désactivé : un seul de vos coups par position (celui de la variante la plus générale), les autres restent des alternatives acceptées.',
+  ecoOpponentEnds: 'Garder les variantes qui finissent par un coup adverse',
+  ecoOpponentEndsHint:
+    'Beaucoup de variantes portent le nom du coup adverse : en les gardant, vous ajoutez votre réponse dans Consulter (Modifier les lignes). Désactivé, ce coup est retiré.',
+  previewOpenEnds: (n) =>
+    `${n} ${n === 1 ? 'ligne finit' : 'lignes finissent'} par un coup adverse : ajoutez votre réponse dans Consulter`,
+  ecoCreate: 'Créer le répertoire',
+  ecoCredit: 'Ouvertures et noms : lichess-org/chess-openings (CC0).',
   personal: 'Personnel',
   deleteRepertoire: 'Supprimer',
   confirmDelete: 'Confirmer : supprimer le répertoire et ses progrès',
@@ -698,6 +774,26 @@ const es: OpeningsTranslations = {
     `Demasiadas jugadas: un repertorio importado tiene como máximo ${max}.`,
   importButton: 'Importar',
   importError: 'Importación fallida',
+  ecoButton: 'Crear desde ECO',
+  ecoTitle: 'Crear un repertorio desde ECO',
+  ecoIntro:
+    'Busca un código ECO (p. ej. C50, o C5 para C50-C59) o el nombre de una apertura: sus variantes con nombre se convierten en las líneas de un repertorio personal, que puedes editar como quieras.',
+  ecoSearchLabel: 'Código ECO o apertura',
+  ecoSearchPlaceholder: 'C50, Italian, Caro-Kann…',
+  ecoLoading: 'Cargando las aperturas…',
+  ecoNoResults: 'No se encontró ninguna apertura.',
+  ecoLines: (n) => `${n} ${n === 1 ? 'variante' : 'variantes'}`,
+  ecoChange: 'Cambiar',
+  ecoBranches: 'Todas las variantes como líneas',
+  ecoBranchesHint:
+    'Desactivado: una sola jugada tuya por posición (la de la variante más general), las demás quedan como alternativas aceptadas.',
+  ecoOpponentEnds: 'Mantener las variantes que terminan con una jugada del rival',
+  ecoOpponentEndsHint:
+    'Muchas variantes llevan el nombre de la jugada del rival: si las mantienes, añades tu respuesta en Consultar (Editar las líneas). Desactivado, esa jugada se quita.',
+  previewOpenEnds: (n) =>
+    `${n} ${n === 1 ? 'línea termina' : 'líneas terminan'} con una jugada del rival: añade tu respuesta en Consultar`,
+  ecoCreate: 'Crear el repertorio',
+  ecoCredit: 'Aperturas y nombres: lichess-org/chess-openings (CC0).',
   personal: 'Personal',
   deleteRepertoire: 'Eliminar',
   confirmDelete: 'Confirmar: eliminar el repertorio y su progreso',
@@ -843,6 +939,26 @@ const de: OpeningsTranslations = {
     `Zu viele Züge: ein importiertes Repertoire hat höchstens ${max}.`,
   importButton: 'Importieren',
   importError: 'Import fehlgeschlagen',
+  ecoButton: 'Aus ECO erstellen',
+  ecoTitle: 'Repertoire aus ECO erstellen',
+  ecoIntro:
+    'Suche einen ECO-Code (z. B. C50, oder C5 für C50-C59) oder den Namen einer Eröffnung: Ihre benannten Varianten werden zu den Linien eines persönlichen Repertoires, das du beliebig bearbeiten kannst.',
+  ecoSearchLabel: 'ECO-Code oder Eröffnung',
+  ecoSearchPlaceholder: 'C50, Italian, Caro-Kann…',
+  ecoLoading: 'Eröffnungen werden geladen…',
+  ecoNoResults: 'Keine Eröffnung gefunden.',
+  ecoLines: (n) => `${n} ${n === 1 ? 'Variante' : 'Varianten'}`,
+  ecoChange: 'Ändern',
+  ecoBranches: 'Jede Variante als Linie',
+  ecoBranchesHint:
+    'Aus: ein Zug von dir pro Stellung (der der allgemeinsten Variante), die anderen bleiben akzeptierte Alternativen.',
+  ecoOpponentEnds: 'Varianten behalten, die mit einem gegnerischen Zug enden',
+  ecoOpponentEndsHint:
+    'Viele Varianten sind nach dem Zug des Gegners benannt: Behältst du sie, fügst du deine Antwort unter Ansehen hinzu (Linien bearbeiten). Aus: Dieser Zug wird entfernt.',
+  previewOpenEnds: (n) =>
+    `${n} ${n === 1 ? 'Linie endet' : 'Linien enden'} mit einem gegnerischen Zug: Füge deine Antwort unter Ansehen hinzu`,
+  ecoCreate: 'Repertoire erstellen',
+  ecoCredit: 'Eröffnungen und Namen: lichess-org/chess-openings (CC0).',
   personal: 'Persönlich',
   deleteRepertoire: 'Löschen',
   confirmDelete: 'Bestätigen: Repertoire und Fortschritt löschen',

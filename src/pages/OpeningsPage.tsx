@@ -33,9 +33,14 @@ export default function OpeningsPage() {
           <Badge variant="outline">{o.draftBadge}</Badge>
         </h1>
         <p className="text-muted-foreground text-sm">{o.subtitle}</p>
-        <Button asChild variant="outline" size="sm" className="mt-2 w-fit">
-          <Link to="/openings/import">{o.importPgn}</Link>
-        </Button>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/openings/eco">{o.ecoButton}</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/openings/import">{o.importPgn}</Link>
+          </Button>
+        </div>
       </div>
 
       {isLoading || !repertoires ? (
