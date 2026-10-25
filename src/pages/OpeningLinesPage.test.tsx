@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { formatScore } from '@/lib/chess-format'
@@ -217,7 +217,14 @@ describe('OpeningLinesPage', () => {
     renderLines()
     expect(screen.getByText('Il cavallo, prima dell’alfiere')).toBeInTheDocument()
 
+    // Tasto destro: il menu della mossa, poi "Commenta la mossa".
     fireEvent.contextMenu(screen.getByRole('button', { name: '2.Nc3' }))
+    const menu = screen.getByRole('menu', { name: o.moveMenu('2.Nc3') })
+    // Repertorio del catalogo: niente modifiche, si suggerisce una copia.
+    expect(within(menu).getByRole('menuitem', { name: o.deleteMove })).toBeDisabled()
+    expect(within(menu).getByRole('menuitem', { name: o.markMistake })).toBeDisabled()
+    expect(within(menu).getByText(o.menuCopyHint)).toBeInTheDocument()
+    fireEvent.click(within(menu).getByRole('menuitem', { name: o.commentMove }))
     const box = screen.getByRole('textbox', { name: o.commentTitle('2.Nc3') })
     fireEvent.change(box, { target: { value: ' Contro la Siciliana ' } })
     fireEvent.click(screen.getByRole('button', { name: o.saveComment }))
@@ -436,6 +443,26 @@ describe('OpeningLinesPage', () => {
     fireEvent.click(screen.getByRole('button', { name: o.clearArrows }))
     expect(saveArrows).toHaveBeenLastCalledWith({ nodeId: 1, arrows: [] })
     arrows = new Map()
+  })
+
+  it('deletes a move and marks mistakes from the move menu of a personal repertoire', () => {
+    deleteMove.mockImplementation((_id, options) => options.onSuccess())
+    renderLines('/openings/u-copy/lines?move=7')
+    expect(board.lastMoveUci).toBe('b8c6')
+
+    // Eliminazione con conferma; la mossa selezionata era nel seguito.
+    fireEvent.contextMenu(screen.getByRole('button', { name: '2.Nc3' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: o.deleteMove }))
+    expect(deleteMove).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('menuitem', { name: o.confirmDeleteMove }))
+    expect(deleteMove).toHaveBeenCalledWith(5, expect.anything())
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    expect(board.lastMoveUci).toBe('c7c5')
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: '2.Bc4' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: o.markMistake }))
+    expect(setMistake).toHaveBeenCalledWith({ nodeId: 6, mistake: true })
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
 
   it('exports the repertoire as PGN', async () => {

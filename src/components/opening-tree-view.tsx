@@ -45,8 +45,8 @@ export function OpeningTreeView({
   names?: Map<number, OpeningName>
   /** Commenti da mostrare, per mossa (gia' risolti: vedi commentOf). */
   comments?: Map<number, string>
-  /** Tasto destro (o tocco lungo) su una mossa: per commentarla. */
-  onMoveContextMenu?: (node: OpeningNode) => void
+  /** Tasto destro (o tocco lungo) su una mossa, con il punto del clic. */
+  onMoveContextMenu?: (node: OpeningNode, point: { x: number; y: number }) => void
 }) {
   const o = useOpeningsTranslations()
   const [collapsed, setCollapsed] = useState<ReadonlySet<number>>(new Set())
@@ -128,7 +128,7 @@ interface LineProps {
   onSelect: (nodeId: number) => void
   names: Map<number, OpeningName>
   comments: Map<number, string>
-  onMoveContextMenu?: (node: OpeningNode) => void
+  onMoveContextMenu?: (node: OpeningNode, point: { x: number; y: number }) => void
   collapsed: ReadonlySet<number>
   toggle: (nodeId: number) => void
 }
@@ -232,7 +232,7 @@ function Move({
       onContextMenu={(event) => {
         if (!onMoveContextMenu) return
         event.preventDefault()
-        onMoveContextMenu(node)
+        onMoveContextMenu(node, { x: event.clientX, y: event.clientY })
       }}
       className={`rounded px-1 py-0.5 font-mono text-xs tabular-nums transition-colors ${
         mistake

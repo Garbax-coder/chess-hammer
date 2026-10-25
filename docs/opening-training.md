@@ -362,7 +362,10 @@ Linee sbagliate, frecce ed export PGN (migrazione
   errori possibili (dell'utente lì, o dell'avversario al posto della sua
   ultima risposta) e li fa seguire sulla scacchiera. In Consulta si segnano
   in modifica ("Segna come linea sbagliata", `set_opening_move_mistake`) e
-  nell'albero sono in rosso, con "?". Dentro una linea sbagliata la potatura
+  nell'albero sono in rosso, con "?". Il tasto destro (o tocco lungo) su una
+  mossa dell'albero apre un menu: commenta, elimina la mossa e quello che
+  segue (con conferma), segna come errore / non errore; le ultime due solo
+  nei repertori personali. Dentro una linea sbagliata la potatura
   delle mosse dell'avversario senza seguito non si applica.
 - **Frecce**: tabella `opening_node_arrows` (per utente, come le note), una
   lista per posizione con colori G/R/B/Y. In Consulta si disegnano col tasto
