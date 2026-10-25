@@ -281,7 +281,12 @@ describe('OpeningLinesPage', () => {
     expect(board.lastMoveUci).toBe('e7e5')
     expect(addMove).not.toHaveBeenCalled()
 
-    // Una nuova risposta dell'avversario si aggiunge dopo 1.e4.
+    // Una nuova risposta dell'avversario si aggiunge dopo 1.e4. Mentre si
+    // salva la scacchiera mostra gia' la mossa (non torna indietro).
+    let save: { onSuccess: (node: { id: number }) => void; onSettled: () => void }
+    addMove.mockImplementation((_params, options) => {
+      save = options
+    })
     fireEvent.click(screen.getByRole('button', { name: '1.e4' }))
     act(() => {
       accepted = board.onMove('d7d5')
@@ -297,6 +302,14 @@ describe('OpeningLinesPage', () => {
       },
       expect.anything(),
     )
+    expect(board.fen.startsWith('rnbqkbnr/ppp1pppp/8/3p4/4P3/')).toBe(true)
+    expect(board.lastMoveUci).toBe('d7d5')
+    // Salvata: si seleziona la mossa nuova (qui 1...e5, gia' nell'albero).
+    act(() => {
+      save.onSuccess({ id: 2 })
+      save.onSettled()
+    })
+    expect(board.lastMoveUci).toBe('e7e5')
 
     // Eliminazione in due passaggi, poi si torna alla mossa precedente.
     deleteMove.mockImplementation((_id, options) => options.onSuccess())

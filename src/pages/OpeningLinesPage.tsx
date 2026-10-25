@@ -93,6 +93,14 @@ function OpeningLines({
   )
   const [editMessage, setEditMessage] = useState<string | null>(null)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  // La mossa appena giocata in modifica, mostrata subito mentre si salva:
+  // senza, la scacchiera tornerebbe indietro fino alla risposta del server e
+  // rifarebbe la mossa.
+  const [pendingMove, setPendingMove] = useState<{
+    parentId: number | null
+    uci: string
+    fen: string
+  } | null>(null)
   const addMove = useAddOpeningMove()
   const deleteMove = useDeleteOpeningMove()
   const setAlternative = useSetMoveAlternative()
@@ -201,6 +209,7 @@ function OpeningLines({
       to: uci.slice(2, 4),
       promotion: uci[4],
     })
+    setPendingMove({ parentId: selectedId, uci, fen: chess.fen() })
     addMove.mutate(
       {
         repertoireId: repertoire.id,
@@ -209,7 +218,10 @@ function OpeningLines({
         san: move.san,
         epd: epdOf(chess.fen()),
       },
-      { onSuccess: (node) => setSelectedId(node.id) },
+      {
+        onSuccess: (node) => setSelectedId(node.id),
+        onSettled: () => setPendingMove(null),
+      },
     )
     return true
   }
@@ -223,6 +235,9 @@ function OpeningLines({
     !firstChild &&
     siblings.some((n) => n.id !== selected.id && n.is_main)
   const endsWithOpponent = !!selected && !selectedIsUser && !firstChild
+
+  // Solo finche' resta selezionata la mossa da cui e' stata giocata.
+  const shownMove = pendingMove?.parentId === selectedId ? pendingMove : null
 
   function handleDelete() {
     if (!selected) return
@@ -388,12 +403,12 @@ function OpeningLines({
         }
         board={
           <OpeningBoard
-            fen={fen}
+            fen={shownMove?.fen ?? fen}
             orientation={color === 'w' ? 'white' : 'black'}
             interactive={editMode}
             onMove={editMode ? handleEditMove : () => false}
             hintUci={bestMove}
-            lastMoveUci={selected?.uci}
+            lastMoveUci={shownMove?.uci ?? selected?.uci}
             boardTheme={stats?.board_theme}
             pieceSet={stats?.piece_set}
           />
