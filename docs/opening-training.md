@@ -351,9 +351,33 @@ Integrazione nel resto dell'app (2026-10-25):
 - I testi delle aperture sono in `src/lib/i18n/openings-text.ts` (solo dati,
   letti anche dagli e2e); l'hook `useOpeningsTranslations` in `openings.ts`.
 
+Linee sbagliate, frecce ed export PGN (migrazione
+`0110_opening_mistakes_and_arrows.sql`):
+
+- **Linee sbagliate**: `opening_nodes.is_mistake` segna la mossa da cui parte
+  una linea da evitare; tutto il suo seguito (confutazione e commenti) ne fa
+  parte (`tree.mistakes`). Restano fuori da Allena, Cicli, copertura e
+  statistiche; giocata nel Drill è un errore con il messaggio "errore noto".
+  In Studia, nella posizione raggiunta, la card "Da evitare" elenca gli
+  errori possibili (dell'utente lì, o dell'avversario al posto della sua
+  ultima risposta) e li fa seguire sulla scacchiera. In Consulta si segnano
+  in modifica ("Segna come linea sbagliata", `set_opening_move_mistake`) e
+  nell'albero sono in rosso, con "?". Dentro una linea sbagliata la potatura
+  delle mosse dell'avversario senza seguito non si applica.
+- **Frecce**: tabella `opening_node_arrows` (per utente, come le note), una
+  lista per posizione con colori G/R/B/Y. In Consulta si disegnano col tasto
+  destro (Shift rossa, Alt blu, Ctrl gialla); ridisegnarne una la toglie.
+  Le salvate sono disegnate sopra la scacchiera da `OpeningBoard`; Studia le
+  mostra.
+- **Export PGN** (Consulta): tutte le varianti, commenti, frecce come
+  `[%cal ...]` e "?" sulle mosse sbagliate (`src/lib/opening-pgn.ts`).
+  L'import PGN legge "?", "??", `$2` e `$4` come linee sbagliate e ne tiene la
+  confutazione finale; le frecce `[%cal]` di un PGN importato non si leggono.
+- Nell'esportazione dei dati: `is_mistake` sulle mosse e le frecce.
+
 Al merge:
 
-- **Migrazioni in produzione** prima del frontend: da `0100` a `0109`
+- **Migrazioni in produzione** prima del frontend: da `0100` a `0110`
   (`supabase db push`), poi le prove SQL in sviluppo restano il riferimento.
 - **Anteprima Vercel**: controllare che le variabili "Preview" puntino al
   progetto Supabase di sviluppo.

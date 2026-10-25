@@ -1,4 +1,5 @@
 import { sinceIsoFor, type EloRange } from '@/lib/elo-history'
+import type { MoveArrow } from '@/lib/opening-arrows'
 import { supabase } from '@/lib/supabase'
 
 export type ExportFormat = 'json' | 'xlsx'
@@ -19,6 +20,7 @@ export interface UserExportData {
   openingAttempts: Row[]
   openingCycles: Row[]
   openingNotes: Row[]
+  openingArrows: Row[]
   hiddenOpeningRepertoires: Row[]
 }
 
@@ -96,7 +98,7 @@ type Page<T> = PromiseLike<{ data: T[] | null; error: { message: string } | null
 // i cicli, i commenti personali e i repertori del catalogo tolti dalla
 // libreria. Il periodo scelto vale solo per i tentativi.
 async function fetchOpeningExportData(userId: string, since: string | null) {
-  const [repertoires, moves, progress, attempts, cycles, notes, hidden] =
+  const [repertoires, moves, progress, attempts, cycles, notes, hidden, arrows] =
     await Promise.all([
       fetchAllPages<Row>((from, to) =>
         supabase
@@ -111,7 +113,7 @@ async function fetchOpeningExportData(userId: string, since: string | null) {
           supabase
             .from('opening_nodes')
             .select(
-              'repertoire_id, path, ply, san, uci, is_main, comment, opening_repertoires!inner(owner_id)',
+              'repertoire_id, path, ply, san, uci, is_main, is_mistake, comment, opening_repertoires!inner(owner_id)',
             )
             .eq('opening_repertoires.owner_id', userId)
             .order('repertoire_id')
@@ -168,6 +170,14 @@ async function fetchOpeningExportData(userId: string, since: string | null) {
             Row & { opening_repertoires: { slug: string; name: string } | null }
           >,
       ),
+      fetchAllPages<Row & { opening_nodes: RawNodeRef | null }>(
+        (from, to) =>
+          supabase
+            .from('opening_node_arrows')
+            .select(`arrows, updated_at, opening_nodes(${NODE_REF})`)
+            .order('updated_at', { ascending: true })
+            .range(from, to) as unknown as Page<Row & { opening_nodes: RawNodeRef | null }>,
+      ),
     ])
 
   const repertoire = (r: { slug: string; name: string } | null) => ({
@@ -188,6 +198,13 @@ async function fetchOpeningExportData(userId: string, since: string | null) {
     })),
     openingNotes: notes.map(({ opening_nodes, ...row }) => ({
       ...nodeColumns(opening_nodes),
+      ...row,
+    })),
+    // Le frecce come nei PGN di Lichess (es. "Ge2e4,Rd1h5"): una cella
+    // dell'Excel non contiene oggetti.
+    openingArrows: arrows.map(({ opening_nodes, arrows: list, ...row }) => ({
+      ...nodeColumns(opening_nodes),
+      arrows: (list as MoveArrow[]).map((a) => `${a.color}${a.from}${a.to}`).join(','),
       ...row,
     })),
     hiddenOpeningRepertoires: hidden.map(({ opening_repertoires, ...row }) => ({
@@ -347,6 +364,7 @@ export async function downloadUserData(
     ['opening_attempts', data.openingAttempts],
     ['opening_cycles', data.openingCycles],
     ['opening_notes', data.openingNotes],
+    ['opening_arrows', data.openingArrows],
     ['opening_hidden', data.hiddenOpeningRepertoires],
   ]
   for (const [name, rows] of sheets) {

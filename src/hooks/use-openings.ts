@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
+import type { MoveArrow } from '@/lib/opening-arrows'
 import { loadEcoLines } from '@/lib/opening-eco'
 import type { OpeningProgress } from '@/lib/opening-tree'
 import {
@@ -9,6 +10,7 @@ import {
   deleteOpeningMove,
   deleteOpeningRepertoire,
   fetchHiddenRepertoires,
+  fetchOpeningArrows,
   fetchOpeningCycles,
   fetchOpeningNames,
   fetchOpeningNotes,
@@ -20,8 +22,10 @@ import {
   recordOpeningMove,
   renameOpeningRepertoire,
   saveOpeningCycle,
+  saveOpeningArrows,
   saveOpeningNote,
   setOpeningMoveAlternative,
+  setOpeningMoveMistake,
   setRepertoireHidden,
   type OpeningCycle,
 } from '@/lib/openings'
@@ -233,6 +237,49 @@ export function useAddOpeningMove() {
 export function useDeleteOpeningMove() {
   const refresh = useRefreshRepertoires()
   return useMutation({ mutationFn: deleteOpeningMove, onSuccess: refresh })
+}
+
+export function useSetMoveMistake() {
+  const refresh = useRefreshRepertoires()
+  return useMutation({ mutationFn: setOpeningMoveMistake, onSuccess: refresh })
+}
+
+function openingArrowsKey(userId: string | undefined) {
+  return ['opening-arrows', userId]
+}
+
+/** Le frecce dell'utente per mossa (la posizione dopo quella mossa). */
+export function useOpeningArrows() {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: openingArrowsKey(user?.id),
+    queryFn: fetchOpeningArrows,
+    enabled: !!user,
+    staleTime: Infinity,
+    select: (rows) => new Map(rows.map((row) => [row.node_id, row.arrows])),
+  })
+}
+
+// Le frecce si aggiornano subito in cache (la scacchiera le mostra mentre si
+// disegna); se il salvataggio fallisce si rileggono.
+export function useSaveOpeningArrows() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const key = openingArrowsKey(user?.id)
+  return useMutation({
+    mutationFn: (params: { nodeId: number; arrows: MoveArrow[] }) =>
+      saveOpeningArrows({ ...params, userId: user!.id }),
+    onMutate: ({ nodeId, arrows }) => {
+      queryClient.setQueryData<{ node_id: number; arrows: MoveArrow[] }[]>(
+        key,
+        (rows) => [
+          ...(rows ?? []).filter((row) => row.node_id !== nodeId),
+          ...(arrows.length > 0 ? [{ node_id: nodeId, arrows }] : []),
+        ],
+      )
+    },
+    onError: () => queryClient.invalidateQueries({ queryKey: key }),
+  })
 }
 
 export function useSetMoveAlternative() {

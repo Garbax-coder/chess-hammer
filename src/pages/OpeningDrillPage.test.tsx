@@ -167,6 +167,21 @@ describe('OpeningDrillPage', () => {
     expect(screen.getByText(o.runResult(2, 2))).toBeInTheDocument()
   })
 
+  it('counts a known wrong line as a mistake, and says so', () => {
+    const bc4 = repertoire.nodes[5]
+    Object.assign(bc4, { is_main: true, is_mistake: true })
+    renderDrill()
+    fireEvent.click(screen.getByRole('button', { name: 'e2e4' }))
+    act(() => vi.advanceTimersByTime(OPPONENT_DELAY_MS))
+
+    fireEvent.click(screen.getByRole('button', { name: 'f1c4' }))
+    expect(record).toHaveBeenLastCalledWith(
+      expect.objectContaining({ nodeId: 3, playedUci: 'f1c4', result: 'wrong' }),
+    )
+    expect(screen.getByRole('status')).toHaveTextContent(o.mistakePlayed('Bc4', 'Nf3'))
+    Object.assign(bc4, { is_main: false, is_mistake: false })
+  })
+
   it('runs a session, repeats the lines with mistakes, then sums up', () => {
     renderDrill()
     const play = (uci: string) =>

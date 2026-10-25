@@ -1,9 +1,10 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { openingsTranslations } from '@/lib/i18n/openings'
 import { it as itTranslations } from '@/lib/i18n/translations'
 import type { OpeningProgress } from '@/lib/opening-tree'
+import type { MoveArrow } from '@/lib/opening-arrows'
 import type { RepertoireWithNodes } from '@/lib/openings'
 import OpeningLinesPage from './OpeningLinesPage'
 
@@ -53,11 +54,16 @@ let board: {
   interactive: boolean
   onMove: (uci: string) => boolean
   hintUci?: string
+  savedArrows?: MoveArrow[]
+  onArrowDrawn?: (arrow: MoveArrow) => void
 }
 const saveNote = vi.fn()
 const addMove = vi.fn()
 const deleteMove = vi.fn()
 const setAlternative = vi.fn()
+const setMistake = vi.fn()
+const saveArrows = vi.fn()
+let arrows = new Map<number, MoveArrow[]>()
 const copyRepertoire = vi.fn()
 const rename = vi.fn()
 const engineCalls: ({ fen: string; moves: string[] } | null)[] = []
@@ -79,6 +85,9 @@ vi.mock('@/hooks/use-openings', () => ({
     isPending: false,
     isError: false,
   }),
+  useSetMoveMistake: () => ({ mutate: setMistake, isPending: false, isError: false }),
+  useOpeningArrows: () => ({ data: arrows }),
+  useSaveOpeningArrows: () => ({ mutate: saveArrows }),
   useCopyRepertoire: () => ({ mutate: copyRepertoire, isPending: false, isError: false }),
   useRenameRepertoire: () => ({ mutate: rename, isPending: false, isError: false }),
   useOpeningNames: () => ({
@@ -118,7 +127,15 @@ function renderLines(path = '/openings/italian-game/lines') {
 describe('OpeningLinesPage', () => {
   beforeEach(() => {
     window.localStorage.clear()
-    for (const mock of [addMove, deleteMove, setAlternative, copyRepertoire, rename])
+    for (const mock of [
+      addMove,
+      deleteMove,
+      setAlternative,
+      setMistake,
+      saveArrows,
+      copyRepertoire,
+      rename,
+    ])
       mock.mockReset()
   })
 
@@ -362,5 +379,74 @@ describe('OpeningLinesPage', () => {
       { repertoireId: 'r2', name: 'Italiana 2' },
       expect.anything(),
     )
+  })
+
+  it('marks a move as the start of a wrong line, and shows a wrong line as such', () => {
+    renderLines('/openings/u-copy/lines')
+    fireEvent.click(screen.getByRole('button', { name: o.editLines }))
+    fireEvent.click(screen.getByRole('button', { name: '2.Nc3' }))
+    fireEvent.click(screen.getByRole('button', { name: o.markMistake }))
+    expect(setMistake).toHaveBeenCalledWith({ nodeId: 5, mistake: true })
+    cleanup()
+
+    // 2.Bc4 segnata: in rosso con "?", fuori dalle linee da allenare.
+    const bc4 = copy.nodes.find((n) => n.id === 6)!
+    bc4.is_mistake = true
+    renderLines('/openings/u-copy/lines')
+    expect(
+      screen.queryByRole('button', { name: '1.e4 e5 2.Bc4' }),
+    ).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '2.Bc4?' }))
+    expect(screen.getByText(o.inMistakeLine)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: o.editLines }))
+    fireEvent.click(screen.getByRole('button', { name: o.unmarkMistake }))
+    expect(setMistake).toHaveBeenCalledWith({ nodeId: 6, mistake: false })
+    expect(
+      screen.queryByRole('button', { name: o.makeAlternative }),
+    ).not.toBeInTheDocument()
+    bc4.is_mistake = false
+  })
+
+  it('draws arrows on the selected position and removes one drawn again', () => {
+    arrows = new Map([[1, [{ from: 'g1', to: 'f3', color: 'G' }]]])
+    renderLines()
+    // Sulla posizione iniziale non si disegna.
+    expect(board.onArrowDrawn).toBeUndefined()
+    fireEvent.click(screen.getByRole('button', { name: '1.e4' }))
+    expect(board.savedArrows).toEqual([{ from: 'g1', to: 'f3', color: 'G' }])
+
+    act(() => board.onArrowDrawn!({ from: 'f1', to: 'c4', color: 'R' }))
+    expect(saveArrows).toHaveBeenLastCalledWith({
+      nodeId: 1,
+      arrows: [
+        { from: 'g1', to: 'f3', color: 'G' },
+        { from: 'f1', to: 'c4', color: 'R' },
+      ],
+    })
+    act(() => board.onArrowDrawn!({ from: 'g1', to: 'f3', color: 'G' }))
+    expect(saveArrows).toHaveBeenLastCalledWith({ nodeId: 1, arrows: [] })
+
+    fireEvent.click(screen.getByRole('button', { name: o.clearArrows }))
+    expect(saveArrows).toHaveBeenLastCalledWith({ nodeId: 1, arrows: [] })
+    arrows = new Map()
+  })
+
+  it('exports the repertoire as PGN', async () => {
+    let blob: Blob | undefined
+    const createObjectURL = vi.fn((b: Blob) => {
+      blob = b
+      return 'blob:pgn'
+    })
+    Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() })
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => {})
+    renderLines()
+    fireEvent.click(screen.getByRole('button', { name: o.exportPgn }))
+    expect(click).toHaveBeenCalled()
+    const pgn = await blob!.text()
+    expect(pgn).toContain('[Event "Partita Italiana"]')
+    expect(pgn).toContain('1. e4 e5 (1... c5 2. Nc3) 2. Nf3 *')
+    click.mockRestore()
   })
 })

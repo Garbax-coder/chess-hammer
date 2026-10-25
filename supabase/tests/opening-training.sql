@@ -1,4 +1,4 @@
--- Prova delle migrazioni 0100-0109 (allenamento sulle aperture). Da
+-- Prova delle migrazioni 0100-0110 (allenamento sulle aperture). Da
 -- eseguire SOLO sul progetto di sviluppo: tutto avviene in una transazione
 -- annullata alla fine.
 --   psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/opening-training.sql
@@ -270,6 +270,60 @@ begin
     raise exception 'copia: mosse o note mancanti %', r;
   end if;
 
+  -- Errori e frecce (0110), sulla copia personale appena fatta.
+  declare
+    rep uuid := (r ->> 'id')::uuid;
+    e4c bigint := (select id from public.opening_nodes
+                    where repertoire_id = (r ->> 'id')::uuid and path = 'e2e4'::extensions.ltree);
+    d4 bigint;
+    d5 bigint;
+    c4 bigint;
+    r2 jsonb;
+  begin
+    -- 1.d4? d5: linea sbagliata, con la confutazione dell'avversario.
+    d4 := (public.add_opening_move(rep, null, 'd2d4', 'd4', 'x') ->> 'id')::bigint;
+    perform public.set_opening_move_mistake(d4, true);
+    d5 := (public.add_opening_move(rep, d4, 'd7d5', 'd5', 'x') ->> 'id')::bigint;
+    c4 := (public.add_opening_move(rep, d5, 'c2c4', 'c4', 'x') ->> 'id')::bigint;
+    -- Togliendo 2.c4 resta 1...d5: dentro una linea sbagliata non si pota.
+    perform public.delete_opening_move(c4);
+    if not exists (select 1 from public.opening_nodes where id = d5) then
+      raise exception 'errori: tolta la confutazione';
+    end if;
+    begin
+      perform public.set_opening_move_alternative(d4, true);
+      raise exception 'errore diventato alternativa';
+    exception when raise_exception then
+      if sqlerrm not like 'Un errore non e''%' then raise; end if;
+    end;
+    begin
+      perform public.set_opening_move_mistake((select e4 from ids), true);
+      raise exception 'errore segnato sul catalogo';
+    exception when raise_exception then
+      if sqlerrm not like 'Mossa non modificabile%' then raise; end if;
+    end;
+
+    insert into public.opening_node_arrows (user_id, node_id, arrows)
+    values ((select user_a from ids), e4c, '[{"from": "g1", "to": "f3", "color": "G"}]');
+    begin
+      insert into public.opening_node_arrows (user_id, node_id, arrows)
+      values ((select user_a from ids), d4, '[]');
+      raise exception 'frecce vuote accettate';
+    exception when check_violation then null;
+    end;
+
+    -- La copia della copia tiene errori e frecce.
+    r2 := public.copy_opening_repertoire(rep, 'Copia della copia');
+    if not exists (select 1 from public.opening_nodes
+                    where repertoire_id = (r2 ->> 'id')::uuid and is_mistake and san = 'd4')
+       or not exists (select 1 from public.opening_node_arrows a
+                        join public.opening_nodes n on n.id = a.node_id
+                       where n.repertoire_id = (r2 ->> 'id')::uuid) then
+      raise exception 'copia: errori o frecce mancanti';
+    end if;
+    delete from public.opening_repertoires where id = (r2 ->> 'id')::uuid;
+  end;
+
   -- Libreria (0108): repertorio vuoto da costruire, catalogo nascosto.
   r := public.create_opening_repertoire('  Da zero  ', 'b');
   if (select name || color || source from public.opening_repertoires where id = (r ->> 'id')::uuid)
@@ -324,6 +378,7 @@ begin
      or exists (select 1 from public.opening_cycles)
      or exists (select 1 from public.opening_node_notes)
      or exists (select 1 from public.opening_hidden_repertoires)
+     or exists (select 1 from public.opening_node_arrows)
      or jsonb_array_length(public.opening_stats() -> 'nodes') > 0
      or exists (select 1 from public.opening_repertoires
                  where id = (select repertoire_id from ids_import)) then
@@ -355,7 +410,8 @@ begin
      or has_function_privilege('anon',
        'public.set_opening_move_alternative(bigint, boolean)', 'execute')
      or has_function_privilege('anon', 'public.create_opening_repertoire(text, text)', 'execute')
-     or has_function_privilege('anon', 'public.opening_stats()', 'execute') then
+     or has_function_privilege('anon', 'public.opening_stats()', 'execute')
+     or has_function_privilege('anon', 'public.set_opening_move_mistake(bigint, boolean)', 'execute') then
     raise exception 'anon puo'' registrare o modificare mosse';
   end if;
   raise notice 'opening-training: tutti i controlli superati';

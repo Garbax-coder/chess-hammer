@@ -3,8 +3,9 @@
 // linea (mosse SAN separate da spazi), la linea principale per prima. Un PGN
 // con piu' partite (es. i capitoli di uno studio Lichess) da' le linee di
 // tutte. I commenti {…} si legano alla mossa che li precede (senza le
-// annotazioni tecniche di Lichess come [%cal …] o [%clk …]); annotazioni
-// ($1, !, ?), numeri di mossa e risultati si ignorano; le partite che non
+// annotazioni tecniche di Lichess come [%cal …] o [%clk …]); le mosse con ?
+// o ?? (o $2, $4) sono errori, che aprono una linea sbagliata; le altre
+// annotazioni ($1, !, !?), numeri di mossa e risultati si ignorano; le partite che non
 // partono dalla posizione iniziale (tag FEN) si saltano. La legalita' delle mosse la controlla chi costruisce il
 // repertorio (buildRepertoire).
 
@@ -16,6 +17,8 @@ export interface PgnLines {
   skipped: number
   /** Commenti per mossa: chiave = mosse SAN dall'inizio fino a quella. */
   comments: Record<string, string>
+  /** Le mosse segnate come errore (stessa chiave dei commenti). */
+  mistakes: string[]
 }
 
 const RESULT = /^(1-0|0-1|1\/2-1\/2|\*)$/
@@ -47,7 +50,7 @@ function splitGames(text: string): { headers: Record<string, string>; moves: str
 }
 
 type Token =
-  | { kind: 'move'; san: string }
+  | { kind: 'move'; san: string; mistake: boolean }
   | { kind: 'open' | 'close' | 'end' }
   | { kind: 'comment'; text: string }
 
@@ -82,18 +85,26 @@ function tokenize(moves: string): Token[] {
       tokens.push({ kind: 'end' })
       continue
     }
+    // $2 (?) e $4 (??) dopo una mossa la segnano come errore.
+    if (raw === '$2' || raw === '$4') {
+      const last = tokens[tokens.length - 1]
+      if (last?.kind === 'move') last.mistake = true
+      continue
+    }
     if (!raw || MOVE_NUMBER.test(raw) || /^\$\d+$/.test(raw)) continue
     if (raw === '(' || raw === ')') {
       tokens.push({ kind: raw === '(' ? 'open' : 'close' })
       continue
     }
     // "12.Nf3" scritto attaccato, annotazioni "!?" in coda, arrocco con lo zero.
+    const suffix = /[!?]+$/.exec(raw)?.[0]
     const san = raw
       .replace(/^\d+\.+/, '')
       .replace(/[!?]+$/, '')
       .replace(/^0-0-0/, 'O-O-O')
       .replace(/^0-0/, 'O-O')
-    if (san) tokens.push({ kind: 'move', san })
+    if (san)
+      tokens.push({ kind: 'move', san, mistake: suffix === '?' || suffix === '??' })
   }
   return tokens
 }
@@ -109,6 +120,7 @@ function walk(
   start: number,
   prefix: string[],
   comments: Record<string, string>,
+  mistakes: Set<string>,
 ): { lines: string[][]; end: number } {
   const main = [...prefix]
   const variations: string[][] = []
@@ -118,7 +130,7 @@ function walk(
     const token = tokens[i]
     if (token.kind === 'close') return { lines: [main, ...variations], end: i + 1 }
     if (token.kind === 'open') {
-      const sub = walk(tokens, i + 1, main.slice(0, -1), comments)
+      const sub = walk(tokens, i + 1, main.slice(0, -1), comments, mistakes)
       variations.push(...sub.lines)
       i = sub.end
       continue
@@ -130,6 +142,7 @@ function walk(
       }
     } else if (token.kind === 'move') {
       main.push(token.san)
+      if (token.mistake) mistakes.add(main.join(' '))
       played++
     }
     i++
@@ -142,6 +155,7 @@ export function pgnLines(text: string): PgnLines {
   let skipped = 0
   const lines: string[] = []
   const comments: Record<string, string> = {}
+  const mistakes = new Set<string>()
   for (const game of games) {
     if (game.headers.FEN || game.headers.SetUp === '1') {
       skipped++
@@ -152,7 +166,7 @@ export function pgnLines(text: string): PgnLines {
     let start = 0
     for (let i = 0; i <= tokens.length; i++) {
       if (i < tokens.length && tokens[i].kind !== 'end') continue
-      for (const line of walk(tokens.slice(start, i), 0, [], comments).lines) {
+      for (const line of walk(tokens.slice(start, i), 0, [], comments, mistakes).lines) {
         if (line.length > 0) lines.push(line.join(' '))
       }
       start = i + 1
@@ -163,5 +177,6 @@ export function pgnLines(text: string): PgnLines {
     headers: games[0]?.headers ?? {},
     skipped,
     comments,
+    mistakes: [...mistakes],
   }
 }

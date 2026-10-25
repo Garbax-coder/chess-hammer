@@ -41,9 +41,9 @@ export default function PrivacyIt() {
         </li>
         <li>
           <b>Dati sulle aperture:</b> i repertori che crei, importi o copi (nome, mosse,
-          commenti), i commenti personali sulle mosse, le risposte nell'allenamento
-          (giusta/sbagliata, tempo impiegato), i progressi e i cicli completati, e i
-          repertori che togli dalla tua libreria.
+          commenti), i commenti e le frecce che aggiungi alle mosse, le risposte
+          nell'allenamento (giusta/sbagliata, tempo impiegato), i progressi e i cicli
+          completati, e i repertori che togli dalla tua libreria.
         </li>
         <li>
           <b>Preferenze:</b> lingua, tema chiaro/scuro, stile dell'app, stile scacchiera e

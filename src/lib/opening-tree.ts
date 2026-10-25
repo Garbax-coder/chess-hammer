@@ -16,6 +16,12 @@ export interface OpeningNode {
   is_main: boolean
   /** Commento della mossa (es. dal PGN importato). */
   comment?: string | null
+  /**
+   * L'inizio di una linea sbagliata (migrazione 0110): con il suo seguito
+   * resta fuori dall'allenamento, e lo studio la mostra come errore da
+   * evitare.
+   */
+  is_mistake?: boolean
 }
 
 export interface OpeningProgress {
@@ -31,6 +37,8 @@ export interface OpeningTree {
   byId: Map<number, OpeningNode>
   children: Map<number | null, OpeningNode[]>
   leaves: OpeningNode[]
+  /** Le mosse delle linee sbagliate: quelle segnate e tutto il loro seguito. */
+  mistakes: ReadonlySet<number>
 }
 
 export function buildOpeningTree(nodes: OpeningNode[]): OpeningTree {
@@ -45,14 +53,21 @@ export function buildOpeningTree(nodes: OpeningNode[]): OpeningTree {
   const leaves: OpeningNode[] = []
   const visit = (parentId: number | null) => {
     for (const child of children.get(parentId) ?? []) {
-      // Le alternative non hanno seguito e non sono Run.
-      if (!child.is_main) continue
+      // Le alternative non hanno seguito e non sono Run, come le linee
+      // sbagliate.
+      if (!child.is_main || child.is_mistake) continue
       if (children.has(child.id)) visit(child.id)
       else leaves.push(child)
     }
   }
   visit(null)
-  return { byId, children, leaves }
+  const mistakes = new Set<number>()
+  const mark = (node: OpeningNode) => {
+    mistakes.add(node.id)
+    for (const child of children.get(node.id) ?? []) mark(child)
+  }
+  for (const node of nodes) if (node.is_mistake) mark(node)
+  return { byId, children, leaves, mistakes }
 }
 
 /** Le mosse di un Run, dalla prima alla foglia. */
@@ -151,7 +166,7 @@ export function openingCoverage(
   now: Date,
 ): OpeningCoverage {
   const userNodes = [...tree.byId.values()].filter(
-    (n) => n.is_main && isUserMove(n, color),
+    (n) => n.is_main && !tree.mistakes.has(n.id) && isUserMove(n, color),
   )
   const states = new Map(userNodes.map((n) => [n.id, moveState(progress.get(n.id), now)]))
   const count = (state: MoveState) =>
@@ -294,7 +309,30 @@ export function nameChange(
  * comunque `node`.
  */
 export function alternativesTo(tree: OpeningTree, node: OpeningNode): OpeningNode[] {
-  return (tree.children.get(node.parent_id) ?? []).filter((n) => n.id !== node.id)
+  return (tree.children.get(node.parent_id) ?? []).filter(
+    (n) => n.id !== node.id && !n.is_mistake,
+  )
+}
+
+/** Le linee sbagliate che partono dalla posizione dopo `parentId`. */
+export function mistakesAt(tree: OpeningTree, parentId: number | null): OpeningNode[] {
+  return (tree.children.get(parentId) ?? []).filter((n) => n.is_mistake)
+}
+
+/**
+ * Una linea sbagliata da mostrare: dalla prima mossa fino alla mossa
+ * sbagliata, poi il suo seguito principale (il primo ramo a ogni bivio).
+ */
+export function mistakeLine(tree: OpeningTree, mistake: OpeningNode): OpeningNode[] {
+  const line = runPath(tree, mistake.id)
+  for (
+    let next = (tree.children.get(mistake.id) ?? [])[0];
+    next;
+    next = (tree.children.get(next.id) ?? [])[0]
+  ) {
+    line.push(next)
+  }
+  return line
 }
 
 /**

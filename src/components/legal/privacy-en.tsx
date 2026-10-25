@@ -38,7 +38,7 @@ export default function PrivacyEn() {
         </li>
         <li>
           <b>Opening data:</b> the repertoires you create, import or copy (name, moves,
-          comments), your personal comments on moves, your answers in training
+          comments), your personal comments and arrows on moves, your answers in training
           (right/wrong, time taken), your progress and completed cycles, and the
           repertoires you remove from your library.
         </li>

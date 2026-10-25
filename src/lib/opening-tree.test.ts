@@ -7,6 +7,8 @@ import {
   chooseRun,
   commentOf,
   fastForwardIndex,
+  mistakeLine,
+  mistakesAt,
   moveLabel,
   moveState,
   nameAt,
@@ -269,5 +271,37 @@ describe('commentOf', () => {
     expect(commentOf(withComment, new Map([[9, 'Mine']]))).toBe('Mine')
     expect(commentOf(withComment, new Map([[9, '']]))).toBeUndefined()
     expect(commentOf(node(1, null, 1, 'e4'), new Map())).toBeUndefined()
+  })
+})
+
+describe('wrong lines', () => {
+  // 1.e4 e5 2.Nf3 | 2.Qh5? (segnata) Nc6 3.Bc4 Nf6 | 1...c5 2.Nf3
+  const withMistake = buildOpeningTree([
+    ...nodes,
+    { ...node(6, 2, 3, 'Qh5'), is_mistake: true },
+    node(7, 6, 4, 'Nc6'),
+    node(8, 7, 5, 'Bc4'),
+    node(9, 8, 6, 'Nf6'),
+  ])
+
+  it('keeps a wrong line, with all it leads to, out of training', () => {
+    expect([...withMistake.mistakes].sort()).toEqual([6, 7, 8, 9])
+    expect(withMistake.leaves.map((l) => l.id)).toEqual([3, 5])
+    expect(openingCoverage(withMistake, new Map(), 'w', now).userMoves).toBe(3)
+    // Giocata nel Drill non e' un'alternativa accettata.
+    expect(alternativesTo(withMistake, withMistake.byId.get(3)!)).toEqual([])
+  })
+
+  it('finds the wrong lines from a position and their main continuation', () => {
+    expect(mistakesAt(withMistake, 2).map((n) => n.san)).toEqual(['Qh5'])
+    expect(mistakesAt(withMistake, 1)).toEqual([])
+    expect(mistakeLine(withMistake, withMistake.byId.get(6)!).map((n) => n.san)).toEqual([
+      'e4',
+      'e5',
+      'Qh5',
+      'Nc6',
+      'Bc4',
+      'Nf6',
+    ])
   })
 })

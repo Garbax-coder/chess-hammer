@@ -24,6 +24,11 @@ export interface RepertoireSource {
   alternatives?: string[]
   /** Commenti per mossa: chiave = mosse SAN dall'inizio fino a quella. */
   comments?: Record<string, string>
+  /**
+   * Mosse che aprono una linea sbagliata (stessa chiave dei commenti): con il
+   * loro seguito restano fuori dall'allenamento.
+   */
+  mistakes?: string[]
 }
 
 export interface CatalogNode {
@@ -38,6 +43,8 @@ export interface CatalogNode {
   /** False per un'alternativa accettata. */
   isMain: boolean
   comment?: string
+  /** L'inizio di una linea sbagliata. */
+  isMistake?: boolean
 }
 
 export function epdOf(fen: string): string {
@@ -69,6 +76,8 @@ export interface BuildReport {
   trimmed: number
   /** Seconde mosse dell'utente nella stessa posizione, tenute come alternative. */
   alternatives: number
+  /** Mosse che aprono una linea sbagliata. */
+  mistakes: number
 }
 
 /**
@@ -109,6 +118,7 @@ export function buildRepertoire(
   const mainUserMove = new Map<string, string>()
   let trimmed = 0
   let alternatives = 0
+  const mistakes = new Set(source.mistakes ?? [])
   const fail = (message: string): never => {
     throw new Error(`${source.slug}, ${message}`)
   }
@@ -121,6 +131,10 @@ export function buildRepertoire(
   ) {
     const chess = new Chess()
     let path: string | null = null
+    // Dentro una linea sbagliata valgono altre regole: piu' mosse
+    // dell'utente nella stessa posizione sono tutte linee, e una mossa gia'
+    // vista la marca come errore.
+    let inMistake = false
     for (const [index, san] of sans.entries()) {
       let move
       try {
@@ -135,7 +149,10 @@ export function buildRepertoire(
       }
       const uci = `${move.from}${move.to}${move.promotion ?? ''}`
       const ply = index + 1
-      const comment = source.comments?.[sans.slice(0, index + 1).join(' ')]
+      const key = sans.slice(0, index + 1).join(' ')
+      const comment = source.comments?.[key]
+      const isMistake = mistakes.has(key)
+      inMistake ||= isMistake
       const childPath: string = path ? `${path}.${uci}` : uci
       const existing = nodes.get(childPath)
       const isLast = index === sans.length - 1
@@ -148,7 +165,7 @@ export function buildRepertoire(
       const userMove = colorAtPly(ply) === source.color
       const parentKey = path ?? ''
       const main = mainUserMove.get(parentKey)
-      const branch = branches && lenient
+      const branch = (branches && lenient) || inMistake
       if (!existing && userMove && main !== undefined && main !== childPath && !branch) {
         // Una seconda mossa dell'utente nella stessa posizione.
         if (asAlternative && isLast) {
@@ -176,13 +193,14 @@ export function buildRepertoire(
         )
       }
       if (!existing) {
-        nodes.set(
-          childPath,
-          node(childPath, path, ply, uci, move.san, chess.fen(), true, comment),
-        )
-        if (userMove) mainUserMove.set(parentKey, childPath)
-      } else if (comment && !existing.comment) {
-        existing.comment = comment
+        nodes.set(childPath, {
+          ...node(childPath, path, ply, uci, move.san, chess.fen(), true, comment),
+          ...(isMistake ? { isMistake } : {}),
+        })
+        if (userMove && !inMistake) mainUserMove.set(parentKey, childPath)
+      } else {
+        if (comment && !existing.comment) existing.comment = comment
+        if (isMistake) existing.isMistake = true
       }
       path = childPath
     }
@@ -191,7 +209,11 @@ export function buildRepertoire(
   source.lines.forEach((line, lineIndex) => {
     let sans = line.trim().split(/\s+/).filter(Boolean)
     const opponentEnd = sans.length > 0 && colorAtPly(sans.length) !== source.color
-    if (opponentEnd && !(lenient && keepOpponentEnds)) {
+    // Una linea sbagliata finisce spesso con la confutazione dell'avversario.
+    const throughMistake = sans.some((_, i) =>
+      mistakes.has(sans.slice(0, i + 1).join(' ')),
+    )
+    if (opponentEnd && !(lenient && (keepOpponentEnds || throughMistake))) {
       if (!lenient) {
         fail(
           `linea ${lineIndex + 1}: deve finire con una mossa di chi allena il repertorio`,
@@ -218,6 +240,7 @@ export function buildRepertoire(
     ),
     trimmed,
     alternatives,
+    mistakes: [...nodes.values()].filter((n) => n.isMistake).length,
   }
 }
 

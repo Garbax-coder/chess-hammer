@@ -42,10 +42,10 @@ export default function PrivacyDe() {
         </li>
         <li>
           <b>Eröffnungsdaten:</b> die Repertoires, die du erstellst, importierst oder
-          kopierst (Name, Züge, Kommentare), deine persönlichen Kommentare zu Zügen, deine
-          Antworten im Training (richtig/falsch, benötigte Zeit), dein Fortschritt und
-          abgeschlossene Zyklen sowie die Repertoires, die du aus deiner Bibliothek
-          entfernst.
+          kopierst (Name, Züge, Kommentare), deine persönlichen Kommentare und Pfeile zu
+          Zügen, deine Antworten im Training (richtig/falsch, benötigte Zeit), dein
+          Fortschritt und abgeschlossene Zyklen sowie die Repertoires, die du aus deiner
+          Bibliothek entfernst.
         </li>
         <li>
           <b>Einstellungen:</b> Sprache, helles/dunkles Design, App-Stil, Brettstil und

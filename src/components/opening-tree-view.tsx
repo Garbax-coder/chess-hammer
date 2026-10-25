@@ -199,6 +199,7 @@ function Branches({ nodes, ...props }: LineProps & { nodes: OpeningNode[] }) {
 function Move({
   node,
   startsRow,
+  tree,
   color,
   progress,
   now,
@@ -208,14 +209,25 @@ function Move({
 }: LineProps & { node: OpeningNode; startsRow: boolean }) {
   const o = useOpeningsTranslations()
   const alternative = !node.is_main
+  // Le mosse delle linee sbagliate: in rosso, quella segnata con "?".
+  const mistake = tree.mistakes.has(node.id)
   const userMove = isUserMove(node, color)
-  const state = userMove && !alternative ? moveState(progress.get(node.id), now) : null
+  const state =
+    userMove && !alternative && !mistake ? moveState(progress.get(node.id), now) : null
   const selected = node.id === selectedId
   return (
     <button
       type="button"
       aria-current={selected ? 'true' : undefined}
-      title={alternative ? o.alternativeLabel : state ? o.legend[state] : o.opponentMove}
+      title={
+        mistake
+          ? o.mistakeLabel
+          : alternative
+            ? o.alternativeLabel
+            : state
+              ? o.legend[state]
+              : o.opponentMove
+      }
       onClick={() => onSelect(node.id)}
       onContextMenu={(event) => {
         if (!onMoveContextMenu) return
@@ -223,14 +235,17 @@ function Move({
         onMoveContextMenu(node)
       }}
       className={`rounded px-1 py-0.5 font-mono text-xs tabular-nums transition-colors ${
-        alternative
-          ? 'border-muted-foreground/60 text-muted-foreground border border-dashed'
-          : state
-            ? MOVE_STATE_CLASSES[state]
-            : 'text-foreground hover:bg-muted'
+        mistake
+          ? 'text-destructive hover:bg-destructive/10'
+          : alternative
+            ? 'border-muted-foreground/60 text-muted-foreground border border-dashed'
+            : state
+              ? MOVE_STATE_CLASSES[state]
+              : 'text-foreground hover:bg-muted'
       } ${selected ? 'ring-primary ring-2' : ''}`}
     >
       {moveLabel(node, startsRow)}
+      {node.is_mistake && '?'}
     </button>
   )
 }

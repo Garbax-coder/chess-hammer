@@ -40,9 +40,10 @@ export default function PrivacyEs() {
         </li>
         <li>
           <b>Datos de aperturas:</b> los repertorios que creas, importas o copias (nombre,
-          jugadas, comentarios), tus comentarios personales sobre las jugadas, tus
-          respuestas en el entrenamiento (acierto/fallo, tiempo empleado), tus progresos y
-          los ciclos completados, y los repertorios que quitas de tu biblioteca.
+          jugadas, comentarios), tus comentarios y flechas personales sobre las jugadas,
+          tus respuestas en el entrenamiento (acierto/fallo, tiempo empleado), tus
+          progresos y los ciclos completados, y los repertorios que quitas de tu
+          biblioteca.
         </li>
         <li>
           <b>Preferencias:</b> idioma, tema claro/oscuro, estilo de la app, estilo del

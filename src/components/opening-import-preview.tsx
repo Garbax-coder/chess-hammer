@@ -73,6 +73,11 @@ export function OpeningImportPreview({ preview }: { preview: Preview }) {
             {o.previewOpenEnds(preview.openEnds)}
           </p>
         )}
+        {!!preview.report?.mistakes && (
+          <p className="text-muted-foreground text-xs">
+            {o.previewMistakes(preview.report.mistakes)}
+          </p>
+        )}
         {!!preview.report?.trimmed && (
           <p className="text-muted-foreground text-xs">
             {o.previewTrimmed(preview.report.trimmed)}

@@ -31,7 +31,10 @@ export function previewImport(pgn: string, color: OpeningColor): Preview {
   const parsed = pgnLines(pgn)
   const suggestedName = parsed.headers.Opening || parsed.headers.Event || ''
   return {
-    ...previewLines(parsed.lines, color, { comments: parsed.comments }),
+    ...previewLines(parsed.lines, color, {
+      comments: parsed.comments,
+      mistakes: parsed.mistakes,
+    }),
     skipped: parsed.skipped,
     suggestedName,
   }
@@ -49,10 +52,12 @@ export function previewLines(
   color: OpeningColor,
   {
     comments,
+    mistakes,
     branches = false,
     keepOpponentEnds = false,
   }: {
     comments?: Record<string, string>
+    mistakes?: string[]
     branches?: boolean
     keepOpponentEnds?: boolean
   } = {},
@@ -61,11 +66,27 @@ export function previewLines(
   if (lines.length === 0) return base
   try {
     const report = buildRepertoire(
-      { slug: 'import', name: '', eco: null, color, source: null, lines, comments },
+      {
+        slug: 'import',
+        name: '',
+        eco: null,
+        color,
+        source: null,
+        lines,
+        comments,
+        mistakes,
+      },
       { lenient: true, branches, keepOpponentEnds },
     )
     const parents = new Set(report.nodes.map((n) => n.parentPath))
-    const leaves = report.nodes.filter((n) => n.isMain && !parents.has(n.path))
+    // Le linee sbagliate non contano tra quelle da allenare.
+    const mistakePaths = report.nodes.filter((n) => n.isMistake).map((n) => n.path)
+    const leaves = report.nodes.filter(
+      (n) =>
+        n.isMain &&
+        !parents.has(n.path) &&
+        !mistakePaths.some((m) => n.path === m || n.path.startsWith(`${m}.`)),
+    )
     const openEnds = leaves.filter((n) => colorAtPly(n.ply) !== color).length
     return { ...base, report, lines: leaves.length, openEnds }
   } catch (error) {

@@ -2,12 +2,16 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { openingsTranslations } from '@/lib/i18n/openings'
+import { it as itTranslations } from '@/lib/i18n/translations'
+import type { MoveArrow } from '@/lib/opening-arrows'
 import type { OpeningNode, OpeningProgress } from '@/lib/opening-tree'
 import type { RepertoireWithNodes } from '@/lib/openings'
 import OpeningLearnPage from './OpeningLearnPage'
 
 const o = openingsTranslations.it
+const t = itTranslations
 const learn = vi.fn()
+let arrows = new Map<number, MoveArrow[]>()
 let progress = new Map<number, OpeningProgress>()
 
 // Bianco: 1.e4 e5 2.Nf3 (Run 3) oppure 1.e4 c5 2.Nc3 (Run 5).
@@ -59,6 +63,7 @@ vi.mock('@/hooks/use-openings', () => ({
     data: new Map([[3, { eco: 'C40', name: "King's Knight Opening" }]]),
   }),
   useLearnOpeningMove: () => ({ mutate: learn, isError: false }),
+  useOpeningArrows: () => ({ data: arrows }),
   useOpeningNotes: () => ({ data: new Map([[1, 'Il centro, subito']]) }),
   useRenameRepertoire: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
 }))
@@ -181,5 +186,33 @@ describe('OpeningLearnPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'b1c3' }))
     // Il commento del PGN su 2.Nc3.
     expect(screen.getByText('Dal PGN: sviluppo')).toBeInTheDocument()
+  })
+
+  it('shows the wrong lines from the position reached, to follow on the board', () => {
+    repertoire.nodes.push(
+      { ...node(6, 2, 3, 'Qh5', 'd1h5'), is_mistake: true, comment: 'Troppo presto' },
+      node(7, 6, 4, 'Nc6', 'b8c6'),
+    )
+    renderLearn()
+    expect(screen.queryByText(o.mistakesTitle)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'e2e4' }))
+    act(() => vi.advanceTimersByTime(500))
+
+    // Dopo 1...e5: 2.Qh5? e' da evitare, con il perche'.
+    expect(screen.getByText(o.mistakesTitle)).toBeInTheDocument()
+    expect(screen.getByText('2.Qh5?')).toBeInTheDocument()
+    expect(screen.getByText('Troppo presto')).toBeInTheDocument()
+
+    // La si segue sulla scacchiera, che intanto non si gioca.
+    fireEvent.click(screen.getByRole('button', { name: o.showMistake }))
+    expect(screen.getByText(o.mistakeLabel)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'g1f3' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: t.puzzleBoard.nextMove }))
+    expect(screen.getByText('2.Qh5? Nc6')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: o.backToLine }))
+    expect(screen.queryByText(o.mistakeLabel)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'g1f3' })).toBeEnabled()
+    repertoire.nodes.splice(5)
   })
 })

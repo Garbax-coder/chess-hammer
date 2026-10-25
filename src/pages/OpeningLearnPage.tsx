@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { Chess } from 'chess.js'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { OpeningBoard } from '@/components/opening-board'
 import { MoveList } from '@/components/opening-move-list'
@@ -13,24 +15,31 @@ import { useLocalToggle } from '@/hooks/use-local-toggle'
 import { useOpeningRun } from '@/hooks/use-opening-run'
 import {
   useLearnOpeningMove,
+  useOpeningArrows,
   useOpeningNames,
   useOpeningNotes,
 } from '@/hooks/use-openings'
 import { useUserStats } from '@/hooks/use-user-stats'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
+import { useTranslations } from '@/lib/language-context'
 import {
   chooseLearnRun,
   commentOf,
   isUserMove,
+  mistakeLine,
+  mistakesAt,
   moveLabel,
   nameAt,
   runPath,
+  type OpeningNode,
 } from '@/lib/opening-tree'
 
 // Modalita' Learn: si studia una linea seguendo la freccia. L'avversario
 // risponde da solo; ogni mossa dell'utente si gioca guidati (o la gioca
 // l'app) e diventa "in apprendimento", da ripassare poi nell'allenamento.
-// Nessun tentativo a memoria, quindi nessun errore registrato.
+// Nessun tentativo a memoria, quindi nessun errore registrato. Le linee
+// sbagliate che partono dalla posizione raggiunta compaiono come "Da
+// evitare" e si possono seguire sulla scacchiera.
 export default function OpeningLearnPage() {
   const { slug } = useParams<{ slug: string }>()
   return (
@@ -41,8 +50,10 @@ export default function OpeningLearnPage() {
 }
 
 function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
+  const t = useTranslations()
   const o = useOpeningsTranslations()
   const { data: stats } = useUserStats()
+  const { data: arrows } = useOpeningArrows()
   const { data: names } = useOpeningNames()
   const { data: notes } = useOpeningNotes()
   const learn = useLearnOpeningMove()
@@ -97,11 +108,54 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
   const position = tree.leaves.findIndex((leaf) => leaf.id === leafId)
   const toLearn = tree.leaves.filter((leaf) =>
     runPath(tree, leaf.id).some(
-      (n) => n.is_main && isUserMove(n, color) && !progress.has(n.id),
+      (n) =>
+        n.is_main &&
+        !tree.mistakes.has(n.id) &&
+        isUserMove(n, color) &&
+        !progress.has(n.id),
     ),
   ).length
   const nextToLearn = done ? chooseLearnRun(tree, progress, color, leafId) : undefined
   const nextInOrder = tree.leaves[(position + 1) % tree.leaves.length].id
+
+  // Gli errori da evitare nella posizione raggiunta: le mosse sbagliate
+  // dell'utente qui, e quelle che l'avversario poteva giocare al posto della
+  // sua ultima risposta. Solo mentre la linea aspetta (il turno dell'utente o
+  // la fine), non mentre l'avversario muove.
+  const mistakes =
+    userTurn || done
+      ? [
+          ...mistakesAt(tree, lastPlayed?.id ?? null),
+          ...(lastPlayed && !isUserMove(lastPlayed, color)
+            ? mistakesAt(tree, lastPlayed.parent_id)
+            : []),
+        ]
+      : []
+  // Una linea sbagliata seguita sulla scacchiera: vale solo nella posizione
+  // in cui la si e' aperta.
+  const runKey = `${leafId}:${nonce}:${index}`
+  const [preview, setPreview] = useState<{
+    key: string
+    line: OpeningNode[]
+    first: number
+    shown: number
+  } | null>(null)
+  const shownPreview = preview?.key === runKey ? preview : null
+  const previewFen = useMemo(() => {
+    if (!shownPreview) return null
+    const chess = new Chess()
+    for (const node of shownPreview.line.slice(0, shownPreview.shown))
+      chess.move(node.san)
+    return chess.fen()
+  }, [shownPreview])
+  const previewNode = shownPreview ? shownPreview.line[shownPreview.shown - 1] : undefined
+  const boardNode = previewNode ?? lastPlayed
+
+  function openPreview(mistake: OpeningNode) {
+    const line = mistakeLine(tree, mistake)
+    // Si parte dalla mossa sbagliata giocata.
+    setPreview({ key: runKey, line, first: mistake.ply, shown: mistake.ply })
+  }
 
   return (
     <OpeningPageLayout
@@ -145,12 +199,13 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
       }
       board={
         <OpeningBoard
-          fen={run.fen}
+          fen={previewFen ?? run.fen}
           orientation={color === 'w' ? 'white' : 'black'}
-          interactive={userTurn}
+          interactive={userTurn && !shownPreview}
           onMove={run.handleMove}
-          hintUci={userTurn ? next.uci : undefined}
-          lastMoveUci={run.lastMoveUci}
+          hintUci={userTurn && !shownPreview ? next.uci : undefined}
+          lastMoveUci={previewNode?.uci ?? run.lastMoveUci}
+          savedArrows={boardNode ? arrows?.get(boardNode.id) : undefined}
           boardTheme={stats?.board_theme}
           pieceSet={stats?.piece_set}
         />
@@ -181,8 +236,89 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
               {lastComment}
             </p>
           )}
+          {shownPreview && previewNode ? (
+            <Card size="sm" className="border-destructive/40">
+              <CardHeader>
+                <CardTitle className="text-destructive text-sm">
+                  {o.mistakeLabel}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-2">
+                <p className="font-mono text-xs">
+                  {shownPreview.line
+                    .slice(shownPreview.first - 1, shownPreview.shown)
+                    .map((n, i) => `${moveLabel(n, i === 0)}${n.is_mistake ? '?' : ''}`)
+                    .join(' ')}
+                </p>
+                {commentOf(previewNode, notes ?? new Map()) && (
+                  <p className="border-l-2 border-sky-500/60 pl-2 text-sm text-sky-800 dark:text-sky-200">
+                    {commentOf(previewNode, notes ?? new Map())}
+                  </p>
+                )}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label={t.puzzleBoard.prevMove}
+                    disabled={shownPreview.shown <= shownPreview.first}
+                    onClick={() =>
+                      setPreview({ ...shownPreview, shown: shownPreview.shown - 1 })
+                    }
+                  >
+                    <ChevronLeft />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label={t.puzzleBoard.nextMove}
+                    disabled={shownPreview.shown >= shownPreview.line.length}
+                    onClick={() =>
+                      setPreview({ ...shownPreview, shown: shownPreview.shown + 1 })
+                    }
+                  >
+                    <ChevronRight />
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setPreview(null)}>
+                    {o.backToLine}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            mistakes.length > 0 && (
+              <Card size="sm">
+                <CardHeader>
+                  <CardTitle className="text-sm">{o.mistakesTitle}</CardTitle>
+                  <p className="text-muted-foreground text-xs">{o.mistakesIntro}</p>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-3">
+                  {mistakes.map((mistake) => {
+                    const comment = commentOf(mistake, notes ?? new Map())
+                    return (
+                      <div key={mistake.id} className="flex flex-col gap-1">
+                        <span className="text-destructive font-mono text-xs">
+                          {moveLabel(mistake, true)}?
+                        </span>
+                        {comment && (
+                          <p className="text-muted-foreground text-xs">{comment}</p>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-fit"
+                          onClick={() => openPreview(mistake)}
+                        >
+                          {o.showMistake}
+                        </Button>
+                      </div>
+                    )
+                  })}
+                </CardContent>
+              </Card>
+            )
+          )}
           {learn.isError && <p className="text-destructive text-xs">{o.saveError}</p>}
-          {userTurn && (
+          {userTurn && !shownPreview && (
             <Button
               variant="outline"
               className="w-fit"

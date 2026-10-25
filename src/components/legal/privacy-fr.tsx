@@ -43,9 +43,10 @@ export default function PrivacyFr() {
         </li>
         <li>
           <b>Données sur les ouvertures :</b> les répertoires que vous créez, importez ou
-          copiez (nom, coups, commentaires), vos commentaires personnels sur les coups,
-          vos réponses à l’entraînement (juste/faux, temps passé), vos progrès et les
-          cycles terminés, et les répertoires que vous retirez de votre bibliothèque.
+          copiez (nom, coups, commentaires), vos commentaires et flèches personnels sur
+          les coups, vos réponses à l’entraînement (juste/faux, temps passé), vos progrès
+          et les cycles terminés, et les répertoires que vous retirez de votre
+          bibliothèque.
         </li>
         <li>
           <b>Préférences :</b> langue, thème clair/sombre, style de l’application, style

@@ -6,6 +6,7 @@ import {
   alternativesTo,
   fastForwardIndex,
   isUserMove,
+  mistakesAt,
   runPath,
   sameMove,
   type OpeningNode,
@@ -14,10 +15,14 @@ import {
 
 export type MoveResult = 'correct' | 'alternative' | 'wrong'
 
-/** Dopo una mossa non del repertorio: quella da giocare e l'alternativa giocata. */
+/**
+ * Dopo una mossa non del repertorio: quella da giocare, e l'alternativa o
+ * l'errore noto (una linea sbagliata del repertorio) giocati.
+ */
 export interface RunHint {
   node: OpeningNode
   alternative: OpeningNode | null
+  mistake: OpeningNode | null
 }
 
 export interface RunResult {
@@ -132,7 +137,17 @@ export function useOpeningRun({
     setState((s) =>
       correct
         ? { ...s, index: s.index + 1, hint: null }
-        : { ...s, hint: { node: next, alternative } },
+        : {
+            ...s,
+            hint: {
+              node: next,
+              alternative,
+              mistake: alternative
+                ? null
+                : (mistakesAt(tree, next.parent_id).find((n) => sameMove(uci, n.uci)) ??
+                  null),
+            },
+          },
     )
     return correct
   }

@@ -174,6 +174,27 @@ describe('buildRepertoire in lenient mode (PGN import)', () => {
     expect(report.nodes.map((n) => n.san)).toEqual(['e4', 'c5', 'e5', 'Nf3', 'Nc6'])
   })
 
+  it('keeps a wrong line with its refutation, and more user moves inside it', () => {
+    const report = buildRepertoire(
+      {
+        ...source(['e4 e5 Nf3', 'e4 e5 Qh5 Nc6 Bc4 Nf6', 'e4 e5 Qh5 Nc6 Qxf7+']),
+        mistakes: ['e4 e5 Qh5'],
+      },
+      { lenient: true },
+    )
+    const qh5 = report.nodes.find((n) => n.san === 'Qh5')!
+    expect(qh5.isMistake).toBe(true)
+    expect(qh5.isMain).toBe(true)
+    expect(report.mistakes).toBe(1)
+    // La confutazione 4...Nf6 resta, e dentro la linea sbagliata 3.Bc4 e
+    // 3.Qxf7 sono entrambe linee, non alternative.
+    expect(report.trimmed).toBe(0)
+    expect(report.alternatives).toBe(0)
+    expect(report.nodes.map((n) => n.san)).toEqual(
+      expect.arrayContaining(['Nf6', 'Bc4', 'Qxf7+']),
+    )
+  })
+
   it('still rejects an illegal move', () => {
     expect(() => buildRepertoire(source(['e4 e5 Ke3']), { lenient: true })).toThrow(
       /non legale/,

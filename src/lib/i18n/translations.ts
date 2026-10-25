@@ -535,7 +535,7 @@ export const it: Translations = {
     roundSummary: (round, perDay, days) =>
       `${round}° giro: ${perDay}/giorno (~${days} giorni)`,
     restingNote: (date) => `⏸ In pausa fino al ${date}`,
-    continueTraining: 'Continua allenamento',
+    continueTraining: 'Continua con la tattica',
     noActiveSessionTitle: 'Nessuna sessione attiva',
     noActiveSessionDescription: 'Configura un nuovo allenamento per iniziare.',
     createSession: 'Crea nuova sessione',
@@ -708,7 +708,7 @@ export const it: Translations = {
     themesNote: (min) => `Solo le categorie con almeno ${min} tentativi.`,
     themesEmpty: (min) =>
       `Servono almeno ${min} tentativi per categoria: continua ad allenarti.`,
-    tabs: { training: 'Allenamento', practice: 'Pratica libera' },
+    tabs: { training: 'Tattica', practice: 'Pratica libera' },
     practiceSubtitle:
       'I puzzle rigiocati in pratica libera, divisi per la sessione da cui li hai aperti.',
     practiceEmpty: 'Ancora nessun puzzle in pratica libera.',
@@ -1145,7 +1145,7 @@ export const en: Translations = {
     roundSummary: (round, perDay, days) =>
       `Round ${round}: ${perDay}/day (~${days} days)`,
     restingNote: (date) => `⏸ Resting until ${date}`,
-    continueTraining: 'Continue training',
+    continueTraining: 'Continue tactics',
     noActiveSessionTitle: 'No active session',
     noActiveSessionDescription: 'Set up a new training to get started.',
     createSession: 'Create new session',
@@ -1317,7 +1317,7 @@ export const en: Translations = {
     themeLine: (rate, attempts) => `${rate}% · ${attempts} attempts`,
     themesNote: (min) => `Only categories with at least ${min} attempts.`,
     themesEmpty: (min) => `Each category needs at least ${min} attempts: keep training.`,
-    tabs: { training: 'Training', practice: 'Free practice' },
+    tabs: { training: 'Tactics', practice: 'Free practice' },
     practiceSubtitle:
       'Puzzles replayed in free practice, split by the session you opened them from.',
     practiceEmpty: 'No free practice puzzles yet.',

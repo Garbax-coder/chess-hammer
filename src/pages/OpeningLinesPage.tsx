@@ -26,14 +26,19 @@ import {
   useDeleteOpeningMove,
   useOpeningNames,
   useOpeningNotes,
+  useOpeningArrows,
+  useSaveOpeningArrows,
   useSaveOpeningNote,
   useSetMoveAlternative,
+  useSetMoveMistake,
 } from '@/hooks/use-openings'
 import { useStockfishAnalysis } from '@/hooks/use-stockfish-analysis'
 import { useUserStats } from '@/hooks/use-user-stats'
 import { useEngineSettings } from '@/lib/engine-settings'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
+import { toggleArrow, type MoveArrow } from '@/lib/opening-arrows'
 import { epdOf } from '@/lib/opening-catalog'
+import { repertoirePgn } from '@/lib/opening-pgn'
 import { MOVE_STATE_CLASSES } from '@/lib/opening-move-style'
 import { useTranslations } from '@/lib/language-context'
 import {
@@ -54,6 +59,8 @@ import type { RepertoireWithNodes } from '@/lib/openings'
 const NO_NAMES = new Map<number, OpeningName>()
 const NO_COMMENTS = new Map<number, string>()
 const NO_NODES: OpeningNode[] = []
+const NO_ARROWS = new Map<number, MoveArrow[]>()
+const NO_MOVE_ARROWS: MoveArrow[] = []
 const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 // Consultazione di un repertorio: l'albero delle varianti con la padronanza
@@ -108,6 +115,10 @@ function OpeningLines({
   const addMove = useAddOpeningMove()
   const deleteMove = useDeleteOpeningMove()
   const setAlternative = useSetMoveAlternative()
+  const setMistake = useSetMoveMistake()
+  // Le frecce dell'utente sulla posizione selezionata (tasto destro).
+  const { data: arrows = NO_ARROWS } = useOpeningArrows()
+  const saveArrows = useSaveOpeningArrows()
   const copyRepertoire = useCopyRepertoire()
   // Stockfish sulla posizione mostrata.
   const [engineOn, setEngineOn] = useLocalToggle('openings-stockfish', false)
@@ -233,12 +244,43 @@ function OpeningLines({
   // La mossa selezionata, se e' dell'utente: alternativa accettata (senza
   // seguito, accanto a un'altra sua mossa principale) o linea.
   const selectedIsUser = !!selected && isUserMove(selected, color)
+  const inMistake = !!selected && tree.mistakes.has(selected.id)
   const canMakeAlternative =
     selectedIsUser &&
     selected.is_main &&
+    !inMistake &&
     !firstChild &&
-    siblings.some((n) => n.id !== selected.id && n.is_main)
-  const endsWithOpponent = !!selected && !selectedIsUser && !firstChild
+    siblings.some((n) => n.id !== selected.id && n.is_main && !n.is_mistake)
+  // Una linea sbagliata puo' finire con la confutazione dell'avversario.
+  const endsWithOpponent = !!selected && !selectedIsUser && !firstChild && !inMistake
+  // Si segna come errore la prima mossa di una linea sbagliata, non il suo
+  // seguito.
+  const canToggleMistake = !!selected && (selected.is_mistake || !inMistake)
+  const selectedArrows = (selectedId !== null && arrows.get(selectedId)) || NO_MOVE_ARROWS
+
+  function drawArrow(arrow: MoveArrow) {
+    if (selectedId === null) return
+    saveArrows.mutate({ nodeId: selectedId, arrows: toggleArrow(selectedArrows, arrow) })
+  }
+
+  function exportPgn() {
+    const pgn = repertoirePgn({
+      name: o.names[repertoire.slug] ?? repertoire.name,
+      eco: repertoire.eco,
+      color,
+      tree,
+      comments,
+      arrows,
+    })
+    const url = URL.createObjectURL(new Blob([pgn], { type: 'application/x-chess-pgn' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${repertoire.slug}.pgn`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }
 
   // Solo finche' resta selezionata la mossa da cui e' stata giocata.
   const shownMove = pendingMove?.parentId === selectedId ? pendingMove : null
@@ -311,12 +353,31 @@ function OpeningLines({
               progress={progress}
               now={now}
             />
+            {inMistake && <p className="text-destructive text-xs">{o.inMistakeLine}</p>}
+            {selected && (
+              <div className="flex flex-col gap-1">
+                <p className="text-muted-foreground text-xs">{o.arrowsHint}</p>
+                {selectedArrows.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-fit"
+                    onClick={() => saveArrows.mutate({ nodeId: selected.id, arrows: [] })}
+                  >
+                    {o.clearArrows}
+                  </Button>
+                )}
+              </div>
+            )}
             <LabeledSwitch
               id="stockfish"
               label="Stockfish"
               checked={engineOn}
               onChange={setEngineOn}
             />
+            <Button variant="outline" size="sm" className="w-fit" onClick={exportPgn}>
+              {o.exportPgn}
+            </Button>
             {repertoire.owner_id ? (
               <div className="flex flex-col gap-2">
                 <Button
@@ -371,6 +432,22 @@ function OpeningLines({
                         {selected.is_main ? o.makeAlternative : o.makeLine}
                       </Button>
                     )}
+                    {canToggleMistake && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-fit"
+                        loading={setMistake.isPending}
+                        onClick={() =>
+                          setMistake.mutate({
+                            nodeId: selected.id,
+                            mistake: !selected.is_mistake,
+                          })
+                        }
+                      >
+                        {selected.is_mistake ? o.unmarkMistake : o.markMistake}
+                      </Button>
+                    )}
                     {endsWithOpponent && (
                       <p className="text-xs text-amber-700 dark:text-amber-300">
                         {o.endsWithOpponent}
@@ -383,7 +460,8 @@ function OpeningLines({
                     )}
                     {(addMove.isError ||
                       deleteMove.isError ||
-                      setAlternative.isError) && (
+                      setAlternative.isError ||
+                      setMistake.isError) && (
                       <p className="text-destructive text-xs">{o.editError}</p>
                     )}
                   </>
@@ -413,6 +491,8 @@ function OpeningLines({
             onMove={editMode ? handleEditMove : () => false}
             hintUci={bestMove}
             lastMoveUci={shownMove?.uci ?? selected?.uci}
+            savedArrows={shownMove ? undefined : selectedArrows}
+            onArrowDrawn={selected ? drawArrow : undefined}
             boardTheme={stats?.board_theme}
             pieceSet={stats?.piece_set}
           />
@@ -552,7 +632,10 @@ function SelectedMove({
   const label = moveLabel(node, true)
   const name = nameAt(tree, node.id, names)
   const row = progress.get(node.id)
-  const state = node.is_main && isUserMove(node, color) ? moveState(row, now) : null
+  const state =
+    node.is_main && !tree.mistakes.has(node.id) && isUserMove(node, color)
+      ? moveState(row, now)
+      : null
   return (
     <div className="flex min-w-0 flex-col text-xs">
       {name && (

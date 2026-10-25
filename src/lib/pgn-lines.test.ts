@@ -61,3 +61,13 @@ describe('pgnLines', () => {
     })
   })
 })
+
+describe('pgnLines mistakes', () => {
+  it('marks the moves with ? or ?? (or $2, $4) as mistakes, not those with ?! or !?', () => {
+    const { mistakes, lines } = pgnLines(
+      '1. e4 e5 2. Nf3 (2. Qh5? Nc6 3. Bc4 Nf6 4. Qxf7?? ) (2. Bc4 $2) (2. f4?!) 2... Nc6 *',
+    )
+    expect(mistakes).toEqual(['e4 e5 Qh5', 'e4 e5 Qh5 Nc6 Bc4 Nf6 Qxf7', 'e4 e5 Bc4'])
+    expect(lines).toContain('e4 e5 f4')
+  })
+})

@@ -1,3 +1,4 @@
+import type { MoveArrow } from '@/lib/opening-arrows'
 import type { CatalogNode, OpeningColor } from '@/lib/opening-catalog'
 import type { OpeningStatsData } from '@/lib/opening-stats'
 import type { OpeningNode, OpeningProgress } from '@/lib/opening-tree'
@@ -21,7 +22,7 @@ export interface RepertoireWithNodes extends OpeningRepertoire {
   nodes: OpeningNode[]
 }
 
-const NODE_COLUMNS = 'id, parent_id, ply, uci, san, epd, is_main, comment'
+const NODE_COLUMNS = 'id, parent_id, ply, uci, san, epd, is_main, comment, is_mistake'
 
 /** Tutti i repertori leggibili, con le mosse (servono per la copertura). */
 export async function fetchRepertoires(): Promise<RepertoireWithNodes[]> {
@@ -158,6 +159,7 @@ export async function importOpeningRepertoire(params: {
       epd: n.epd,
       is_main: n.isMain,
       comment: n.comment ?? null,
+      is_mistake: n.isMistake ?? false,
     })),
   })
   if (error) throw error
@@ -167,6 +169,47 @@ export async function importOpeningRepertoire(params: {
 /** Cancella un repertorio personale, con mosse, progressi e cicli. */
 export async function deleteOpeningRepertoire(id: string): Promise<void> {
   const { error } = await supabase.from('opening_repertoires').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Segna (o no) una mossa di un repertorio personale come errore (0110). */
+export async function setOpeningMoveMistake(params: {
+  nodeId: number
+  mistake: boolean
+}): Promise<void> {
+  const { error } = await supabase.rpc('set_opening_move_mistake', {
+    p_node_id: params.nodeId,
+    p_mistake: params.mistake,
+  })
+  if (error) throw error
+}
+
+/** Le frecce disegnate dall'utente sulle posizioni (0110). */
+export async function fetchOpeningArrows(): Promise<
+  { node_id: number; arrows: MoveArrow[] }[]
+> {
+  const { data, error } = await supabase
+    .from('opening_node_arrows')
+    .select('node_id, arrows')
+  if (error) throw error
+  return data
+}
+
+/** Salva le frecce di una posizione; nessuna freccia = le toglie. */
+export async function saveOpeningArrows(params: {
+  userId: string
+  nodeId: number
+  arrows: MoveArrow[]
+}): Promise<void> {
+  const { error } =
+    params.arrows.length === 0
+      ? await supabase.from('opening_node_arrows').delete().eq('node_id', params.nodeId)
+      : await supabase.from('opening_node_arrows').upsert({
+          user_id: params.userId,
+          node_id: params.nodeId,
+          arrows: params.arrows,
+          updated_at: new Date().toISOString(),
+        })
   if (error) throw error
 }
 

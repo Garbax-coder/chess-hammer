@@ -1,5 +1,6 @@
 import { act, render } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import { ARROW_COLORS } from '@/lib/opening-arrows'
 import { OpeningBoard } from './opening-board'
 
 // react-chessboard sostituita da un segnaposto che conserva le opzioni: qui
@@ -7,6 +8,9 @@ import { OpeningBoard } from './opening-board'
 interface BoardOptions {
   onPieceDrop: (args: { sourceSquare: string; targetSquare: string | null }) => boolean
   onSquareClick: (args: { square: string; piece: unknown }) => void
+  onArrowsChange: (args: {
+    arrows: { startSquare: string; endSquare: string; color: string }[]
+  }) => void
 }
 let options: BoardOptions
 vi.mock('react-chessboard', () => ({
@@ -58,5 +62,29 @@ describe('OpeningBoard', () => {
     )
     expect(options.onPieceDrop({ sourceSquare: 'g1', targetSquare: 'f3' })).toBe(false)
     expect(onMove).not.toHaveBeenCalled()
+  })
+
+  it('hands over an arrow drawn with the right button, and shows the saved ones', () => {
+    const onArrowDrawn = vi.fn()
+    const { container } = render(
+      <OpeningBoard
+        fen={START}
+        orientation="black"
+        interactive={false}
+        onMove={() => false}
+        savedArrows={[{ from: 'g1', to: 'f3', color: 'G' }]}
+        onArrowDrawn={onArrowDrawn}
+      />,
+    )
+    expect(container.querySelector('[data-arrow="Gg1f3"]')).not.toBeNull()
+
+    act(() => options.onArrowsChange({ arrows: [] }))
+    expect(onArrowDrawn).not.toHaveBeenCalled()
+    act(() =>
+      options.onArrowsChange({
+        arrows: [{ startSquare: 'd1', endSquare: 'h5', color: ARROW_COLORS.R }],
+      }),
+    )
+    expect(onArrowDrawn).toHaveBeenCalledWith({ from: 'd1', to: 'h5', color: 'R' })
   })
 })

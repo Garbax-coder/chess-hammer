@@ -83,7 +83,7 @@ export const fr: Translations = {
     roundSummary: (round, perDay, days) =>
       `Cycle ${round} : ${perDay}/jour (~${days} jours)`,
     restingNote: (date) => `⏸ Pause jusqu’au ${date}`,
-    continueTraining: 'Continuer l’entraînement',
+    continueTraining: 'Continuer la tactique',
     noActiveSessionTitle: 'Aucune session active',
     noActiveSessionDescription: 'Configurez un nouvel entraînement pour commencer.',
     createSession: 'Créer une session',
@@ -256,7 +256,7 @@ export const fr: Translations = {
     themesNote: (min) => `Seulement les catégories avec au moins ${min} tentatives.`,
     themesEmpty: (min) =>
       `Il faut au moins ${min} tentatives par catégorie : continuez à vous entraîner.`,
-    tabs: { training: 'Entraînement', practice: 'Entraînement libre' },
+    tabs: { training: 'Tactique', practice: 'Entraînement libre' },
     practiceSubtitle:
       'Les puzzles rejoués en entraînement libre, par session d’où vous les avez ouverts.',
     practiceEmpty: 'Aucun puzzle en entraînement libre pour l’instant.',

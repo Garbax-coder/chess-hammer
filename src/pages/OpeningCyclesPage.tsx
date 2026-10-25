@@ -136,7 +136,9 @@ function OpeningCycles({ repertoire, tree }: RepertoireData) {
     : hint
       ? hint.alternative
         ? o.alternativePlayed(hint.alternative.san, hint.node.san)
-        : o.wrong(hint.node.san)
+        : hint.mistake
+          ? o.mistakePlayed(hint.mistake.san, hint.node.san)
+          : o.wrong(hint.node.san)
       : run.userTurn
         ? o.yourMove
         : o.opponentMoving

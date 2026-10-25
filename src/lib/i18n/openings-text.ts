@@ -44,6 +44,19 @@ export interface OpeningsTranslations {
   statsDay: (date: string, moves: number, correct: number) => string
   faqTitle: string
   faqItems: { question: string; answer: string }[]
+  mistakePlayed: (played: string, main: string) => string
+  markMistake: string
+  unmarkMistake: string
+  mistakeLabel: string
+  inMistakeLine: string
+  mistakesTitle: string
+  mistakesIntro: string
+  showMistake: string
+  backToLine: string
+  arrowsHint: string
+  clearArrows: string
+  exportPgn: string
+  previewMistakes: (n: number) => string
   creditsTitle: string
   creditsBody: string
   empty: string
@@ -268,7 +281,29 @@ const it: OpeningsTranslations = {
       answer:
         'Dal dataset pubblico delle aperture di Lichess (codici ECO e nomi delle varianti, di pubblico dominio). Lo stesso dataset serve per creare un repertorio da ECO.',
     },
+    {
+      question: 'Cosa sono le linee sbagliate?',
+      answer:
+        'Mosse che non vuoi giocare (o che l’avversario potrebbe sbagliare), con il loro seguito: la confutazione e i tuoi commenti. Le segni in Consulta con “Modifica le linee”. Non entrano in Allena e nei Cicli; in Studia compaiono come “Da evitare” nella posizione in cui si possono giocare, e puoi seguirle sulla scacchiera.\n\nIn Consulta puoi anche disegnare frecce su una posizione (tasto destro e trascina) ed esportare il repertorio in PGN, con commenti, frecce ed errori segnati con ?.',
+    },
   ],
+  mistakePlayed: (played, main) =>
+    `${played}? è un errore noto: in questa linea si gioca ${main}.`,
+  markMistake: 'Segna come linea sbagliata',
+  unmarkMistake: 'Non è un errore',
+  mistakeLabel: 'Linea sbagliata',
+  inMistakeLine:
+    'Fa parte di una linea sbagliata: si mostra nello studio come errore da evitare, non si allena.',
+  mistakesTitle: 'Da evitare',
+  mistakesIntro: 'Errori possibili in questa posizione, con il perché.',
+  showMistake: 'Guarda la linea',
+  backToLine: 'Torna alla linea',
+  arrowsHint:
+    'Tasto destro e trascina sulla scacchiera per disegnare una freccia (Shift rossa, Alt blu, Ctrl gialla): resta sulla mossa selezionata. Ridisegnala per toglierla.',
+  clearArrows: 'Cancella le frecce',
+  exportPgn: 'Esporta PGN',
+  previewMistakes: (n) =>
+    `${n} ${n === 1 ? 'mossa segnata' : 'mosse segnate'} con ? o ??: ${n === 1 ? 'tenuta come linea sbagliata' : 'tenute come linee sbagliate'}, da evitare`,
   creditsTitle: 'Aperture',
   creditsBody:
     'Nomi delle aperture, codici ECO e linee per creare un repertorio da ECO vengono dal dataset lichess-org/chess-openings, di pubblico dominio (CC0). Chess Hammer non è affiliato a Lichess.',
@@ -523,7 +558,29 @@ const en: OpeningsTranslations = {
       answer:
         'From the public Lichess openings dataset (ECO codes and variation names, in the public domain). The same dataset is used to create a repertoire from ECO.',
     },
+    {
+      question: 'What are wrong lines?',
+      answer:
+        'Moves you don’t want to play (or that your opponent might get wrong), with their continuation: the refutation and your comments. You mark them in Browse with “Edit the lines”. They are left out of Train and Cycles; in Learn they show up as “To avoid” in the position where they can be played, and you can follow them on the board.\n\nIn Browse you can also draw arrows on a position (right-click and drag) and export the repertoire as PGN, with comments, arrows and mistakes marked with ?.',
+    },
   ],
+  mistakePlayed: (played, main) =>
+    `${played}? is a known mistake: in this line you play ${main}.`,
+  markMistake: 'Mark as a wrong line',
+  unmarkMistake: 'Not a mistake',
+  mistakeLabel: 'Wrong line',
+  inMistakeLine:
+    'Part of a wrong line: Learn shows it as a mistake to avoid, it is not trained.',
+  mistakesTitle: 'To avoid',
+  mistakesIntro: 'Possible mistakes in this position, and why.',
+  showMistake: 'See the line',
+  backToLine: 'Back to the line',
+  arrowsHint:
+    'Right-click and drag on the board to draw an arrow (Shift red, Alt blue, Ctrl yellow): it stays on the selected move. Draw it again to remove it.',
+  clearArrows: 'Clear the arrows',
+  exportPgn: 'Export PGN',
+  previewMistakes: (n) =>
+    `${n} ${n === 1 ? 'move' : 'moves'} marked with ? or ??: kept as ${n === 1 ? 'a wrong line' : 'wrong lines'}, to avoid`,
   creditsTitle: 'Openings',
   creditsBody:
     'Opening names, ECO codes and the lines used to create a repertoire from ECO come from the lichess-org/chess-openings dataset, in the public domain (CC0). Chess Hammer is not affiliated with Lichess.',
@@ -770,7 +827,29 @@ const fr: OpeningsTranslations = {
       answer:
         'Du jeu de données public des ouvertures de Lichess (codes ECO et noms des variantes, dans le domaine public). Le même jeu de données sert à créer un répertoire depuis l’ECO.',
     },
+    {
+      question: 'Que sont les lignes fautives ?',
+      answer:
+        'Des coups que vous ne voulez pas jouer (ou que l’adversaire pourrait rater), avec leur suite : la réfutation et vos commentaires. Vous les marquez dans Consulter avec « Modifier les lignes ». Elles ne font pas partie de S’entraîner ni des Cycles ; dans Étudier elles apparaissent comme « À éviter » dans la position où elles peuvent être jouées, et vous pouvez les suivre sur l’échiquier.\n\nDans Consulter vous pouvez aussi dessiner des flèches sur une position (clic droit et glisser) et exporter le répertoire en PGN, avec commentaires, flèches et erreurs marquées par ?.',
+    },
   ],
+  mistakePlayed: (played, main) =>
+    `${played}? est une erreur connue : dans cette ligne on joue ${main}.`,
+  markMistake: 'Marquer comme ligne fautive',
+  unmarkMistake: 'Pas une erreur',
+  mistakeLabel: 'Ligne fautive',
+  inMistakeLine:
+    'Fait partie d’une ligne fautive : Étudier la montre comme erreur à éviter, elle n’est pas entraînée.',
+  mistakesTitle: 'À éviter',
+  mistakesIntro: 'Erreurs possibles dans cette position, et pourquoi.',
+  showMistake: 'Voir la ligne',
+  backToLine: 'Revenir à la ligne',
+  arrowsHint:
+    'Clic droit et glissez sur l’échiquier pour dessiner une flèche (Maj rouge, Alt bleue, Ctrl jaune) : elle reste sur le coup sélectionné. Redessinez-la pour la retirer.',
+  clearArrows: 'Effacer les flèches',
+  exportPgn: 'Exporter en PGN',
+  previewMistakes: (n) =>
+    `${n} ${n === 1 ? 'coup marqué' : 'coups marqués'} avec ? ou ?? : ${n === 1 ? 'gardé comme ligne fautive' : 'gardés comme lignes fautives'}, à éviter`,
   creditsTitle: 'Ouvertures',
   creditsBody:
     'Les noms des ouvertures, les codes ECO et les lignes pour créer un répertoire depuis l’ECO viennent du jeu de données lichess-org/chess-openings, dans le domaine public (CC0). Chess Hammer n’est pas affilié à Lichess.',
@@ -1021,7 +1100,29 @@ const es: OpeningsTranslations = {
       answer:
         'Del conjunto de datos público de aperturas de Lichess (códigos ECO y nombres de las variantes, de dominio público). El mismo conjunto sirve para crear un repertorio desde ECO.',
     },
+    {
+      question: '¿Qué son las líneas erróneas?',
+      answer:
+        'Jugadas que no quieres jugar (o que el rival podría equivocar), con su continuación: la refutación y tus comentarios. Las marcas en Consultar con «Editar las líneas». No entran en Entrenar ni en los Ciclos; en Estudiar aparecen como «A evitar» en la posición en la que se pueden jugar, y puedes seguirlas en el tablero.\n\nEn Consultar también puedes dibujar flechas sobre una posición (clic derecho y arrastrar) y exportar el repertorio en PGN, con comentarios, flechas y errores marcados con ?.',
+    },
   ],
+  mistakePlayed: (played, main) =>
+    `${played}? es un error conocido: en esta línea se juega ${main}.`,
+  markMistake: 'Marcar como línea errónea',
+  unmarkMistake: 'No es un error',
+  mistakeLabel: 'Línea errónea',
+  inMistakeLine:
+    'Forma parte de una línea errónea: Estudiar la muestra como error a evitar, no se entrena.',
+  mistakesTitle: 'A evitar',
+  mistakesIntro: 'Errores posibles en esta posición, y por qué.',
+  showMistake: 'Ver la línea',
+  backToLine: 'Volver a la línea',
+  arrowsHint:
+    'Clic derecho y arrastra en el tablero para dibujar una flecha (Mayús roja, Alt azul, Ctrl amarilla): se queda en la jugada seleccionada. Dibújala otra vez para quitarla.',
+  clearArrows: 'Borrar las flechas',
+  exportPgn: 'Exportar PGN',
+  previewMistakes: (n) =>
+    `${n} ${n === 1 ? 'jugada marcada' : 'jugadas marcadas'} con ? o ??: ${n === 1 ? 'guardada como línea errónea' : 'guardadas como líneas erróneas'}, a evitar`,
   creditsTitle: 'Aperturas',
   creditsBody:
     'Los nombres de las aperturas, los códigos ECO y las líneas para crear un repertorio desde ECO vienen del conjunto de datos lichess-org/chess-openings, de dominio público (CC0). Chess Hammer no está afiliado a Lichess.',
@@ -1278,7 +1379,29 @@ const de: OpeningsTranslations = {
       answer:
         'Aus dem öffentlichen Eröffnungs-Datensatz von Lichess (ECO-Codes und Variantennamen, gemeinfrei). Derselbe Datensatz dient zum Erstellen eines Repertoires aus ECO.',
     },
+    {
+      question: 'Was sind falsche Linien?',
+      answer:
+        'Züge, die du nicht spielen willst (oder bei denen der Gegner danebengreifen könnte), mit ihrer Fortsetzung: der Widerlegung und deinen Kommentaren. Du markierst sie unter Ansehen mit „Linien bearbeiten“. Sie gehören nicht zu Trainieren und den Zyklen; in Lernen erscheinen sie als „Vermeiden“ in der Stellung, in der sie möglich sind, und du kannst sie auf dem Brett verfolgen.\n\nUnter Ansehen kannst du auch Pfeile auf eine Stellung zeichnen (Rechtsklick und ziehen) und das Repertoire als PGN exportieren, mit Kommentaren, Pfeilen und mit ? markierten Fehlern.',
+    },
   ],
+  mistakePlayed: (played, main) =>
+    `${played}? ist ein bekannter Fehler: In dieser Linie spielt man ${main}.`,
+  markMistake: 'Als falsche Linie markieren',
+  unmarkMistake: 'Kein Fehler',
+  mistakeLabel: 'Falsche Linie',
+  inMistakeLine:
+    'Teil einer falschen Linie: Lernen zeigt sie als zu vermeidenden Fehler, sie wird nicht trainiert.',
+  mistakesTitle: 'Vermeiden',
+  mistakesIntro: 'Mögliche Fehler in dieser Stellung und warum.',
+  showMistake: 'Linie ansehen',
+  backToLine: 'Zurück zur Linie',
+  arrowsHint:
+    'Rechtsklick und ziehen, um einen Pfeil zu zeichnen (Umschalt rot, Alt blau, Strg gelb): Er bleibt beim ausgewählten Zug. Zeichne ihn erneut, um ihn zu entfernen.',
+  clearArrows: 'Pfeile löschen',
+  exportPgn: 'PGN exportieren',
+  previewMistakes: (n) =>
+    `${n} mit ? oder ?? ${n === 1 ? 'markierter Zug' : 'markierte Züge'}: als ${n === 1 ? 'falsche Linie' : 'falsche Linien'} behalten, zu vermeiden`,
   creditsTitle: 'Eröffnungen',
   creditsBody:
     'Eröffnungsnamen, ECO-Codes und die Linien zum Erstellen eines Repertoires aus ECO stammen aus dem Datensatz lichess-org/chess-openings, gemeinfrei (CC0). Chess Hammer ist nicht mit Lichess verbunden.',
