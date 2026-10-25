@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { EditableSessionName } from '@/components/editable-session-name'
 import { EloHistoryChart } from '@/components/elo-history-chart'
+import { OpeningsOverviewCard } from '@/components/openings-overview-card'
 import { SessionPerformanceCard } from '@/components/session-performance-card'
 import { Button } from '@/components/ui/button'
 import {
@@ -138,6 +139,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      <OpeningsOverviewCard />
 
       <div className="flex w-full flex-col gap-6 text-left">
         <EloHistoryChart />

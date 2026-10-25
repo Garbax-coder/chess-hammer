@@ -15,8 +15,7 @@ export const de: Translations = {
   },
   nav: {
     dashboard: 'Dashboard',
-    train: 'Training',
-    history: 'Verlauf',
+    train: 'Taktik',
     stats: 'Statistiken',
     faq: 'FAQ',
     menu: 'Menü',
@@ -84,7 +83,7 @@ export const de: Translations = {
     roundSummary: (round, perDay, days) =>
       `Durchgang ${round}: ${perDay}/Tag (~${days} Tage)`,
     restingNote: (date) => `⏸ Pause bis ${date}`,
-    continueTraining: 'Training fortsetzen',
+    continueTraining: 'Taktik fortsetzen',
     noActiveSessionTitle: 'Keine aktive Session',
     noActiveSessionDescription: 'Richte ein neues Training ein, um loszulegen.',
     createSession: 'Neue Session erstellen',
@@ -257,7 +256,7 @@ export const de: Translations = {
     themesNote: (min) => `Nur Kategorien mit mindestens ${min} Versuchen.`,
     themesEmpty: (min) =>
       `Jede Kategorie braucht mindestens ${min} Versuche: Trainiere weiter.`,
-    tabs: { training: 'Training', practice: 'Freies Üben' },
+    tabs: { training: 'Taktik', practice: 'Freies Üben' },
     practiceSubtitle:
       'Im freien Üben wiederholte Puzzles, nach der Session, aus der du sie geöffnet hast.',
     practiceEmpty: 'Noch keine Puzzles im freien Üben.',
@@ -276,7 +275,6 @@ export const de: Translations = {
     openTheme: (theme) => `Die ${theme}-Puzzles im freien Üben wiederholen`,
   },
   sessionsHistory: {
-    title: 'Session-Verlauf',
     empty: 'Noch keine Session erstellt.',
     puzzlesRound: (total, round) => `${total} Puzzles — Durchgang ${round}/3`,
     createdOn: (date) => `Erstellt am ${date}`,
@@ -512,8 +510,7 @@ export const de: Translations = {
       'Wir haben unsere Nutzungsbedingungen und Datenschutzerklärung aktualisiert',
     updatedIntro: 'Das ändert sich:',
     changes: [
-      'Wir messen mit Sentry die Ladezeiten der Seiten und der Anfragen an den Server, um Langsames zu finden: ohne E-Mail-Adresse, Namen oder IP-Adresse, nach 30 Tagen gelöscht.',
-      'Der Verantwortliche kann die Daten deines Kontos für Support und Betrieb des Dienstes schreibgeschützt einsehen, in einem Bereich, auf den nur er Zugriff hat.',
+      "Neu ist das Eröffnungstraining: Wir speichern die Repertoires, die du erstellst oder importierst, deine Kommentare zu Zügen, deine Antworten, Fortschritte und Zyklen. Sie sind im Datenexport enthalten und werden mit dem Konto gelöscht.",
     ],
     continuing:
       'Wenn du Chess Hammer weiter nutzt, akzeptierst du die aktualisierten Texte.',

@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { adminTranslations } from '@/lib/i18n/admin'
+import { openingsTranslations } from '@/lib/i18n/openings'
 import { it as itTranslations } from '@/lib/i18n/translations'
 import { AppShell } from './app-shell'
 
@@ -34,12 +35,12 @@ describe('AppShell mobile menu', () => {
     expect(links).toEqual([
       itTranslations.nav.dashboard,
       itTranslations.nav.train,
-      itTranslations.nav.history,
+      openingsTranslations.it.navLabel,
       itTranslations.nav.stats,
       itTranslations.nav.faq,
     ])
 
-    fireEvent.click(within(menu).getByRole('link', { name: itTranslations.nav.history }))
+    fireEvent.click(within(menu).getByRole('link', { name: itTranslations.nav.stats }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

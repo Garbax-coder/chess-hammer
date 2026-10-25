@@ -32,7 +32,6 @@ export interface Translations {
   nav: {
     dashboard: string
     train: string
-    history: string
     stats: string
     faq: string
     menu: string
@@ -193,7 +192,6 @@ export interface Translations {
     openTheme: (theme: string) => string
   }
   sessionsHistory: {
-    title: string
     empty: string
     puzzlesRound: (total: number, round: number) => string
     createdOn: (date: string) => string
@@ -472,8 +470,7 @@ export const it: Translations = {
   },
   nav: {
     dashboard: 'Dashboard',
-    train: 'Allenamento',
-    history: 'Storico',
+    train: 'Tattica',
     stats: 'Statistiche',
     faq: 'FAQ',
     menu: 'Menu',
@@ -538,7 +535,7 @@ export const it: Translations = {
     roundSummary: (round, perDay, days) =>
       `${round}° giro: ${perDay}/giorno (~${days} giorni)`,
     restingNote: (date) => `⏸ In pausa fino al ${date}`,
-    continueTraining: 'Continua allenamento',
+    continueTraining: 'Continua con la tattica',
     noActiveSessionTitle: 'Nessuna sessione attiva',
     noActiveSessionDescription: 'Configura un nuovo allenamento per iniziare.',
     createSession: 'Crea nuova sessione',
@@ -711,7 +708,7 @@ export const it: Translations = {
     themesNote: (min) => `Solo le categorie con almeno ${min} tentativi.`,
     themesEmpty: (min) =>
       `Servono almeno ${min} tentativi per categoria: continua ad allenarti.`,
-    tabs: { training: 'Allenamento', practice: 'Pratica libera' },
+    tabs: { training: 'Tattica', practice: 'Pratica libera' },
     practiceSubtitle:
       'I puzzle rigiocati in pratica libera, divisi per la sessione da cui li hai aperti.',
     practiceEmpty: 'Ancora nessun puzzle in pratica libera.',
@@ -730,7 +727,6 @@ export const it: Translations = {
     openTheme: (theme) => `Ripassa in pratica libera i puzzle di ${theme}`,
   },
   sessionsHistory: {
-    title: 'Storico sessioni',
     empty: 'Nessuna sessione ancora creata.',
     puzzlesRound: (total, round) => `${total} puzzle — giro ${round}/3`,
     createdOn: (date) => `Creata il ${date}`,
@@ -958,8 +954,7 @@ export const it: Translations = {
     updatedTitle: "Abbiamo aggiornato Termini e Privacy",
     updatedIntro: "Ecco cosa cambia:",
     changes: [
-      'Misuriamo con Sentry i tempi di caricamento delle pagine e delle richieste al server, per trovare cosa è lento: senza email, nome né indirizzo IP, cancellati dopo 30 giorni.',
-      "Il titolare può consultare in sola lettura i dati del tuo account, da un'area riservata solo a lui, per l'assistenza e la gestione del Servizio.",
+      "Abbiamo aggiunto l'allenamento sulle aperture: salviamo i repertori che crei o importi, i tuoi commenti sulle mosse, le risposte, i progressi e i cicli. Sono inclusi nell'esportazione dei dati e cancellati con l'account.",
     ],
     continuing: "Continuando a usare Chess Hammer accetti i testi aggiornati.",
     acknowledge: "Ho capito",
@@ -1085,8 +1080,7 @@ export const en: Translations = {
   },
   nav: {
     dashboard: 'Dashboard',
-    train: 'Training',
-    history: 'History',
+    train: 'Tactics',
     stats: 'Statistics',
     faq: 'FAQ',
     menu: 'Menu',
@@ -1151,7 +1145,7 @@ export const en: Translations = {
     roundSummary: (round, perDay, days) =>
       `Round ${round}: ${perDay}/day (~${days} days)`,
     restingNote: (date) => `⏸ Resting until ${date}`,
-    continueTraining: 'Continue training',
+    continueTraining: 'Continue tactics',
     noActiveSessionTitle: 'No active session',
     noActiveSessionDescription: 'Set up a new training to get started.',
     createSession: 'Create new session',
@@ -1323,7 +1317,7 @@ export const en: Translations = {
     themeLine: (rate, attempts) => `${rate}% · ${attempts} attempts`,
     themesNote: (min) => `Only categories with at least ${min} attempts.`,
     themesEmpty: (min) => `Each category needs at least ${min} attempts: keep training.`,
-    tabs: { training: 'Training', practice: 'Free practice' },
+    tabs: { training: 'Tactics', practice: 'Free practice' },
     practiceSubtitle:
       'Puzzles replayed in free practice, split by the session you opened them from.',
     practiceEmpty: 'No free practice puzzles yet.',
@@ -1342,7 +1336,6 @@ export const en: Translations = {
     openTheme: (theme) => `Review the ${theme} puzzles in free practice`,
   },
   sessionsHistory: {
-    title: 'Session history',
     empty: 'No session created yet.',
     puzzlesRound: (total, round) => `${total} puzzles — round ${round}/3`,
     createdOn: (date) => `Created on ${date}`,
@@ -1570,8 +1563,7 @@ export const en: Translations = {
     updatedTitle: "We've updated our Terms and Privacy Policy",
     updatedIntro: "Here's what changed:",
     changes: [
-      'We use Sentry to measure how long pages and server requests take to load, to find what is slow: without email, name or IP address, deleted after 30 days.',
-      'The controller can view your account data in read-only mode, from an area only they can access, for support and to run the Service.',
+      "We added opening training: we store the repertoires you create or import, your comments on moves, your answers, progress and cycles. They are included in the data export and deleted with your account.",
     ],
     continuing: "By continuing to use Chess Hammer you accept the updated texts.",
     acknowledge: "Got it",

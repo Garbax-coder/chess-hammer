@@ -11,7 +11,7 @@ export default function PrivacyEs() {
   return (
     <>
       <p>
-        Última actualización: 24 de octubre de 2026. Esta política describe qué datos
+        Última actualización: 25 de octubre de 2026. Esta política describe qué datos
         personales recoge {SITE_DOMAIN} («Chess Hammer», «el Servicio»), con qué fines y
         qué derechos tienes sobre ellos, según el Reglamento (UE) 2016/679 (RGPD).
       </p>
@@ -37,6 +37,13 @@ export default function PrivacyEs() {
           <b>Datos de entrenamiento:</b> los puzzles que se te proponen, tus intentos
           (resuelto/fallado, tiempo empleado), tu puntuación ELO y las sesiones de
           entrenamiento que creas.
+        </li>
+        <li>
+          <b>Datos de aperturas:</b> los repertorios que creas, importas o copias (nombre,
+          jugadas, comentarios), tus comentarios y flechas personales sobre las jugadas,
+          tus respuestas en el entrenamiento (acierto/fallo, tiempo empleado), tus
+          progresos y los ciclos completados, y los repertorios que quitas de tu
+          biblioteca.
         </li>
         <li>
           <b>Preferencias:</b> idioma, tema claro/oscuro, estilo de la app, estilo del
@@ -177,6 +184,10 @@ export default function PrivacyEs() {
         <li>
           idioma, tema, sonidos, estilo del tablero, juego de piezas, ajustes del motor de
           análisis;
+        </li>
+        <li>
+          las preferencias de aperturas (nombres de variantes y comentarios visibles,
+          avance rápido, Stockfish en Consultar);
         </li>
         <li>
           una copia de la lista de puzzles de la sesión en curso, para no descargarla

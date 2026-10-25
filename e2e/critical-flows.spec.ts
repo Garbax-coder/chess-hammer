@@ -1,13 +1,16 @@
 import { readFileSync } from 'node:fs'
 import { expect, test, type Page } from '@playwright/test'
 import { Chess } from 'chess.js'
+import { openingsTranslations } from '../src/lib/i18n/openings-text'
 import { it as t } from '../src/lib/i18n/translations'
 import { E2E_EMAIL_PREFIX, readEnv } from './dev-env'
 
 // I flussi principali, nell'ordine in cui li vive un utente: registrazione,
-// allenamento, preferenze, esportazione dei dati, eliminazione dell'account.
+// allenamento sulla tattica e sulle aperture, preferenze, esportazione dei
+// dati, eliminazione dell'account.
 test.describe.configure({ mode: 'serial' })
 
+const o = openingsTranslations.it
 const email = `${E2E_EMAIL_PREFIX}${Date.now()}@gmail.com`
 const password = `E2e-${Math.random().toString(36).slice(2, 12)}`
 let page: Page
@@ -121,6 +124,44 @@ test('save the puzzle on the board to the problem puzzles', async () => {
   ).toBeVisible()
 })
 
+test('learn an opening line', async () => {
+  await page.goto('/openings/italian-game/learn')
+  await expect(page.locator('[data-square]')).toHaveCount(64)
+  // Le mosse dell'utente con "Gioca la mossa", l'avversario risponde da solo.
+  const learned = page.getByText(o.lineLearned)
+  const playForMe = page.getByRole('button', { name: o.playForMe })
+  for (let i = 0; i < 30 && !(await learned.isVisible()); i++) {
+    if (await playForMe.isVisible()) await playForMe.click()
+    await page.waitForTimeout(700)
+  }
+  await expect(learned).toBeVisible()
+
+  // Sulla dashboard, la card delle aperture.
+  await page.goto('/dashboard')
+  await expect(page.getByText(o.dashboardTitle, { exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: o.dashboardOpen })).toBeVisible()
+})
+
+test('build a repertoire from scratch', async () => {
+  await page.goto('/openings/new')
+  await page.getByLabel(o.nameLabel).fill('Repertorio e2e')
+  await page.getByRole('button', { name: o.scratchCreate }).click()
+  await expect(page).toHaveURL(/\/lines\?edit=1$/)
+  await expect(page.locator('[data-square]')).toHaveCount(64)
+
+  // 1.e4 con due clic, poi la risposta dell'avversario.
+  for (const [from, to] of [
+    ['e2', 'e4'],
+    ['e7', 'e5'],
+  ]) {
+    await page.locator(`[data-square="${from}"]`).click()
+    await page.locator(`[data-square="${to}"]`).click()
+    await expect(page.getByRole('button', { name: o.deleteMove })).toBeVisible()
+  }
+  await expect(page.getByRole('button', { name: '1.e4 e5', exact: true })).toBeVisible()
+  await expect(page.getByText(o.endsWithOpponent)).toBeVisible()
+})
+
 test('change the language from the profile', async () => {
   await page.goto('/profile')
   await page.getByRole('button', { name: 'English' }).click()
@@ -139,6 +180,15 @@ test('download your data as JSON', async () => {
   expect(data.puzzleAttempts).toHaveLength(1)
   expect(data.sessions).toHaveLength(1)
   expect(data.savedPuzzles).toHaveLength(1)
+  // Le aperture: il repertorio creato da zero con le sue mosse, i progressi
+  // della linea studiata.
+  expect(data.openingRepertoires).toEqual([
+    expect.objectContaining({ name: 'Repertorio e2e', color: 'w' }),
+  ])
+  expect(data.openingMoves.map((m: { san: string }) => m.san)).toEqual(['e4', 'e5'])
+  expect(data.openingProgress.length).toBeGreaterThan(0)
+  expect(data.openingProgress[0].repertoire_slug).toBe('italian-game')
+  expect(data.openingAttempts).toEqual([])
 })
 
 test('regular users cannot reach the admin area or its data', async () => {

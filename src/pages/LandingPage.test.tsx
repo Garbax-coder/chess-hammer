@@ -33,6 +33,13 @@ describe('LandingPage', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: marketingCopy.it.landing.title }),
     ).toBeInTheDocument()
+    // La tattica e, accanto, le aperture.
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: marketingCopy.it.landing.openings.title,
+      }),
+    ).toBeInTheDocument()
   })
 
   it('sends signed-in users straight to the dashboard, in every language', () => {

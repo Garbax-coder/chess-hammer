@@ -11,7 +11,7 @@ export default function PrivacyDe() {
   return (
     <>
       <p>
-        Zuletzt aktualisiert: 24. Oktober 2026. Diese Datenschutzerklärung beschreibt,
+        Zuletzt aktualisiert: 25. Oktober 2026. Diese Datenschutzerklärung beschreibt,
         welche personenbezogenen Daten {SITE_DOMAIN} („Chess Hammer“, „der Dienst“)
         erhebt, zu welchen Zwecken und welche Rechte du daran hast, gemäß der Verordnung
         (EU) 2016/679 (DSGVO).
@@ -39,6 +39,13 @@ export default function PrivacyDe() {
           <b>Trainingsdaten:</b> die Puzzles, die dir angezeigt werden, deine Versuche
           (gelöst/verfehlt, benötigte Zeit), deine ELO-Wertung und die Trainingssessions,
           die du anlegst.
+        </li>
+        <li>
+          <b>Eröffnungsdaten:</b> die Repertoires, die du erstellst, importierst oder
+          kopierst (Name, Züge, Kommentare), deine persönlichen Kommentare und Pfeile zu
+          Zügen, deine Antworten im Training (richtig/falsch, benötigte Zeit), dein
+          Fortschritt und abgeschlossene Zyklen sowie die Repertoires, die du aus deiner
+          Bibliothek entfernst.
         </li>
         <li>
           <b>Einstellungen:</b> Sprache, helles/dunkles Design, App-Stil, Brettstil und
@@ -177,6 +184,10 @@ export default function PrivacyDe() {
         </li>
         <li>
           Sprache, Design, Töne, Brettstil, Figurensatz, Einstellungen der Analyse-Engine;
+        </li>
+        <li>
+          Eröffnungs-Einstellungen (angezeigte Variantennamen und Kommentare, schnelles
+          Vorspulen, Stockfish unter Ansehen);
         </li>
         <li>
           eine Kopie der Puzzleliste der laufenden Session, damit sie nicht bei jedem

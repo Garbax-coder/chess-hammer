@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { AdminRoute } from '@/components/admin/admin-route'
 import { ProtectedRoute } from '@/components/protected-route'
 import { ScrollToTopOnNavigate } from '@/components/scroll-to-top'
@@ -19,7 +19,6 @@ const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'))
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
 const NewSessionPage = lazy(() => import('@/pages/NewSessionPage'))
 const TrainPage = lazy(() => import('@/pages/TrainPage'))
-const SessionsHistoryPage = lazy(() => import('@/pages/SessionsHistoryPage'))
 const SessionDetailPage = lazy(() => import('@/pages/SessionDetailPage'))
 const SessionSummaryPage = lazy(() => import('@/pages/SessionSummaryPage'))
 const RoundSummaryPage = lazy(() => import('@/pages/RoundSummaryPage'))
@@ -27,6 +26,14 @@ const DailySessionSummaryPage = lazy(() => import('@/pages/DailySessionSummaryPa
 const FaqPage = lazy(() => import('@/pages/FaqPage'))
 const StatsPage = lazy(() => import('@/pages/StatsPage'))
 const ThemePracticePage = lazy(() => import('@/pages/ThemePracticePage'))
+const OpeningsPage = lazy(() => import('@/pages/OpeningsPage'))
+const OpeningDrillPage = lazy(() => import('@/pages/OpeningDrillPage'))
+const OpeningLinesPage = lazy(() => import('@/pages/OpeningLinesPage'))
+const OpeningLearnPage = lazy(() => import('@/pages/OpeningLearnPage'))
+const OpeningCyclesPage = lazy(() => import('@/pages/OpeningCyclesPage'))
+const OpeningImportPage = lazy(() => import('@/pages/OpeningImportPage'))
+const OpeningEcoPage = lazy(() => import('@/pages/OpeningEcoPage'))
+const OpeningNewPage = lazy(() => import('@/pages/OpeningNewPage'))
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
 const TermsPage = lazy(() => import('@/pages/TermsPage'))
 const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'))
@@ -82,14 +89,8 @@ function App() {
             </Protected>
           }
         />
-        <Route
-          path="/sessions"
-          element={
-            <Protected>
-              <SessionsHistoryPage />
-            </Protected>
-          }
-        />
+        {/* Lo storico delle sessioni e' nella dashboard: i vecchi link ci portano. */}
+        <Route path="/sessions" element={<Navigate to="/dashboard" replace />} />
         <Route
           path="/sessions/:id"
           element={
@@ -135,6 +136,70 @@ function App() {
           element={
             <Protected>
               <ThemePracticePage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/openings"
+          element={
+            <Protected>
+              <OpeningsPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/openings/import"
+          element={
+            <Protected>
+              <OpeningImportPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/openings/eco"
+          element={
+            <Protected>
+              <OpeningEcoPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/openings/new"
+          element={
+            <Protected>
+              <OpeningNewPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/openings/:slug"
+          element={
+            <Protected>
+              <OpeningDrillPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/openings/:slug/lines"
+          element={
+            <Protected>
+              <OpeningLinesPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/openings/:slug/learn"
+          element={
+            <Protected>
+              <OpeningLearnPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/openings/:slug/cycles"
+          element={
+            <Protected>
+              <OpeningCyclesPage />
             </Protected>
           }
         />

@@ -1,4 +1,5 @@
 import { sinceIsoFor, type EloRange } from '@/lib/elo-history'
+import type { MoveArrow } from '@/lib/opening-arrows'
 import { supabase } from '@/lib/supabase'
 
 export type ExportFormat = 'json' | 'xlsx'
@@ -13,6 +14,14 @@ export interface UserExportData {
   puzzleAttempts: Row[]
   practiceAttempts: Row[]
   savedPuzzles: Row[]
+  openingRepertoires: Row[]
+  openingMoves: Row[]
+  openingProgress: Row[]
+  openingAttempts: Row[]
+  openingCycles: Row[]
+  openingNotes: Row[]
+  openingArrows: Row[]
+  hiddenOpeningRepertoires: Row[]
 }
 
 // PostgREST restituisce al massimo 1000 righe per richiesta: un utente con
@@ -61,6 +70,150 @@ interface RawPracticeAttempt {
   lichess_puzzles: { rating: number; themes: string[] } | null
 }
 
+// Una mossa di un repertorio, per riconoscerla nell'export: repertorio e
+// mosse dalla posizione iniziale (percorso in UCI, es. "e2e4.e7e5").
+interface RawNodeRef {
+  path: string
+  ply: number
+  san: string
+  opening_repertoires: { slug: string; name: string } | null
+}
+
+function nodeColumns(node: RawNodeRef | null) {
+  return {
+    repertoire_slug: node?.opening_repertoires?.slug ?? null,
+    repertoire_name: node?.opening_repertoires?.name ?? null,
+    path: node?.path ?? null,
+    ply: node?.ply ?? null,
+    san: node?.san ?? null,
+  }
+}
+
+const NODE_REF = 'path, ply, san, opening_repertoires(slug, name)'
+
+type Page<T> = PromiseLike<{ data: T[] | null; error: { message: string } | null }>
+
+// I dati delle aperture: i repertori personali con le loro mosse, i
+// progressi e i tentativi su ogni mossa (anche dei repertori del catalogo),
+// i cicli, i commenti personali e i repertori del catalogo tolti dalla
+// libreria. Il periodo scelto vale solo per i tentativi.
+async function fetchOpeningExportData(userId: string, since: string | null) {
+  const [repertoires, moves, progress, attempts, cycles, notes, hidden, arrows] =
+    await Promise.all([
+      fetchAllPages<Row>((from, to) =>
+        supabase
+          .from('opening_repertoires')
+          .select('id, slug, name, eco, color, source, created_at')
+          .eq('owner_id', userId)
+          .order('created_at', { ascending: true })
+          .range(from, to),
+      ),
+      fetchAllPages<Row & { opening_repertoires: unknown }>(
+        (from, to) =>
+          supabase
+            .from('opening_nodes')
+            .select(
+              'repertoire_id, path, ply, san, uci, is_main, is_mistake, comment, opening_repertoires!inner(owner_id)',
+            )
+            .eq('opening_repertoires.owner_id', userId)
+            .order('repertoire_id')
+            .order('ply')
+            .order('id')
+            .range(from, to) as unknown as Page<Row & { opening_repertoires: unknown }>,
+      ),
+      fetchAllPages<Row & { opening_nodes: RawNodeRef | null }>(
+        (from, to) =>
+          supabase
+            .from('opening_node_progress')
+            .select(
+              `attempts, first_try_correct, streak, last_seen_at, due_at, opening_nodes(${NODE_REF})`,
+            )
+            .order('node_id')
+            .range(from, to) as unknown as Page<Row & { opening_nodes: RawNodeRef | null }>,
+      ),
+      fetchAllPages<Row & { node: RawNodeRef | null }>((from, to) => {
+        let query = supabase
+          .from('opening_attempts')
+          .select(`created_at, played_uci, result, ms, node:opening_nodes!node_id(${NODE_REF})`)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: true })
+        if (since) query = query.gte('created_at', since)
+        return query.range(from, to) as unknown as Page<Row & { node: RawNodeRef | null }>
+      }),
+      fetchAllPages<Row & { opening_repertoires: { slug: string; name: string } | null }>(
+        (from, to) =>
+          supabase
+            .from('opening_cycles')
+            .select(
+              'cycle, lines, moves, correct, total_ms, started_at, completed_at, opening_repertoires(slug, name)',
+            )
+            .order('completed_at', { ascending: true })
+            .range(from, to) as unknown as Page<
+            Row & { opening_repertoires: { slug: string; name: string } | null }
+          >,
+      ),
+      fetchAllPages<Row & { opening_nodes: RawNodeRef | null }>(
+        (from, to) =>
+          supabase
+            .from('opening_node_notes')
+            .select(`note, updated_at, opening_nodes(${NODE_REF})`)
+            .order('updated_at', { ascending: true })
+            .range(from, to) as unknown as Page<Row & { opening_nodes: RawNodeRef | null }>,
+      ),
+      fetchAllPages<Row & { opening_repertoires: { slug: string; name: string } | null }>(
+        (from, to) =>
+          supabase
+            .from('opening_hidden_repertoires')
+            .select('hidden_at, opening_repertoires(slug, name)')
+            .order('hidden_at', { ascending: true })
+            .range(from, to) as unknown as Page<
+            Row & { opening_repertoires: { slug: string; name: string } | null }
+          >,
+      ),
+      fetchAllPages<Row & { opening_nodes: RawNodeRef | null }>(
+        (from, to) =>
+          supabase
+            .from('opening_node_arrows')
+            .select(`arrows, updated_at, opening_nodes(${NODE_REF})`)
+            .order('updated_at', { ascending: true })
+            .range(from, to) as unknown as Page<Row & { opening_nodes: RawNodeRef | null }>,
+      ),
+    ])
+
+  const repertoire = (r: { slug: string; name: string } | null) => ({
+    repertoire_slug: r?.slug ?? null,
+    repertoire_name: r?.name ?? null,
+  })
+  return {
+    openingRepertoires: repertoires,
+    openingMoves: moves.map(({ opening_repertoires: _owner, ...move }) => move),
+    openingProgress: progress.map(({ opening_nodes, ...row }) => ({
+      ...nodeColumns(opening_nodes),
+      ...row,
+    })),
+    openingAttempts: attempts.map(({ node, ...row }) => ({ ...nodeColumns(node), ...row })),
+    openingCycles: cycles.map(({ opening_repertoires, ...row }) => ({
+      ...repertoire(opening_repertoires),
+      ...row,
+    })),
+    openingNotes: notes.map(({ opening_nodes, ...row }) => ({
+      ...nodeColumns(opening_nodes),
+      ...row,
+    })),
+    // Le frecce come nei PGN di Lichess (es. "Ge2e4,Rd1h5"): una cella
+    // dell'Excel non contiene oggetti.
+    openingArrows: arrows.map(({ opening_nodes, arrows: list, ...row }) => ({
+      ...nodeColumns(opening_nodes),
+      arrows: (list as MoveArrow[]).map((a) => `${a.color}${a.from}${a.to}`).join(','),
+      ...row,
+    })),
+    hiddenOpeningRepertoires: hidden.map(({ opening_repertoires, ...row }) => ({
+      ...repertoire(opening_repertoires),
+      ...row,
+    })),
+  }
+}
+
 // RLS su tutte queste tabelle restringe gia' alle sole righe dell'utente
 // corrente (stesso schema di fetchEloHistory in elo-history.ts): il filtro
 // esplicito su user_id serve solo dove le query esistenti lo fanno gia'
@@ -71,6 +224,7 @@ export async function fetchUserExportData(
 ): Promise<UserExportData> {
   const since = sinceIsoFor(range)
 
+  const openingsPromise = fetchOpeningExportData(userId, since)
   const [statsResult, sessions, puzzleAttempts, practiceAttempts, savedPuzzles] = await Promise.all([
     supabase.from('user_stats').select('*').eq('user_id', userId).maybeSingle(),
     fetchAllPages<Row>((from, to) =>
@@ -119,6 +273,7 @@ export async function fetchUserExportData(
     ),
   ])
   if (statsResult.error) throw new Error(statsResult.error.message)
+  const openings = await openingsPromise
 
   return {
     exportedAt: new Date().toISOString(),
@@ -150,6 +305,7 @@ export async function fetchUserExportData(
       time_seconds: a.time_seconds,
     })),
     savedPuzzles,
+    ...openings,
   }
 }
 
@@ -202,6 +358,14 @@ export async function downloadUserData(
     ['puzzle_attempts', data.puzzleAttempts],
     ['practice_attempts', data.practiceAttempts],
     ['saved_puzzles', data.savedPuzzles],
+    ['opening_repertoires', data.openingRepertoires],
+    ['opening_moves', data.openingMoves],
+    ['opening_progress', data.openingProgress],
+    ['opening_attempts', data.openingAttempts],
+    ['opening_cycles', data.openingCycles],
+    ['opening_notes', data.openingNotes],
+    ['opening_arrows', data.openingArrows],
+    ['opening_hidden', data.hiddenOpeningRepertoires],
   ]
   for (const [name, rows] of sheets) {
     XLSX.utils.book_append_sheet(

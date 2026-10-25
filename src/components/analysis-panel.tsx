@@ -26,6 +26,8 @@ interface AnalysisPanelProps {
   analyzing: boolean
   settings: EngineSettings
   onUpdateSettings: (patch: Partial<EngineSettings>) => void
+  /** Sostituisce la larghezza predefinita (w-full lg:w-72). */
+  className?: string
 }
 
 export function AnalysisPanel({
@@ -34,13 +36,14 @@ export function AnalysisPanel({
   analyzing,
   settings,
   onUpdateSettings,
+  className = 'w-full lg:w-72',
 }: AnalysisPanelProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const sideToMove = fen.split(' ')[1] === 'b' ? 'b' : 'w'
   const t = useTranslations()
 
   return (
-    <Card className="w-full lg:w-72">
+    <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between gap-2 py-3">
         <CardTitle className="text-sm">{t.analysisPanel.title}</CardTitle>
         <Button

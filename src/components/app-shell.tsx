@@ -1,6 +1,6 @@
 import { Menu, Moon, Sun, User as UserIcon } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { AppLogo } from '@/components/app-logo'
 import { SiteFooter } from '@/components/site-footer'
 import { Button } from '@/components/ui/button'
@@ -16,13 +16,17 @@ import { useTheme } from '@/hooks/use-theme'
 import { isAdminUser } from '@/lib/admin'
 import { useAuth } from '@/lib/auth-context'
 import { useAdminTranslations } from '@/lib/i18n/admin'
+import { useOpeningsTranslations } from '@/lib/i18n/openings'
 import { useLanguage } from '@/lib/language-context'
+import { isOpeningBoardPath } from '@/lib/opening-routes'
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { theme, toggleTheme } = useTheme()
   const { t } = useLanguage()
   const { user } = useAuth()
   const adminT = useAdminTranslations()
+  const openingsT = useOpeningsTranslations()
+  const { pathname } = useLocation()
   const appStyle = useAppStyle()
   // Il menu mobile va chiuso a mano al click su una voce, altrimenti resta
   // aperto sopra la pagina di destinazione.
@@ -41,7 +45,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link to="/train">{t.nav.train}</Link>
       </Button>
       <Button asChild variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
-        <Link to="/sessions">{t.nav.history}</Link>
+        <Link to="/openings">{openingsT.navLabel}</Link>
       </Button>
       <Button asChild variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
         <Link to="/stats">{t.nav.stats}</Link>
@@ -126,7 +130,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <div className="flex flex-1 flex-col">{children}</div>
-      <SiteFooter />
+      <SiteFooter className={isOpeningBoardPath(pathname) ? 'lg:hidden' : undefined} />
     </div>
   )
 }
