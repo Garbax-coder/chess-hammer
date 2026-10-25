@@ -21,7 +21,8 @@ const STATES: MoveState[] = ['new', 'learning', 'due', 'mastered']
 /**
  * L'albero delle varianti di un repertorio: una catena di mosse senza
  * alternative sta su una riga, e ogni diramazione apre rami annidati, che si
- * possono comprimere. Un clic su una mossa la seleziona.
+ * possono comprimere uno per uno o tutti insieme. Un clic su una mossa la
+ * seleziona.
  */
 export function OpeningTreeView({
   tree,
@@ -47,6 +48,7 @@ export function OpeningTreeView({
   /** Tasto destro (o tocco lungo) su una mossa: per commentarla. */
   onMoveContextMenu?: (node: OpeningNode) => void
 }) {
+  const o = useOpeningsTranslations()
   const [collapsed, setCollapsed] = useState<ReadonlySet<number>>(new Set())
   const roots = tree.children.get(null) ?? []
 
@@ -57,6 +59,20 @@ export function OpeningTreeView({
       else next.add(nodeId)
       return next
     })
+  }
+
+  // Le mosse dove l'albero si dirama: quelle che si comprimono.
+  const branchPoints = [...tree.children]
+    .filter(([parentId, children]) => parentId !== null && children.length > 1)
+    .map(([parentId]) => parentId as number)
+
+  // Comprimendo tutto resta aperto il percorso fino alla mossa selezionata.
+  function collapseAll() {
+    const open = new Set<number>()
+    for (let id = selectedId; id !== null; id = tree.byId.get(id)?.parent_id ?? null) {
+      open.add(id)
+    }
+    setCollapsed(new Set(branchPoints.filter((id) => !open.has(id))))
   }
 
   const props = {
@@ -72,10 +88,34 @@ export function OpeningTreeView({
     collapsed,
     toggle,
   }
-  return roots.length === 1 ? (
-    <Line start={roots[0]} {...props} />
-  ) : (
-    <Branches nodes={roots} {...props} />
+  const view =
+    roots.length === 1 ? (
+      <Line start={roots[0]} {...props} />
+    ) : (
+      <Branches nodes={roots} {...props} />
+    )
+  if (branchPoints.length === 0) return view
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex gap-3 text-xs">
+        <button
+          type="button"
+          onClick={() => setCollapsed(new Set())}
+          disabled={collapsed.size === 0}
+          className="text-primary disabled:text-muted-foreground underline-offset-4 hover:underline disabled:no-underline"
+        >
+          {o.expandAll}
+        </button>
+        <button
+          type="button"
+          onClick={collapseAll}
+          className="text-primary underline-offset-4 hover:underline"
+        >
+          {o.collapseAll}
+        </button>
+      </div>
+      {view}
+    </div>
   )
 }
 

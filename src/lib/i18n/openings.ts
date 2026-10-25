@@ -38,6 +38,8 @@ export interface OpeningsTranslations {
   legend: { new: string; learning: string; due: string; mastered: string }
   collapse: string
   expand: string
+  expandAll: string
+  collapseAll: string
   opponentMove: string
   neverPlayed: string
   moveStats: (attempts: number, firstTryPercent: number) => string
@@ -194,6 +196,8 @@ const it: OpeningsTranslations = {
   },
   collapse: 'Comprimi il ramo',
   expand: 'Espandi il ramo',
+  expandAll: 'Espandi tutto',
+  collapseAll: 'Comprimi tutto',
   opponentMove: 'Mossa dell’avversario',
   neverPlayed: 'Non ancora allenata',
   moveStats: (attempts, pct) =>
@@ -371,6 +375,8 @@ const en: OpeningsTranslations = {
   legend: { new: 'New', learning: 'Learning', due: 'Due', mastered: 'Mastered' },
   collapse: 'Collapse branch',
   expand: 'Expand branch',
+  expandAll: 'Expand all',
+  collapseAll: 'Collapse all',
   opponentMove: 'Opponent move',
   neverPlayed: 'Not trained yet',
   moveStats: (attempts, pct) =>
@@ -543,6 +549,8 @@ const fr: OpeningsTranslations = {
   legend: { new: 'Nouveau', learning: 'En cours', due: 'À revoir', mastered: 'Maîtrisé' },
   collapse: 'Replier la branche',
   expand: 'Déplier la branche',
+  expandAll: 'Tout déplier',
+  collapseAll: 'Tout replier',
   opponentMove: 'Coup de l’adversaire',
   neverPlayed: 'Pas encore entraîné',
   moveStats: (attempts, pct) =>
@@ -725,6 +733,8 @@ const es: OpeningsTranslations = {
   },
   collapse: 'Contraer la rama',
   expand: 'Expandir la rama',
+  expandAll: 'Expandir todo',
+  collapseAll: 'Contraer todo',
   opponentMove: 'Jugada del rival',
   neverPlayed: 'Aún sin entrenar',
   moveStats: (attempts, pct) =>
@@ -902,6 +912,8 @@ const de: OpeningsTranslations = {
   legend: { new: 'Neu', learning: 'Im Lernen', due: 'Fällig', mastered: 'Gefestigt' },
   collapse: 'Zweig einklappen',
   expand: 'Zweig ausklappen',
+  expandAll: 'Alle ausklappen',
+  collapseAll: 'Alle einklappen',
   opponentMove: 'Zug des Gegners',
   neverPlayed: 'Noch nicht trainiert',
   moveStats: (attempts, pct) =>
