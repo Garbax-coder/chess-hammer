@@ -28,6 +28,7 @@ const repertoire: RepertoireWithNodes = {
   name: 'Italian Game',
   eco: 'C50',
   color: 'w',
+  owner_id: null,
   nodes: [
     node(1, null, 1, 'e4', 'e2e4'),
     node(2, 1, 2, 'e5', 'e7e5'),

@@ -16,6 +16,7 @@ const repertoire: RepertoireWithNodes = {
   name: 'Italian Game',
   eco: 'C50',
   color: 'w',
+  owner_id: null,
   nodes: [
     { id: 1, parent_id: null, ply: 1, uci: 'e2e4', san: 'e4', epd: 'a', is_main: true },
     { id: 2, parent_id: 1, ply: 2, uci: 'e7e5', san: 'e5', epd: 'b', is_main: true },

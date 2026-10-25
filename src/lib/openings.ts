@@ -1,4 +1,4 @@
-import type { OpeningColor } from '@/lib/opening-catalog'
+import type { CatalogNode, OpeningColor } from '@/lib/opening-catalog'
 import type { OpeningNode, OpeningProgress } from '@/lib/opening-tree'
 import { supabase } from '@/lib/supabase'
 
@@ -12,6 +12,8 @@ export interface OpeningRepertoire {
   name: string
   eco: string | null
   color: OpeningColor
+  /** null per i repertori del catalogo; l'utente per quelli importati. */
+  owner_id: string | null
 }
 
 export interface RepertoireWithNodes extends OpeningRepertoire {
@@ -24,7 +26,7 @@ const NODE_COLUMNS = 'id, parent_id, ply, uci, san, epd, is_main'
 export async function fetchRepertoires(): Promise<RepertoireWithNodes[]> {
   const { data, error } = await supabase
     .from('opening_repertoires')
-    .select(`id, slug, name, eco, color, opening_nodes(${NODE_COLUMNS})`)
+    .select(`id, slug, name, eco, color, owner_id, opening_nodes(${NODE_COLUMNS})`)
     .order('name')
   if (error) throw error
   return (data as (OpeningRepertoire & { opening_nodes: OpeningNode[] })[]).map(
@@ -135,4 +137,33 @@ export async function saveOpeningCycle(params: {
     .single()
   if (error) throw error
   return data
+}
+
+/** Importa un repertorio personale (migrazione 0105); restituisce lo slug. */
+export async function importOpeningRepertoire(params: {
+  name: string
+  color: OpeningColor
+  nodes: CatalogNode[]
+}): Promise<{ id: string; slug: string }> {
+  const { data, error } = await supabase.rpc('import_opening_repertoire', {
+    p_name: params.name,
+    p_color: params.color,
+    p_nodes: params.nodes.map((n) => ({
+      path: n.path,
+      parent_path: n.parentPath,
+      ply: n.ply,
+      uci: n.uci,
+      san: n.san,
+      epd: n.epd,
+      is_main: n.isMain,
+    })),
+  })
+  if (error) throw error
+  return data as { id: string; slug: string }
+}
+
+/** Cancella un repertorio personale, con mosse, progressi e cicli. */
+export async function deleteOpeningRepertoire(id: string): Promise<void> {
+  const { error } = await supabase.from('opening_repertoires').delete().eq('id', id)
+  if (error) throw error
 }

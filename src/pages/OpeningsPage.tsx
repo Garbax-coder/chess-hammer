@@ -1,8 +1,13 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useOpeningProgress, useRepertoires } from '@/hooks/use-openings'
+import {
+  useDeleteRepertoire,
+  useOpeningProgress,
+  useRepertoires,
+} from '@/hooks/use-openings'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
 import { useTranslations } from '@/lib/language-context'
 import { buildOpeningTree, openingCoverage } from '@/lib/opening-tree'
@@ -15,6 +20,9 @@ export default function OpeningsPage() {
   const o = useOpeningsTranslations()
   const { data: repertoires, isLoading } = useRepertoires()
   const { data: progress } = useOpeningProgress()
+  const deleteRepertoire = useDeleteRepertoire()
+  // Il repertorio personale in attesa di conferma per la cancellazione.
+  const [confirming, setConfirming] = useState<string | null>(null)
   const now = new Date()
 
   return (
@@ -25,6 +33,9 @@ export default function OpeningsPage() {
           <Badge variant="outline">{o.draftBadge}</Badge>
         </h1>
         <p className="text-muted-foreground text-sm">{o.subtitle}</p>
+        <Button asChild variant="outline" size="sm" className="mt-2 w-fit">
+          <Link to="/openings/import">{o.importPgn}</Link>
+        </Button>
       </div>
 
       {isLoading || !repertoires ? (
@@ -46,7 +57,12 @@ export default function OpeningsPage() {
               <Card key={repertoire.id}>
                 <CardHeader>
                   <CardTitle className="flex items-baseline justify-between gap-2">
-                    <span>{o.names[repertoire.slug] ?? repertoire.name}</span>
+                    <span className="flex items-baseline gap-2">
+                      {o.names[repertoire.slug] ?? repertoire.name}
+                      {repertoire.owner_id && (
+                        <Badge variant="secondary">{o.personal}</Badge>
+                      )}
+                    </span>
                     {repertoire.eco && (
                       <span className="text-muted-foreground text-xs font-normal">
                         {repertoire.eco}
@@ -93,6 +109,23 @@ export default function OpeningsPage() {
                     <Button asChild variant="outline">
                       <Link to={`/openings/${repertoire.slug}/cycles`}>{o.cycles}</Link>
                     </Button>
+                    {repertoire.owner_id &&
+                      (confirming === repertoire.id ? (
+                        <Button
+                          variant="destructive"
+                          loading={deleteRepertoire.isPending}
+                          onClick={() => deleteRepertoire.mutate(repertoire.id)}
+                        >
+                          {o.confirmDelete}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          onClick={() => setConfirming(repertoire.id)}
+                        >
+                          {o.deleteRepertoire}
+                        </Button>
+                      ))}
                   </div>
                 </CardContent>
               </Card>

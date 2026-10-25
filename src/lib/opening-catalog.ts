@@ -46,6 +46,20 @@ export function colorAtPly(ply: number): OpeningColor {
   return ply % 2 === 1 ? 'w' : 'b'
 }
 
+/** Una mossa illegale in una linea: per mostrarla a chi importa un PGN. */
+export class IllegalMoveError extends Error {
+  readonly line: number
+  readonly ply: number
+  readonly san: string
+
+  constructor(message: string, line: number, ply: number, san: string) {
+    super(message)
+    this.line = line
+    this.ply = ply
+    this.san = san
+  }
+}
+
 export interface BuildReport {
   nodes: CatalogNode[]
   /** Mosse dell'avversario in fondo alle linee, tolte (solo in modo tollerante). */
@@ -78,7 +92,12 @@ export function buildRepertoire(
     throw new Error(`${source.slug}, ${message}`)
   }
 
-  function addLine(sans: string[], label: string, asAlternative: boolean) {
+  function addLine(
+    sans: string[],
+    label: string,
+    lineNumber: number,
+    asAlternative: boolean,
+  ) {
     const chess = new Chess()
     let path: string | null = null
     for (const [index, san] of sans.entries()) {
@@ -86,7 +105,12 @@ export function buildRepertoire(
       try {
         move = chess.move(san)
       } catch {
-        return fail(`${label}: mossa ${index + 1} (${san}) non legale`)
+        throw new IllegalMoveError(
+          `${source.slug}, ${label}: mossa ${index + 1} (${san}) non legale`,
+          lineNumber,
+          index + 1,
+          san,
+        )
       }
       const uci = `${move.from}${move.to}${move.promotion ?? ''}`
       const ply = index + 1
@@ -147,7 +171,7 @@ export function buildRepertoire(
       trimmed++
       sans = sans.slice(0, -1)
     }
-    if (sans.length > 0) addLine(sans, `linea ${lineIndex + 1}`, false)
+    if (sans.length > 0) addLine(sans, `linea ${lineIndex + 1}`, lineIndex + 1, false)
   })
   for (const [index, line] of (source.alternatives ?? []).entries()) {
     const sans = line.trim().split(/\s+/)
@@ -156,7 +180,7 @@ export function buildRepertoire(
         `alternativa ${index + 1}: deve finire con una mossa di chi allena il repertorio`,
       )
     }
-    addLine(sans, `alternativa ${index + 1}`, true)
+    addLine(sans, `alternativa ${index + 1}`, index + 1, true)
   }
 
   return {

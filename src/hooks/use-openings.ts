@@ -2,10 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
 import type { OpeningProgress } from '@/lib/opening-tree'
 import {
+  deleteOpeningRepertoire,
   fetchOpeningCycles,
   fetchOpeningNames,
   fetchOpeningProgress,
   fetchRepertoires,
+  importOpeningRepertoire,
   learnOpeningMove,
   recordOpeningMove,
   saveOpeningCycle,
@@ -103,4 +105,26 @@ export function useSaveOpeningCycle() {
       )
     },
   })
+}
+
+// Dopo un import o una cancellazione cambiano l'elenco dei repertori e i
+// nomi delle loro mosse.
+function useRefreshRepertoires() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['opening-repertoires', user?.id] }),
+      queryClient.invalidateQueries({ queryKey: ['opening-names', user?.id] }),
+    ])
+}
+
+export function useImportRepertoire() {
+  const refresh = useRefreshRepertoires()
+  return useMutation({ mutationFn: importOpeningRepertoire, onSuccess: refresh })
+}
+
+export function useDeleteRepertoire() {
+  const refresh = useRefreshRepertoires()
+  return useMutation({ mutationFn: deleteOpeningRepertoire, onSuccess: refresh })
 }

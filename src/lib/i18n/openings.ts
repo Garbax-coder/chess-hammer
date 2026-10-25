@@ -78,6 +78,27 @@ export interface OpeningsTranslations {
   slower: (delta: string) => string
   noCycles: string
   cycleColumns: { cycle: string; date: string; time: string; accuracy: string }
+  importPgn: string
+  importTitle: string
+  importIntro: string
+  pgnLabel: string
+  pgnPlaceholder: string
+  fileLabel: string
+  nameLabel: string
+  colorLabel: string
+  previewTitle: string
+  previewLines: (lines: number, moves: number) => string
+  previewAlternatives: (n: number) => string
+  previewTrimmed: (n: number) => string
+  previewSkipped: (n: number) => string
+  previewEmpty: string
+  illegalMove: (line: number, move: string) => string
+  previewTooBig: (max: number) => string
+  importButton: string
+  importError: string
+  personal: string
+  deleteRepertoire: string
+  confirmDelete: string
   /** Nomi dei repertori di catalogo, per slug (altrimenti il nome inglese). */
   names: Record<string, string>
 }
@@ -170,6 +191,34 @@ const it: OpeningsTranslations = {
   slower: (delta) => `${delta} più lento del ciclo precedente`,
   noCycles: 'Nessun ciclo completato.',
   cycleColumns: { cycle: 'Ciclo', date: 'Data', time: 'Tempo', accuracy: 'Precisione' },
+  importPgn: 'Importa un PGN',
+  importTitle: 'Importa un repertorio',
+  importIntro:
+    'Incolla un PGN o carica un file .pgn: varianti e capitoli (per esempio di uno studio Lichess) diventano le linee del tuo repertorio.',
+  pgnLabel: 'PGN',
+  pgnPlaceholder: '1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4) 3. Bc4 *',
+  fileLabel: 'Carica un file .pgn',
+  nameLabel: 'Nome',
+  colorLabel: 'Giochi',
+  previewTitle: 'Anteprima',
+  previewLines: (lines, moves) =>
+    `${lines} ${lines === 1 ? 'linea' : 'linee'}, ${moves} mosse`,
+  previewAlternatives: (n) =>
+    `${n} ${n === 1 ? 'mossa tua' : 'mosse tue'} in una posizione dove ne avevi già una: ${n === 1 ? 'tenuta' : 'tenute'} come alternativa accettata, senza seguito`,
+  previewTrimmed: (n) =>
+    `${n} ${n === 1 ? 'linea finiva' : 'linee finivano'} con una mossa dell’avversario: tolta`,
+  previewSkipped: (n) =>
+    `${n} ${n === 1 ? 'partita non parte' : 'partite non partono'} dalla posizione iniziale: ${n === 1 ? 'saltata' : 'saltate'}`,
+  previewEmpty: 'Nessuna mossa trovata.',
+  illegalMove: (line, move) =>
+    `Linea ${line}: ${move} non è una mossa legale. Controlla il PGN.`,
+  previewTooBig: (max) =>
+    `Troppe mosse: un repertorio importato ne ha al massimo ${max}.`,
+  importButton: 'Importa',
+  importError: 'Importazione non riuscita',
+  personal: 'Personale',
+  deleteRepertoire: 'Elimina',
+  confirmDelete: 'Conferma: elimina il repertorio e i suoi progressi',
   names: {
     'italian-game': 'Partita Italiana',
     'queens-gambit': 'Gambetto di Donna',
@@ -259,6 +308,33 @@ const en: OpeningsTranslations = {
   slower: (delta) => `${delta} slower than the previous cycle`,
   noCycles: 'No cycles completed yet.',
   cycleColumns: { cycle: 'Cycle', date: 'Date', time: 'Time', accuracy: 'Accuracy' },
+  importPgn: 'Import a PGN',
+  importTitle: 'Import a repertoire',
+  importIntro:
+    'Paste a PGN or upload a .pgn file: variations and chapters (for instance of a Lichess study) become the lines of your repertoire.',
+  pgnLabel: 'PGN',
+  pgnPlaceholder: '1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4) 3. Bc4 *',
+  fileLabel: 'Upload a .pgn file',
+  nameLabel: 'Name',
+  colorLabel: 'You play',
+  previewTitle: 'Preview',
+  previewLines: (lines, moves) =>
+    `${lines} ${lines === 1 ? 'line' : 'lines'}, ${moves} moves`,
+  previewAlternatives: (n) =>
+    `${n} ${n === 1 ? 'move' : 'moves'} of yours in a position where you already had one: kept as accepted ${n === 1 ? 'alternative' : 'alternatives'}, without continuation`,
+  previewTrimmed: (n) =>
+    `${n} ${n === 1 ? 'line ended' : 'lines ended'} with an opponent move: removed`,
+  previewSkipped: (n) =>
+    `${n} ${n === 1 ? 'game does not start' : 'games do not start'} from the initial position: skipped`,
+  previewEmpty: 'No moves found.',
+  illegalMove: (line, move) =>
+    `Line ${line}: ${move} is not a legal move. Check the PGN.`,
+  previewTooBig: (max) => `Too many moves: an imported repertoire has at most ${max}.`,
+  importButton: 'Import',
+  importError: 'Import failed',
+  personal: 'Personal',
+  deleteRepertoire: 'Delete',
+  confirmDelete: 'Confirm: delete the repertoire and its progress',
   names: {},
 }
 
@@ -346,6 +422,33 @@ const fr: OpeningsTranslations = {
   slower: (delta) => `${delta} plus lent que le cycle précédent`,
   noCycles: 'Aucun cycle terminé.',
   cycleColumns: { cycle: 'Cycle', date: 'Date', time: 'Temps', accuracy: 'Précision' },
+  importPgn: 'Importer un PGN',
+  importTitle: 'Importer un répertoire',
+  importIntro:
+    'Collez un PGN ou chargez un fichier .pgn : variantes et chapitres (par exemple d’une étude Lichess) deviennent les lignes de votre répertoire.',
+  pgnLabel: 'PGN',
+  pgnPlaceholder: '1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4) 3. Bc4 *',
+  fileLabel: 'Charger un fichier .pgn',
+  nameLabel: 'Nom',
+  colorLabel: 'Vous jouez',
+  previewTitle: 'Aperçu',
+  previewLines: (lines, moves) =>
+    `${lines} ${lines === 1 ? 'ligne' : 'lignes'}, ${moves} coups`,
+  previewAlternatives: (n) =>
+    `${n} ${n === 1 ? 'coup' : 'coups'} de votre part dans une position où vous en aviez déjà un : ${n === 1 ? 'gardé' : 'gardés'} comme alternative acceptée, sans suite`,
+  previewTrimmed: (n) =>
+    `${n} ${n === 1 ? 'ligne finissait' : 'lignes finissaient'} par un coup de l’adversaire : retiré`,
+  previewSkipped: (n) =>
+    `${n} ${n === 1 ? 'partie ne part pas' : 'parties ne partent pas'} de la position initiale : ${n === 1 ? 'ignorée' : 'ignorées'}`,
+  previewEmpty: 'Aucun coup trouvé.',
+  illegalMove: (line, move) =>
+    `Ligne ${line} : ${move} n’est pas un coup légal. Vérifiez le PGN.`,
+  previewTooBig: (max) => `Trop de coups : un répertoire importé en a au maximum ${max}.`,
+  importButton: 'Importer',
+  importError: 'Import échoué',
+  personal: 'Personnel',
+  deleteRepertoire: 'Supprimer',
+  confirmDelete: 'Confirmer : supprimer le répertoire et ses progrès',
   names: {
     'italian-game': 'Partie italienne',
     'queens-gambit': 'Gambit dame',
@@ -440,6 +543,34 @@ const es: OpeningsTranslations = {
   slower: (delta) => `${delta} más lento que el ciclo anterior`,
   noCycles: 'Ningún ciclo completado.',
   cycleColumns: { cycle: 'Ciclo', date: 'Fecha', time: 'Tiempo', accuracy: 'Precisión' },
+  importPgn: 'Importar un PGN',
+  importTitle: 'Importar un repertorio',
+  importIntro:
+    'Pega un PGN o sube un archivo .pgn: variantes y capítulos (por ejemplo de un estudio de Lichess) se convierten en las líneas de tu repertorio.',
+  pgnLabel: 'PGN',
+  pgnPlaceholder: '1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4) 3. Bc4 *',
+  fileLabel: 'Subir un archivo .pgn',
+  nameLabel: 'Nombre',
+  colorLabel: 'Juegas',
+  previewTitle: 'Vista previa',
+  previewLines: (lines, moves) =>
+    `${lines} ${lines === 1 ? 'línea' : 'líneas'}, ${moves} jugadas`,
+  previewAlternatives: (n) =>
+    `${n} ${n === 1 ? 'jugada tuya' : 'jugadas tuyas'} en una posición donde ya tenías una: ${n === 1 ? 'guardada' : 'guardadas'} como alternativa aceptada, sin continuación`,
+  previewTrimmed: (n) =>
+    `${n} ${n === 1 ? 'línea terminaba' : 'líneas terminaban'} con una jugada del rival: quitada`,
+  previewSkipped: (n) =>
+    `${n} ${n === 1 ? 'partida no empieza' : 'partidas no empiezan'} desde la posición inicial: ${n === 1 ? 'omitida' : 'omitidas'}`,
+  previewEmpty: 'No se han encontrado jugadas.',
+  illegalMove: (line, move) =>
+    `Línea ${line}: ${move} no es una jugada legal. Revisa el PGN.`,
+  previewTooBig: (max) =>
+    `Demasiadas jugadas: un repertorio importado tiene como máximo ${max}.`,
+  importButton: 'Importar',
+  importError: 'Importación fallida',
+  personal: 'Personal',
+  deleteRepertoire: 'Eliminar',
+  confirmDelete: 'Confirmar: eliminar el repertorio y su progreso',
   names: {
     'italian-game': 'Apertura italiana',
     'queens-gambit': 'Gambito de dama',
@@ -530,6 +661,34 @@ const de: OpeningsTranslations = {
   slower: (delta) => `${delta} langsamer als der vorherige Zyklus`,
   noCycles: 'Noch kein Zyklus abgeschlossen.',
   cycleColumns: { cycle: 'Zyklus', date: 'Datum', time: 'Zeit', accuracy: 'Genauigkeit' },
+  importPgn: 'PGN importieren',
+  importTitle: 'Repertoire importieren',
+  importIntro:
+    'Füge ein PGN ein oder lade eine .pgn-Datei hoch: Varianten und Kapitel (zum Beispiel einer Lichess-Studie) werden zu den Linien deines Repertoires.',
+  pgnLabel: 'PGN',
+  pgnPlaceholder: '1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4) 3. Bc4 *',
+  fileLabel: '.pgn-Datei hochladen',
+  nameLabel: 'Name',
+  colorLabel: 'Du spielst',
+  previewTitle: 'Vorschau',
+  previewLines: (lines, moves) =>
+    `${lines} ${lines === 1 ? 'Linie' : 'Linien'}, ${moves} Züge`,
+  previewAlternatives: (n) =>
+    `${n} ${n === 1 ? 'Zug' : 'Züge'} von dir in einer Stellung, in der du schon einen hattest: als akzeptierte ${n === 1 ? 'Alternative' : 'Alternativen'} behalten, ohne Fortsetzung`,
+  previewTrimmed: (n) =>
+    `${n} ${n === 1 ? 'Linie endete' : 'Linien endeten'} mit einem Zug des Gegners: entfernt`,
+  previewSkipped: (n) =>
+    `${n} ${n === 1 ? 'Partie beginnt' : 'Partien beginnen'} nicht in der Ausgangsstellung: übersprungen`,
+  previewEmpty: 'Keine Züge gefunden.',
+  illegalMove: (line, move) =>
+    `Linie ${line}: ${move} ist kein legaler Zug. Prüfe das PGN.`,
+  previewTooBig: (max) =>
+    `Zu viele Züge: ein importiertes Repertoire hat höchstens ${max}.`,
+  importButton: 'Importieren',
+  importError: 'Import fehlgeschlagen',
+  personal: 'Persönlich',
+  deleteRepertoire: 'Löschen',
+  confirmDelete: 'Bestätigen: Repertoire und Fortschritt löschen',
   names: {
     'italian-game': 'Italienische Partie',
     'queens-gambit': 'Damengambit',

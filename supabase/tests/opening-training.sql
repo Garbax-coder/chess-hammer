@@ -1,4 +1,4 @@
--- Prova delle migrazioni 0100-0104 (allenamento sulle aperture). Da
+-- Prova delle migrazioni 0100-0105 (allenamento sulle aperture). Da
 -- eseguire SOLO sul progetto di sviluppo: tutto avviene in una transazione
 -- annullata alla fine.
 --   psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/opening-training.sql
@@ -25,6 +25,8 @@ select gen_random_uuid() as user_a, gen_random_uuid() as user_b,
          where r.slug = 'italian-game'
            and n.path = 'e2e4.e7e5.g1f3.d7d6.d2d4.e5d4.f3d4.g8f6.b1c3.f8e7.f1e2'::extensions.ltree) as leaf;
 grant select on ids to authenticated;
+create temp table ids_import (repertoire_id uuid);
+grant select, insert on ids_import to authenticated;
 
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password,
                         email_confirmed_at, created_at, updated_at,
@@ -135,6 +137,47 @@ begin
   exception when insufficient_privilege then null;
   end;
 
+  -- Import di un repertorio personale (0105): 1.e4 e5 2.Nf3.
+  r := public.import_opening_repertoire('  Mio repertorio ', 'w', jsonb_build_array(
+    jsonb_build_object('path', 'e2e4', 'parent_path', null, 'ply', 1, 'uci', 'e2e4',
+                       'san', 'e4', 'epd', 'x1', 'is_main', true),
+    jsonb_build_object('path', 'e2e4.e7e5', 'parent_path', 'e2e4', 'ply', 2, 'uci', 'e7e5',
+                       'san', 'e5', 'epd', 'x2', 'is_main', true),
+    jsonb_build_object('path', 'e2e4.e7e5.g1f3', 'parent_path', 'e2e4.e7e5', 'ply', 3,
+                       'uci', 'g1f3', 'san', 'Nf3', 'epd', 'x3')));
+  if (select name from public.opening_repertoires where id = (r ->> 'id')::uuid) <> 'Mio repertorio'
+     or (select count(*) from public.opening_nodes
+          where repertoire_id = (r ->> 'id')::uuid and parent_id is not null) <> 2 then
+    raise exception 'import: repertorio o mosse inattesi %', r;
+  end if;
+  begin
+    perform public.import_opening_repertoire('X', 'w', jsonb_build_array(
+      jsonb_build_object('path', 'e2e4.e7e5', 'parent_path', 'e2e4', 'ply', 2, 'uci', 'e7e5',
+                         'san', 'e5', 'epd', 'x')));
+    raise exception 'import senza la mossa precedente accettato';
+  exception when raise_exception then
+    if sqlerrm not like 'Mosse senza la mossa precedente%' then raise; end if;
+  end;
+  begin
+    perform public.import_opening_repertoire('X', 'r', '[]'::jsonb);
+    raise exception 'colore non valido accettato';
+  exception when raise_exception then
+    if sqlerrm not like 'Colore non valido%' then raise; end if;
+  end;
+  -- Il catalogo non si tocca.
+  begin
+    insert into public.opening_nodes (repertoire_id, path, ply, uci, san, epd)
+    select r2.id, 'h2h4'::extensions.ltree, 1, 'h2h4', 'h4', 'x'
+      from public.opening_repertoires r2 where r2.slug = 'italian-game';
+    raise exception 'mossa aggiunta al catalogo';
+  exception when insufficient_privilege then null;
+  end;
+  delete from public.opening_repertoires where slug = 'italian-game';
+  if not exists (select 1 from public.opening_repertoires where slug = 'italian-game') then
+    raise exception 'catalogo cancellato da un utente';
+  end if;
+  insert into ids_import select (r ->> 'id')::uuid;
+
   -- Esito non valido.
   begin
     perform public.record_opening_move((select e4 from ids), (select leaf from ids), 'e2e4', 'boh', 1);
@@ -154,8 +197,25 @@ do $$
 begin
   if exists (select 1 from public.opening_node_progress)
      or exists (select 1 from public.opening_attempts)
-     or exists (select 1 from public.opening_cycles) then
+     or exists (select 1 from public.opening_cycles)
+     or exists (select 1 from public.opening_repertoires
+                 where id = (select repertoire_id from ids_import)) then
     raise exception 'B vede i progressi di A';
+  end if;
+end $$;
+reset role;
+
+-- Chi ha importato un repertorio lo puo' cancellare, con le sue mosse.
+select set_config('request.jwt.claims',
+                  json_build_object('sub', user_a, 'role', 'authenticated')::text, true)
+  from ids;
+set local role authenticated;
+do $$
+begin
+  delete from public.opening_repertoires where id = (select repertoire_id from ids_import);
+  if exists (select 1 from public.opening_nodes
+              where repertoire_id = (select repertoire_id from ids_import)) then
+    raise exception 'cancellando il repertorio restano le sue mosse';
   end if;
 end $$;
 reset role;

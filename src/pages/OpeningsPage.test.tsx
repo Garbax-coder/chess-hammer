@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { openingsTranslations } from '@/lib/i18n/openings'
@@ -15,6 +15,7 @@ const repertoire: RepertoireWithNodes = {
   name: 'Caro-Kann Defence',
   eco: 'B12',
   color: 'b',
+  owner_id: null,
   nodes: [
     { id: 1, parent_id: null, ply: 1, uci: 'e2e4', san: 'e4', epd: 'a', is_main: true },
     { id: 2, parent_id: 1, ply: 2, uci: 'c7c6', san: 'c6', epd: 'b', is_main: true },
@@ -35,8 +36,11 @@ vi.mock('@/lib/language-context', async () => {
   const { it: italian } = await import('@/lib/i18n/translations')
   return { useTranslations: () => italian, useLanguage: () => ({ language: 'it' }) }
 })
+const deleteRepertoire = vi.fn()
+let repertoires = [repertoire]
 vi.mock('@/hooks/use-openings', () => ({
-  useRepertoires: () => ({ data: [repertoire], isLoading: false }),
+  useRepertoires: () => ({ data: repertoires, isLoading: false }),
+  useDeleteRepertoire: () => ({ mutate: deleteRepertoire, isPending: false }),
   useOpeningProgress: () => ({ data: new Map([[2, mastered]]) }),
 }))
 
@@ -58,5 +62,28 @@ describe('OpeningsPage', () => {
       'href',
       '/openings/caro-kann',
     )
+  })
+
+  it('marks the personal repertoires and deletes one after a confirmation', () => {
+    repertoires = [
+      repertoire,
+      { ...repertoire, id: 'r2', slug: 'u-abc', name: 'My Caro', owner_id: 'u1' },
+    ]
+    render(
+      <MemoryRouter>
+        <OpeningsPage />
+      </MemoryRouter>,
+    )
+    expect(screen.getByRole('link', { name: o.importPgn })).toHaveAttribute(
+      'href',
+      '/openings/import',
+    )
+    expect(screen.getAllByText(o.personal)).toHaveLength(1)
+    // Solo il repertorio personale si puo' eliminare, e prima si conferma.
+    fireEvent.click(screen.getByRole('button', { name: o.deleteRepertoire }))
+    expect(deleteRepertoire).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: o.confirmDelete }))
+    expect(deleteRepertoire).toHaveBeenCalledWith('r2')
+    repertoires = [repertoire]
   })
 })

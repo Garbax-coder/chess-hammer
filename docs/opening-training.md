@@ -231,11 +231,35 @@ Fatto (2026-10-25):
   `0103_opening_learn.sql`, funzione `learn_opening_move`), senza tentativi:
   non era a memoria. "Studia" compare nell'elenco dei repertori e sulle
   linee con mosse nuove; poi si allena.
+- **Alternative accettate** (2026-10-25): una linea del catalogo può
+  dichiarare un'alternativa (`alternatives` in `repertoires.json`, nodo con
+  `is_main = false`). Nel Drill è valida ("buona mossa, ma in questa linea
+  alleniamo…"), conta come primo tentativo giusto e poi si chiede la mossa
+  principale; non è mai un Run e nell'albero è tratteggiata.
+- **Avanzamento rapido del tronco**: le mosse note in testa alla linea
+  (consolidate nel Drill, già studiate in Learn) si giocano da sole; switch
+  "Salta le mosse già note" (localStorage `openings-fast-forward`).
+- **Sessioni del Drill con ripetizione degli errori**: 5 linee, poi di nuovo
+  quelle con almeno un errore, poi il riepilogo.
+- **Cicli Woodpecker** `/openings/:slug/cycles` (migrazione
+  `0104_opening_cycles.sql`): tutte le linee di fila, senza avanzamento
+  rapido, a tempo; il ciclo completato si salva e si confronta col
+  precedente.
+- **Import PGN** `/openings/import` (migrazione `0105_opening_import.sql`):
+  varianti e capitoli diventano linee; in anteprima si vedono le linee, le
+  mosse dell'avversario tolte in fondo, le seconde mosse dell'utente tenute
+  come alternative (senza seguito) e le partite che non partono dalla
+  posizione iniziale. Repertori personali (al massimo 20, 3000 mosse
+  ciascuno), cancellabili con i loro progressi.
+
+Nota: `0101_opening_catalog.sql` è stata rigenerata dopo essere stata
+applicata in sviluppo (alternative). È idempotente: in sviluppo si riapplica
+eseguendo il file; in produzione arriva una volta sola, al merge.
 
 Da fare prima del merge:
 
-- **Esportazione dei dati** (profilo): includere `opening_node_progress` e
-  `opening_attempts`.
+- **Esportazione dei dati** (profilo): includere `opening_node_progress`,
+  `opening_attempts`, `opening_cycles` e i repertori personali.
 - **Informativa privacy**: verificare se i tentativi sulle aperture vanno
   citati tra i dati di allenamento, aggiungere alle preferenze salvate nel
   browser la visualizzazione dei nomi delle varianti, e aggiornare la
@@ -246,8 +270,8 @@ Da fare prima del merge:
 - Citare `lichess-org/chess-openings` nella pagina Crediti (CC0 non lo
   richiede, ma è corretto).
 
-Idee per i passi successivi: alternative accettate
-(`is_main`); avanzamento rapido del tronco già consolidato; errori ripetuti a
-fine sessione; pesi dall'Opening Explorer (serve un token); cicli Woodpecker
-sui Run; import PGN dagli studi Lichess.
+Idee per i passi successivi: pesi dall'Opening Explorer (serve un token)
+per scegliere le risposte dell'avversario; import diretto da uno studio
+Lichess (URL); varianti dell'utente come linee a sé invece che come
+alternative, a scelta, nell'import.
 
