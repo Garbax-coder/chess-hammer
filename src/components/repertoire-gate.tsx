@@ -23,9 +23,12 @@ export interface RepertoireData {
  */
 export function RepertoireGate({
   slug,
+  allowEmpty = false,
   children,
 }: {
   slug: string | undefined
+  /** Anche un repertorio senza mosse (la consultazione, dove lo si modifica). */
+  allowEmpty?: boolean
   children: (data: RepertoireData) => ReactNode
 }) {
   const t = useTranslations()
@@ -45,7 +48,7 @@ export function RepertoireGate({
       </main>
     )
   }
-  if (!repertoire || !tree || tree.leaves.length === 0) {
+  if (!repertoire || !tree || (!allowEmpty && tree.leaves.length === 0)) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-3">
         <p className="text-muted-foreground text-sm">{o.notFound}</p>

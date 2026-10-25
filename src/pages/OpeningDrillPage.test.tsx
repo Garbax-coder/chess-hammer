@@ -49,6 +49,7 @@ vi.mock('@/hooks/use-openings', () => ({
   useRepertoires: () => ({ data: [repertoire], isLoading: false }),
   useOpeningProgress: () => ({ data: progress }),
   useRecordOpeningMove: () => ({ mutate: record, isError: false }),
+  useRenameRepertoire: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
 }))
 vi.mock('@/hooks/use-user-stats', () => ({ useUserStats: () => ({ data: undefined }) }))
 // Al posto della scacchiera: la posizione e un pulsante per mossa giocabile.

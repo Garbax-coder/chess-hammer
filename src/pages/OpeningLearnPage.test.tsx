@@ -60,6 +60,7 @@ vi.mock('@/hooks/use-openings', () => ({
   }),
   useLearnOpeningMove: () => ({ mutate: learn, isError: false }),
   useOpeningNotes: () => ({ data: new Map([[1, 'Il centro, subito']]) }),
+  useRenameRepertoire: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
 }))
 vi.mock('@/hooks/use-user-stats', () => ({ useUserStats: () => ({ data: undefined }) }))
 vi.mock('@/components/opening-board', () => ({

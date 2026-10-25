@@ -2,6 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
 import type { OpeningProgress } from '@/lib/opening-tree'
 import {
+  addOpeningMove,
+  copyOpeningRepertoire,
+  deleteOpeningMove,
   deleteOpeningRepertoire,
   fetchOpeningCycles,
   fetchOpeningNames,
@@ -11,6 +14,7 @@ import {
   importOpeningRepertoire,
   learnOpeningMove,
   recordOpeningMove,
+  renameOpeningRepertoire,
   saveOpeningCycle,
   saveOpeningNote,
   type OpeningCycle,
@@ -164,4 +168,27 @@ export function useSaveOpeningNote() {
       )
     },
   })
+}
+
+// Modifica dei repertori personali: dopo ogni modifica si rilegge l'elenco
+// (con le mosse) prima di proseguire, cosi' la mossa nuova e' gia' nell'albero
+// quando la si seleziona.
+export function useAddOpeningMove() {
+  const refresh = useRefreshRepertoires()
+  return useMutation({ mutationFn: addOpeningMove, onSuccess: refresh })
+}
+
+export function useDeleteOpeningMove() {
+  const refresh = useRefreshRepertoires()
+  return useMutation({ mutationFn: deleteOpeningMove, onSuccess: refresh })
+}
+
+export function useCopyRepertoire() {
+  const refresh = useRefreshRepertoires()
+  return useMutation({ mutationFn: copyOpeningRepertoire, onSuccess: refresh })
+}
+
+export function useRenameRepertoire() {
+  const refresh = useRefreshRepertoires()
+  return useMutation({ mutationFn: renameOpeningRepertoire, onSuccess: refresh })
 }

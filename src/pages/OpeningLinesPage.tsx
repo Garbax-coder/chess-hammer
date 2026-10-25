@@ -1,7 +1,8 @@
 import { Chess } from 'chess.js'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { AnalysisPanel } from '@/components/analysis-panel'
 import { OpeningBoard } from '@/components/opening-board'
 import { OpeningCommentDialog } from '@/components/opening-comment-dialog'
 import { OpeningPageHeader } from '@/components/opening-page-header'
@@ -20,12 +21,18 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useLocalToggle } from '@/hooks/use-local-toggle'
 import {
+  useAddOpeningMove,
+  useCopyRepertoire,
+  useDeleteOpeningMove,
   useOpeningNames,
   useOpeningNotes,
   useSaveOpeningNote,
 } from '@/hooks/use-openings'
+import { useStockfishAnalysis } from '@/hooks/use-stockfish-analysis'
 import { useUserStats } from '@/hooks/use-user-stats'
+import { useEngineSettings } from '@/lib/engine-settings'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
+import { epdOf } from '@/lib/opening-catalog'
 import { MOVE_STATE_CLASSES } from '@/lib/opening-move-style'
 import { useTranslations } from '@/lib/language-context'
 import {
@@ -45,6 +52,8 @@ import type { RepertoireWithNodes } from '@/lib/openings'
 
 const NO_NAMES = new Map<number, OpeningName>()
 const NO_COMMENTS = new Map<number, string>()
+const NO_NODES: OpeningNode[] = []
+const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 // Consultazione di un repertorio: l'albero delle varianti con la padronanza
 // di ogni mossa (heatmap), la posizione della mossa selezionata e le linee,
@@ -52,7 +61,9 @@ const NO_COMMENTS = new Map<number, string>()
 export default function OpeningLinesPage() {
   const { slug } = useParams<{ slug: string }>()
   return (
-    <RepertoireGate slug={slug}>{(data) => <OpeningLines {...data} />}</RepertoireGate>
+    <RepertoireGate slug={slug} allowEmpty>
+      {(data) => <OpeningLines key={data.repertoire.id} {...data} />}
+    </RepertoireGate>
   )
 }
 
@@ -70,7 +81,23 @@ function OpeningLines({
   const { data: stats } = useUserStats()
   // I nomi arrivano a parte: finche' non ci sono la pagina funziona senza.
   const { data: names = NO_NAMES } = useOpeningNames()
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [selection, setSelectedId] = useState<number | null>(null)
+  // Una mossa appena eliminata non e' piu' nell'albero: si torna all'inizio.
+  const selectedId = selection !== null && tree.byId.has(selection) ? selection : null
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  // Modifica delle linee: solo per i repertori personali (?edit=1 dopo una copia).
+  const [editMode, setEditMode] = useState(
+    () => !!repertoire.owner_id && searchParams.get('edit') === '1',
+  )
+  const [editMessage, setEditMessage] = useState<string | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const addMove = useAddOpeningMove()
+  const deleteMove = useDeleteOpeningMove()
+  const copyRepertoire = useCopyRepertoire()
+  // Stockfish sulla posizione mostrata.
+  const [engineOn, setEngineOn] = useLocalToggle('openings-stockfish', false)
+  const { settings: engineSettings, update: updateEngineSettings } = useEngineSettings()
   // Nomi delle varianti, da mostrare o no in ciascuna delle due card, e
   // commenti nell'albero.
   const [treeNames, setTreeNames] = useLocalToggle('openings-tree-names', true)
@@ -103,15 +130,107 @@ function OpeningLines({
   const color = repertoire.color
   const selected = selectedId === null ? undefined : tree.byId.get(selectedId)
 
+  const pathToSelected = useMemo(
+    () => (selectedId === null ? [] : runPath(tree, selectedId)),
+    [tree, selectedId],
+  )
   const fen = useMemo(() => {
     const chess = new Chess()
-    if (selectedId !== null) {
-      for (const node of runPath(tree, selectedId)) chess.move(node.san)
-    }
+    for (const node of pathToSelected) chess.move(node.san)
     return chess.fen()
-  }, [tree, selectedId])
+  }, [pathToSelected])
+  const engine = useStockfishAnalysis(
+    engineOn ? { fen: START_FEN, moves: pathToSelected.map((n) => n.uci) } : null,
+    { multiPv: engineSettings.multiPv, depth: engineSettings.depth, enabled: engineOn },
+  )
+  const bestMove =
+    engineOn && engineSettings.showBestMoveArrow ? engine.lines[0]?.pvUci[0] : undefined
 
   const firstChild = (tree.children.get(selectedId) ?? [])[0]
+  const siblings = tree.children.get(selected?.parent_id ?? null) ?? NO_NODES
+
+  // Frecce della tastiera: indietro e avanti lungo la linea, su e giu' tra
+  // le varianti della stessa mossa. Non mentre si scrive o con una finestra
+  // aperta.
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target
+      if (
+        commentNode ||
+        (target instanceof Element &&
+          target.closest(
+            'input, textarea, select, [contenteditable="true"], [role="dialog"]',
+          ))
+      ) {
+        return
+      }
+      const index = selected ? siblings.findIndex((n) => n.id === selected.id) : -1
+      let next: number | null | undefined
+      if (event.key === 'ArrowLeft') next = selected ? selected.parent_id : undefined
+      else if (event.key === 'ArrowRight') next = firstChild?.id
+      else if (event.key === 'ArrowUp' && index > 0) next = siblings[index - 1].id
+      else if (event.key === 'ArrowDown' && index >= 0 && index < siblings.length - 1)
+        next = siblings[index + 1].id
+      else return
+      event.preventDefault()
+      if (next !== undefined) setSelectedId(next)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [commentNode, selected, siblings, firstChild])
+
+  // In modifica: una mossa giocata sulla scacchiera si aggiunge dopo quella
+  // selezionata (o si seleziona, se c'e' gia').
+  function handleEditMove(uci: string): boolean {
+    setEditMessage(null)
+    setConfirmingDelete(false)
+    const existing = (tree.children.get(selectedId) ?? []).find((n) => n.uci === uci)
+    if (existing) {
+      setSelectedId(existing.id)
+      return true
+    }
+    if (selected && !selected.is_main) {
+      setEditMessage(o.alternativeNoContinuation)
+      return false
+    }
+    const chess = new Chess(fen)
+    const move = chess.move({
+      from: uci.slice(0, 2),
+      to: uci.slice(2, 4),
+      promotion: uci[4],
+    })
+    addMove.mutate(
+      {
+        repertoireId: repertoire.id,
+        parentId: selectedId,
+        uci,
+        san: move.san,
+        epd: epdOf(chess.fen()),
+      },
+      { onSuccess: (node) => setSelectedId(node.id) },
+    )
+    return true
+  }
+
+  function handleDelete() {
+    if (!selected) return
+    deleteMove.mutate(selected.id, {
+      onSuccess: () => {
+        setConfirmingDelete(false)
+        setSelectedId(selected.parent_id)
+      },
+    })
+  }
+
+  function copyAndEdit() {
+    copyRepertoire.mutate(
+      {
+        repertoireId: repertoire.id,
+        name: o.copyName(o.names[repertoire.slug] ?? repertoire.name),
+      },
+      { onSuccess: ({ slug }) => navigate(`/openings/${slug}/lines?edit=1`) },
+    )
+  }
 
   return (
     <>
@@ -161,14 +280,84 @@ function OpeningLines({
               progress={progress}
               now={now}
             />
+            <LabeledSwitch
+              id="stockfish"
+              label="Stockfish"
+              checked={engineOn}
+              onChange={setEngineOn}
+            />
+            {repertoire.owner_id ? (
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant={editMode ? 'default' : 'outline'}
+                  size="sm"
+                  className="w-fit"
+                  onClick={() => {
+                    setEditMode((on) => !on)
+                    setEditMessage(null)
+                    setConfirmingDelete(false)
+                  }}
+                >
+                  {editMode ? o.doneEditing : o.editLines}
+                </Button>
+                {editMode && (
+                  <>
+                    <p className="text-muted-foreground text-xs">{o.editHint}</p>
+                    {selected &&
+                      (confirmingDelete ? (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="w-fit"
+                          loading={deleteMove.isPending}
+                          onClick={handleDelete}
+                        >
+                          {o.confirmDeleteMove}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-fit"
+                          onClick={() => setConfirmingDelete(true)}
+                        >
+                          {o.deleteMove}
+                        </Button>
+                      ))}
+                    {editMessage && (
+                      <p className="text-xs text-amber-700 dark:text-amber-300">
+                        {editMessage}
+                      </p>
+                    )}
+                    {(addMove.isError || deleteMove.isError) && (
+                      <p className="text-destructive text-xs">{o.editError}</p>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-fit"
+                loading={copyRepertoire.isPending}
+                onClick={copyAndEdit}
+              >
+                {o.copyToEdit}
+              </Button>
+            )}
+            {copyRepertoire.isError && (
+              <p className="text-destructive text-xs">{o.editError}</p>
+            )}
           </>
         }
         board={
           <OpeningBoard
             fen={fen}
             orientation={color === 'w' ? 'white' : 'black'}
-            interactive={false}
-            onMove={() => false}
+            interactive={editMode}
+            onMove={editMode ? handleEditMove : () => false}
+            hintUci={bestMove}
             lastMoveUci={selected?.uci}
             boardTheme={stats?.board_theme}
             pieceSet={stats?.piece_set}
@@ -176,6 +365,16 @@ function OpeningLines({
         }
         right={
           <>
+            {engineOn && (
+              <AnalysisPanel
+                fen={fen}
+                lines={engine.lines}
+                analyzing={engine.analyzing}
+                settings={engineSettings}
+                onUpdateSettings={updateEngineSettings}
+                className="w-full"
+              />
+            )}
             <Card>
               <CardHeader className="gap-2">
                 <CardTitle>{o.treeTitle}</CardTitle>

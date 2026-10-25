@@ -257,7 +257,33 @@ Fatto (2026-10-25):
   schermo sotto l'intestazione e non scorre (niente piè di pagina su queste
   pagine): la scacchiera al centro prende tutta l'altezza disponibile,
   informazioni a sinistra, stato e comandi a destra, e le due colonne
-  scorrono per conto loro. Su mobile: scacchiera, comandi, informazioni.
+  scorrono per conto loro. Su mobile la scacchiera resta ferma in alto
+  (sticky, al massimo il 62% dell'altezza) e sotto scorrono comandi e
+  informazioni.
+- **Learn sempre disponibile**, anche con tutte le linee studiate (diventa un
+  ripasso), con l'indicazione "Linea N di M · K da studiare".
+- **Commenti** (migrazione `0106_opening_notes_and_editing.sql`): i commenti
+  del PGN importato si conservano sulle mosse e Learn li mostra dopo la
+  mossa; in Consulta il tasto destro (o la pressione lunga) su una mossa
+  dell'albero apre il commento personale (tabella `opening_node_notes`, che
+  vale anche sulle mosse del catalogo; una nota vuota nasconde il commento
+  originale). Switch "Commenti" nell'albero (localStorage
+  `openings-comments`).
+- **Modifica delle linee** in Consulta, solo sui repertori personali
+  (funzioni `add_opening_move`, `delete_opening_move`): con "Modifica le
+  linee" la scacchiera diventa giocabile e una mossa si aggiunge dopo quella
+  selezionata (se c'è già si seleziona; una seconda mossa dell'utente nella
+  stessa posizione è un'alternativa, che non ha seguito); "Elimina la mossa
+  e il seguito" chiede conferma, e se toglie la mossa principale
+  l'alternativa ne prende il posto. Un repertorio del catalogo si copia
+  (`copy_opening_repertoire`, con le note dell'utente) e si apre la copia in
+  modifica. Un repertorio personale si rinomina dalla matita accanto al
+  nome.
+- **Stockfish in Consulta**: switch (localStorage `openings-stockfish`) che
+  analizza la posizione selezionata, con il pannello di analisi e la freccia
+  della mossa migliore (impostazioni condivise con i puzzle).
+- **Tastiera in Consulta**: ← e → indietro e avanti lungo la linea, ↑ e ↓
+  tra le risposte alternative alla stessa mossa.
 
 Nota: `0101_opening_catalog.sql` è stata rigenerata dopo essere stata
 applicata in sviluppo (alternative). È idempotente: in sviluppo si riapplica
@@ -266,10 +292,12 @@ eseguendo il file; in produzione arriva una volta sola, al merge.
 Da fare prima del merge:
 
 - **Esportazione dei dati** (profilo): includere `opening_node_progress`,
-  `opening_attempts`, `opening_cycles` e i repertori personali.
+  `opening_attempts`, `opening_cycles`, `opening_node_notes` e i repertori
+  personali.
 - **Informativa privacy**: verificare se i tentativi sulle aperture vanno
   citati tra i dati di allenamento, aggiungere alle preferenze salvate nel
-  browser la visualizzazione dei nomi delle varianti, e aggiornare la
+  browser la visualizzazione dei nomi delle varianti, dei commenti e di
+  Stockfish e l'avanzamento rapido, e aggiornare la
   versione legale.
 - **Anteprima Vercel**: controllare che le variabili "Preview" puntino al
   progetto Supabase di sviluppo.

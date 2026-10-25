@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { openingsTranslations } from '@/lib/i18n/openings'
@@ -33,8 +33,26 @@ const e4: OpeningProgress = {
   last_seen_at: '2026-10-24T10:00:00Z',
   due_at: '2099-01-01T00:00:00Z',
 }
-let board: { fen: string; lastMoveUci?: string }
+// Una copia personale dello stesso repertorio, modificabile.
+const copy: RepertoireWithNodes = {
+  ...repertoire,
+  id: 'r2',
+  slug: 'u-copy',
+  owner_id: 'me',
+}
+let board: {
+  fen: string
+  lastMoveUci?: string
+  interactive: boolean
+  onMove: (uci: string) => boolean
+  hintUci?: string
+}
 const saveNote = vi.fn()
+const addMove = vi.fn()
+const deleteMove = vi.fn()
+const copyRepertoire = vi.fn()
+const rename = vi.fn()
+const engineCalls: ({ fen: string; moves: string[] } | null)[] = []
 let notes = new Map<number, string>()
 
 vi.mock('@/lib/language-context', () => ({
@@ -42,10 +60,14 @@ vi.mock('@/lib/language-context', () => ({
   useLanguage: () => ({ language: 'it' }),
 }))
 vi.mock('@/hooks/use-openings', () => ({
-  useRepertoires: () => ({ data: [repertoire], isLoading: false }),
+  useRepertoires: () => ({ data: [repertoire, copy], isLoading: false }),
   useOpeningProgress: () => ({ data: new Map([[1, e4]]) }),
   useOpeningNotes: () => ({ data: notes }),
   useSaveOpeningNote: () => ({ mutate: saveNote, isPending: false }),
+  useAddOpeningMove: () => ({ mutate: addMove, isError: false }),
+  useDeleteOpeningMove: () => ({ mutate: deleteMove, isPending: false, isError: false }),
+  useCopyRepertoire: () => ({ mutate: copyRepertoire, isPending: false, isError: false }),
+  useRenameRepertoire: () => ({ mutate: rename, isPending: false, isError: false }),
   useOpeningNames: () => ({
     data: new Map([
       [3, { eco: 'C40', name: "King's Knight Opening" }],
@@ -54,16 +76,25 @@ vi.mock('@/hooks/use-openings', () => ({
   }),
 }))
 vi.mock('@/hooks/use-user-stats', () => ({ useUserStats: () => ({ data: undefined }) }))
+vi.mock('@/hooks/use-stockfish-analysis', () => ({
+  useStockfishAnalysis: (position: { fen: string; moves: string[] } | null) => {
+    engineCalls.push(position)
+    return { lines: position ? [{ pvUci: ['g8f6'] }] : [], analyzing: false }
+  },
+}))
+vi.mock('@/components/analysis-panel', () => ({
+  AnalysisPanel: () => <div>Analisi del motore</div>,
+}))
 vi.mock('@/components/opening-board', () => ({
-  OpeningBoard: (props: { fen: string; lastMoveUci?: string }) => {
+  OpeningBoard: (props: typeof board) => {
     board = props
     return null
   },
 }))
 
-function renderLines() {
+function renderLines(path = '/openings/italian-game/lines') {
   render(
-    <MemoryRouter initialEntries={['/openings/italian-game/lines']}>
+    <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route path="/openings/:slug/lines" element={<OpeningLinesPage />} />
       </Routes>
@@ -72,7 +103,10 @@ function renderLines() {
 }
 
 describe('OpeningLinesPage', () => {
-  beforeEach(() => window.localStorage.clear())
+  beforeEach(() => {
+    window.localStorage.clear()
+    for (const mock of [addMove, deleteMove, copyRepertoire, rename]) mock.mockReset()
+  })
 
   it('shows the selected move on the board, with its training data', () => {
     renderLines()
@@ -161,5 +195,115 @@ describe('OpeningLinesPage', () => {
     fireEvent.click(screen.getByRole('switch', { name: o.showComments }))
     expect(screen.queryByText('Il cavallo, prima dell’alfiere')).not.toBeInTheDocument()
     notes = new Map()
+  })
+
+  it('moves through the tree with the arrow keys', () => {
+    renderLines()
+    const key = (k: string) => fireEvent.keyDown(window, { key: k })
+    key('ArrowRight')
+    expect(board.lastMoveUci).toBe('e2e4')
+    key('ArrowRight')
+    expect(board.lastMoveUci).toBe('e7e5')
+    // Giu' e su: le risposte alternative alla stessa mossa.
+    key('ArrowDown')
+    expect(board.lastMoveUci).toBe('c7c5')
+    key('ArrowDown')
+    expect(board.lastMoveUci).toBe('c7c5')
+    key('ArrowUp')
+    expect(board.lastMoveUci).toBe('e7e5')
+    key('ArrowLeft')
+    key('ArrowLeft')
+    expect(board.lastMoveUci).toBeUndefined()
+    expect(screen.getByText(o.startPosition)).toBeInTheDocument()
+  })
+
+  it('turns Stockfish on for the position shown, with the best move on the board', () => {
+    renderLines()
+    expect(engineCalls.at(-1)).toBeNull()
+    expect(screen.queryByText('Analisi del motore')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Stockfish' }))
+    fireEvent.click(screen.getByRole('button', { name: '1.e4' }))
+    expect(screen.getByText('Analisi del motore')).toBeInTheDocument()
+    // Al motore la partenza con le mosse giocate (conta le ripetizioni).
+    expect(engineCalls.at(-1)).toEqual({
+      fen: expect.stringMatching(/^rnbqkbnr\/pppppppp\/8\/8\/8/),
+      moves: ['e2e4'],
+    })
+    expect(board.hintUci).toBe('g8f6')
+    expect(window.localStorage.getItem('openings-stockfish')).toBe('true')
+  })
+
+  it('copies a catalog repertoire to edit it, then opens the copy in edit mode', () => {
+    copyRepertoire.mockImplementation((_params, options) =>
+      options.onSuccess({ slug: 'u-copy' }),
+    )
+    renderLines()
+    expect(board.interactive).toBe(false)
+    expect(screen.queryByRole('button', { name: o.editLines })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: o.copyToEdit }))
+    expect(copyRepertoire).toHaveBeenCalledWith(
+      { repertoireId: 'r1', name: o.copyName('Partita Italiana') },
+      expect.anything(),
+    )
+    expect(board.interactive).toBe(true)
+    expect(screen.getByRole('button', { name: o.doneEditing })).toBeInTheDocument()
+  })
+
+  it('adds and deletes moves of a personal repertoire', () => {
+    addMove.mockImplementation((_params, options) => options.onSuccess({ id: 9 }))
+    renderLines('/openings/u-copy/lines')
+    fireEvent.click(screen.getByRole('button', { name: o.editLines }))
+    expect(board.interactive).toBe(true)
+
+    // Una mossa gia' presente si seleziona soltanto.
+    fireEvent.click(screen.getByRole('button', { name: '1.e4' }))
+    let accepted = false
+    act(() => {
+      accepted = board.onMove('e7e5')
+    })
+    expect(accepted).toBe(true)
+    expect(board.lastMoveUci).toBe('e7e5')
+    expect(addMove).not.toHaveBeenCalled()
+
+    // Una nuova risposta dell'avversario si aggiunge dopo 1.e4.
+    fireEvent.click(screen.getByRole('button', { name: '1.e4' }))
+    act(() => {
+      accepted = board.onMove('d7d5')
+    })
+    expect(accepted).toBe(true)
+    expect(addMove).toHaveBeenCalledWith(
+      {
+        repertoireId: 'r2',
+        parentId: 1,
+        uci: 'd7d5',
+        san: 'd5',
+        epd: 'rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -',
+      },
+      expect.anything(),
+    )
+
+    // Eliminazione in due passaggi, poi si torna alla mossa precedente.
+    deleteMove.mockImplementation((_id, options) => options.onSuccess())
+    fireEvent.click(screen.getByRole('button', { name: '2.Nc3' }))
+    fireEvent.click(screen.getByRole('button', { name: o.deleteMove }))
+    expect(deleteMove).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: o.confirmDeleteMove }))
+    expect(deleteMove).toHaveBeenCalledWith(5, expect.anything())
+    expect(board.lastMoveUci).toBe('c7c5')
+  })
+
+  it('renames a personal repertoire from the header', () => {
+    renderLines('/openings/u-copy/lines')
+    fireEvent.click(screen.getByRole('button', { name: o.rename }))
+    fireEvent.change(screen.getByRole('textbox', { name: o.rename }), {
+      target: { value: '  Italiana 2  ' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: o.renameSave }))
+    expect(rename).toHaveBeenCalledWith(
+      { repertoireId: 'r2', name: 'Italiana 2' },
+      expect.anything(),
+    )
   })
 })

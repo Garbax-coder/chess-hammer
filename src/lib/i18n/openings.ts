@@ -52,6 +52,17 @@ export interface OpeningsTranslations {
   saveComment: string
   deleteComment: string
   cancel: string
+  editLines: string
+  doneEditing: string
+  editHint: string
+  deleteMove: string
+  confirmDeleteMove: string
+  alternativeNoContinuation: string
+  copyToEdit: string
+  copyName: (name: string) => string
+  rename: string
+  renameSave: string
+  editError: string
   learn: string
   learnLine: string
   learnIntro: string
@@ -168,6 +179,19 @@ const it: OpeningsTranslations = {
   saveComment: 'Salva',
   deleteComment: 'Elimina il commento',
   cancel: 'Annulla',
+  editLines: 'Modifica le linee',
+  doneEditing: 'Fine modifiche',
+  editHint:
+    'Gioca una mossa sulla scacchiera per aggiungerla dopo quella selezionata (o all’inizio, se non ne hai selezionata nessuna).',
+  deleteMove: 'Elimina la mossa e il seguito',
+  confirmDeleteMove: 'Conferma: elimina',
+  alternativeNoContinuation:
+    'Dopo un’alternativa non si aggiungono mosse: eliminala o scegli la mossa principale.',
+  copyToEdit: 'Crea una copia personale per modificarla',
+  copyName: (name) => `${name} (mia)`,
+  rename: 'Rinomina il repertorio',
+  renameSave: 'Salva',
+  editError: 'Modifica non riuscita',
   learn: 'Studia',
   learnLine: 'Studia questa linea',
   learnIntro:
@@ -295,6 +319,19 @@ const en: OpeningsTranslations = {
   saveComment: 'Save',
   deleteComment: 'Delete the comment',
   cancel: 'Cancel',
+  editLines: 'Edit the lines',
+  doneEditing: 'Done editing',
+  editHint:
+    'Play a move on the board to add it after the selected one (or at the start, if none is selected).',
+  deleteMove: 'Delete the move and what follows',
+  confirmDeleteMove: 'Confirm: delete',
+  alternativeNoContinuation:
+    'No moves can follow an alternative: delete it or pick the main move.',
+  copyToEdit: 'Make a personal copy to edit it',
+  copyName: (name) => `${name} (mine)`,
+  rename: 'Rename the repertoire',
+  renameSave: 'Save',
+  editError: 'Edit failed',
   learn: 'Learn',
   learnLine: 'Learn this line',
   learnIntro:
@@ -418,6 +455,19 @@ const fr: OpeningsTranslations = {
   saveComment: 'Enregistrer',
   deleteComment: 'Supprimer le commentaire',
   cancel: 'Annuler',
+  editLines: 'Modifier les lignes',
+  doneEditing: 'Terminer',
+  editHint:
+    'Jouez un coup sur l’échiquier pour l’ajouter après le coup sélectionné (ou au début, si aucun n’est sélectionné).',
+  deleteMove: 'Supprimer le coup et la suite',
+  confirmDeleteMove: 'Confirmer : supprimer',
+  alternativeNoContinuation:
+    'Aucun coup ne peut suivre une alternative : supprimez-la ou choisissez le coup principal.',
+  copyToEdit: 'Créer une copie personnelle pour la modifier',
+  copyName: (name) => `${name} (à moi)`,
+  rename: 'Renommer le répertoire',
+  renameSave: 'Enregistrer',
+  editError: 'Modification échouée',
   learn: 'Apprendre',
   learnLine: 'Apprendre cette ligne',
   learnIntro:
@@ -550,6 +600,19 @@ const es: OpeningsTranslations = {
   saveComment: 'Guardar',
   deleteComment: 'Eliminar el comentario',
   cancel: 'Cancelar',
+  editLines: 'Editar las líneas',
+  doneEditing: 'Terminar',
+  editHint:
+    'Juega una jugada en el tablero para añadirla tras la seleccionada (o al principio, si no hay ninguna seleccionada).',
+  deleteMove: 'Eliminar la jugada y lo que sigue',
+  confirmDeleteMove: 'Confirmar: eliminar',
+  alternativeNoContinuation:
+    'Tras una alternativa no se añaden jugadas: elimínala o elige la jugada principal.',
+  copyToEdit: 'Crear una copia personal para editarla',
+  copyName: (name) => `${name} (mía)`,
+  rename: 'Renombrar el repertorio',
+  renameSave: 'Guardar',
+  editError: 'Edición fallida',
   learn: 'Aprender',
   learnLine: 'Aprender esta línea',
   learnIntro:
@@ -678,6 +741,19 @@ const de: OpeningsTranslations = {
   saveComment: 'Speichern',
   deleteComment: 'Kommentar löschen',
   cancel: 'Abbrechen',
+  editLines: 'Linien bearbeiten',
+  doneEditing: 'Fertig',
+  editHint:
+    'Spiele einen Zug auf dem Brett, um ihn nach dem ausgewählten hinzuzufügen (oder am Anfang, wenn keiner ausgewählt ist).',
+  deleteMove: 'Zug und Fortsetzung löschen',
+  confirmDeleteMove: 'Bestätigen: löschen',
+  alternativeNoContinuation:
+    'Nach einer Alternative folgen keine Züge: Lösche sie oder wähle den Hauptzug.',
+  copyToEdit: 'Persönliche Kopie zum Bearbeiten erstellen',
+  copyName: (name) => `${name} (meine)`,
+  rename: 'Repertoire umbenennen',
+  renameSave: 'Speichern',
+  editError: 'Bearbeitung fehlgeschlagen',
   learn: 'Lernen',
   learnLine: 'Diese Linie lernen',
   learnIntro:

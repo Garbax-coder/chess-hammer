@@ -195,3 +195,56 @@ export async function saveOpeningNote(params: {
         })
   if (error) throw error
 }
+
+/**
+ * Aggiunge una mossa a un repertorio personale dopo `parentId` (null = prima
+ * mossa); se c'e' gia', restituisce quella (migrazione 0106).
+ */
+export async function addOpeningMove(params: {
+  repertoireId: string
+  parentId: number | null
+  uci: string
+  san: string
+  epd: string
+}): Promise<OpeningNode> {
+  const { data, error } = await supabase.rpc('add_opening_move', {
+    p_repertoire_id: params.repertoireId,
+    p_parent_id: params.parentId,
+    p_uci: params.uci,
+    p_san: params.san,
+    p_epd: params.epd,
+  })
+  if (error) throw error
+  return data as OpeningNode
+}
+
+/** Toglie una mossa di un repertorio personale con tutto il suo seguito. */
+export async function deleteOpeningMove(nodeId: number): Promise<void> {
+  const { error } = await supabase.rpc('delete_opening_move', { p_node_id: nodeId })
+  if (error) throw error
+}
+
+/** Copia personale (modificabile) di un repertorio; restituisce lo slug. */
+export async function copyOpeningRepertoire(params: {
+  repertoireId: string
+  name: string
+}): Promise<{ id: string; slug: string }> {
+  const { data, error } = await supabase.rpc('copy_opening_repertoire', {
+    p_repertoire_id: params.repertoireId,
+    p_name: params.name,
+  })
+  if (error) throw error
+  return data as { id: string; slug: string }
+}
+
+/** Nuovo nome di un repertorio personale. */
+export async function renameOpeningRepertoire(params: {
+  repertoireId: string
+  name: string
+}): Promise<void> {
+  const { error } = await supabase
+    .from('opening_repertoires')
+    .update({ name: params.name })
+    .eq('id', params.repertoireId)
+  if (error) throw error
+}

@@ -59,6 +59,7 @@ vi.mock('@/hooks/use-openings', () => ({
   useOpeningCycles: () => ({ data: [firstCycle] }),
   useRecordOpeningMove: () => ({ mutate: record }),
   useSaveOpeningCycle: () => ({ mutate: save, data: undefined, isError: false }),
+  useRenameRepertoire: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
 }))
 vi.mock('@/hooks/use-user-stats', () => ({ useUserStats: () => ({ data: undefined }) }))
 vi.mock('@/components/opening-board', () => ({
