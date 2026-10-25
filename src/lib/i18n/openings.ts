@@ -66,6 +66,18 @@ export interface OpeningsTranslations {
   sessionSummary: (lines: number, correct: number, total: number) => string
   repeatedLines: (n: number) => string
   newSession: string
+  cycles: string
+  cyclesTitle: string
+  cyclesIntro: string
+  startCycle: (n: number) => string
+  cycleProgress: (cycle: number, line: number, total: number) => string
+  previousCycle: (time: string) => string
+  cycleDone: (n: number) => string
+  cycleResult: (time: string, correct: number, total: number) => string
+  faster: (delta: string) => string
+  slower: (delta: string) => string
+  noCycles: string
+  cycleColumns: { cycle: string; date: string; time: string; accuracy: string }
   /** Nomi dei repertori di catalogo, per slug (altrimenti il nome inglese). */
   names: Record<string, string>
 }
@@ -145,6 +157,19 @@ const it: OpeningsTranslations = {
       ? 'Nessun errore da ripassare.'
       : `${n} ${n === 1 ? 'linea ripassata' : 'linee ripassate'} alla fine.`,
   newSession: 'Nuova sessione',
+  cycles: 'Cicli',
+  cyclesTitle: 'Cicli Woodpecker',
+  cyclesIntro:
+    'Tutte le linee del repertorio di fila, a tempo. Ripeti il ciclo per completarlo ogni volta più in fretta, senza perdere precisione.',
+  startCycle: (n) => `Inizia il ciclo ${n}`,
+  cycleProgress: (cycle, line, total) => `Ciclo ${cycle} · linea ${line} di ${total}`,
+  previousCycle: (time) => `Ciclo precedente: ${time}`,
+  cycleDone: (n) => `Ciclo ${n} completato`,
+  cycleResult: (time, ok, total) => `${time} · ${ok} su ${total} al primo colpo`,
+  faster: (delta) => `${delta} più veloce del ciclo precedente`,
+  slower: (delta) => `${delta} più lento del ciclo precedente`,
+  noCycles: 'Nessun ciclo completato.',
+  cycleColumns: { cycle: 'Ciclo', date: 'Data', time: 'Tempo', accuracy: 'Precisione' },
   names: {
     'italian-game': 'Partita Italiana',
     'queens-gambit': 'Gambetto di Donna',
@@ -221,6 +246,19 @@ const en: OpeningsTranslations = {
       ? 'No mistakes to review.'
       : `${n} ${n === 1 ? 'line' : 'lines'} reviewed at the end.`,
   newSession: 'New session',
+  cycles: 'Cycles',
+  cyclesTitle: 'Woodpecker cycles',
+  cyclesIntro:
+    'Every line of the repertoire in a row, against the clock. Repeat the cycle to finish it faster each time, without losing accuracy.',
+  startCycle: (n) => `Start cycle ${n}`,
+  cycleProgress: (cycle, line, total) => `Cycle ${cycle} · line ${line} of ${total}`,
+  previousCycle: (time) => `Previous cycle: ${time}`,
+  cycleDone: (n) => `Cycle ${n} complete`,
+  cycleResult: (time, ok, total) => `${time} · ${ok} of ${total} on the first try`,
+  faster: (delta) => `${delta} faster than the previous cycle`,
+  slower: (delta) => `${delta} slower than the previous cycle`,
+  noCycles: 'No cycles completed yet.',
+  cycleColumns: { cycle: 'Cycle', date: 'Date', time: 'Time', accuracy: 'Accuracy' },
   names: {},
 }
 
@@ -295,6 +333,19 @@ const fr: OpeningsTranslations = {
       ? 'Aucune erreur à revoir.'
       : `${n} ${n === 1 ? 'ligne revue' : 'lignes revues'} à la fin.`,
   newSession: 'Nouvelle session',
+  cycles: 'Cycles',
+  cyclesTitle: 'Cycles Woodpecker',
+  cyclesIntro:
+    'Toutes les lignes du répertoire à la suite, chronométrées. Répétez le cycle pour le terminer chaque fois plus vite, sans perdre en précision.',
+  startCycle: (n) => `Commencer le cycle ${n}`,
+  cycleProgress: (cycle, line, total) => `Cycle ${cycle} · ligne ${line} sur ${total}`,
+  previousCycle: (time) => `Cycle précédent : ${time}`,
+  cycleDone: (n) => `Cycle ${n} terminé`,
+  cycleResult: (time, ok, total) => `${time} · ${ok} sur ${total} du premier coup`,
+  faster: (delta) => `${delta} plus rapide que le cycle précédent`,
+  slower: (delta) => `${delta} plus lent que le cycle précédent`,
+  noCycles: 'Aucun cycle terminé.',
+  cycleColumns: { cycle: 'Cycle', date: 'Date', time: 'Temps', accuracy: 'Précision' },
   names: {
     'italian-game': 'Partie italienne',
     'queens-gambit': 'Gambit dame',
@@ -376,6 +427,19 @@ const es: OpeningsTranslations = {
       ? 'Ningún error que repasar.'
       : `${n} ${n === 1 ? 'línea repasada' : 'líneas repasadas'} al final.`,
   newSession: 'Nueva sesión',
+  cycles: 'Ciclos',
+  cyclesTitle: 'Ciclos Woodpecker',
+  cyclesIntro:
+    'Todas las líneas del repertorio seguidas, con cronómetro. Repite el ciclo para terminarlo cada vez más rápido, sin perder precisión.',
+  startCycle: (n) => `Empezar el ciclo ${n}`,
+  cycleProgress: (cycle, line, total) => `Ciclo ${cycle} · línea ${line} de ${total}`,
+  previousCycle: (time) => `Ciclo anterior: ${time}`,
+  cycleDone: (n) => `Ciclo ${n} completado`,
+  cycleResult: (time, ok, total) => `${time} · ${ok} de ${total} a la primera`,
+  faster: (delta) => `${delta} más rápido que el ciclo anterior`,
+  slower: (delta) => `${delta} más lento que el ciclo anterior`,
+  noCycles: 'Ningún ciclo completado.',
+  cycleColumns: { cycle: 'Ciclo', date: 'Fecha', time: 'Tiempo', accuracy: 'Precisión' },
   names: {
     'italian-game': 'Apertura italiana',
     'queens-gambit': 'Gambito de dama',
@@ -453,6 +517,19 @@ const de: OpeningsTranslations = {
       ? 'Keine Fehler zu wiederholen.'
       : `${n} ${n === 1 ? 'Linie' : 'Linien'} am Ende wiederholt.`,
   newSession: 'Neue Sitzung',
+  cycles: 'Zyklen',
+  cyclesTitle: 'Woodpecker-Zyklen',
+  cyclesIntro:
+    'Alle Linien des Repertoires am Stück, auf Zeit. Wiederhole den Zyklus, um ihn jedes Mal schneller zu schaffen, ohne an Genauigkeit zu verlieren.',
+  startCycle: (n) => `Zyklus ${n} starten`,
+  cycleProgress: (cycle, line, total) => `Zyklus ${cycle} · Linie ${line} von ${total}`,
+  previousCycle: (time) => `Vorheriger Zyklus: ${time}`,
+  cycleDone: (n) => `Zyklus ${n} abgeschlossen`,
+  cycleResult: (time, ok, total) => `${time} · ${ok} von ${total} im ersten Versuch`,
+  faster: (delta) => `${delta} schneller als der vorherige Zyklus`,
+  slower: (delta) => `${delta} langsamer als der vorherige Zyklus`,
+  noCycles: 'Noch kein Zyklus abgeschlossen.',
+  cycleColumns: { cycle: 'Zyklus', date: 'Datum', time: 'Zeit', accuracy: 'Genauigkeit' },
   names: {
     'italian-game': 'Italienische Partie',
     'queens-gambit': 'Damengambit',

@@ -100,6 +100,12 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
             >
               {o.browse}
             </Link>
+            <Link
+              to={`/openings/${repertoire.slug}/cycles`}
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              {o.cycles}
+            </Link>
           </div>
         </div>
 

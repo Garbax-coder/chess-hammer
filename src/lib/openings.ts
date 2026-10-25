@@ -81,3 +81,58 @@ export async function learnOpeningMove(nodeId: number): Promise<OpeningProgress>
   if (error) throw error
   return data as OpeningProgress
 }
+
+export interface OpeningCycle {
+  id: string
+  repertoire_id: string
+  cycle: number
+  lines: number
+  moves: number
+  correct: number
+  total_ms: number
+  started_at: string
+  completed_at: string
+}
+
+/** I cicli Woodpecker completati su un repertorio (migrazione 0104), dal primo. */
+export async function fetchOpeningCycles(repertoireId: string): Promise<OpeningCycle[]> {
+  const { data, error } = await supabase
+    .from('opening_cycles')
+    .select(
+      'id, repertoire_id, cycle, lines, moves, correct, total_ms, started_at, completed_at',
+    )
+    .eq('repertoire_id', repertoireId)
+    .order('cycle')
+  if (error) throw error
+  return data
+}
+
+export async function saveOpeningCycle(params: {
+  userId: string
+  repertoireId: string
+  cycle: number
+  lines: number
+  moves: number
+  correct: number
+  totalMs: number
+  startedAt: string
+}): Promise<OpeningCycle> {
+  const { data, error } = await supabase
+    .from('opening_cycles')
+    .insert({
+      user_id: params.userId,
+      repertoire_id: params.repertoireId,
+      cycle: params.cycle,
+      lines: params.lines,
+      moves: params.moves,
+      correct: params.correct,
+      total_ms: params.totalMs,
+      started_at: params.startedAt,
+    })
+    .select(
+      'id, repertoire_id, cycle, lines, moves, correct, total_ms, started_at, completed_at',
+    )
+    .single()
+  if (error) throw error
+  return data
+}

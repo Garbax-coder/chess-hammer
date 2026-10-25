@@ -90,6 +90,9 @@ export default function OpeningsPage() {
                     <Button asChild variant="outline">
                       <Link to={`/openings/${repertoire.slug}/lines`}>{o.browse}</Link>
                     </Button>
+                    <Button asChild variant="outline">
+                      <Link to={`/openings/${repertoire.slug}/cycles`}>{o.cycles}</Link>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

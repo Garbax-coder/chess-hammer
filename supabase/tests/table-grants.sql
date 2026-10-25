@@ -9,7 +9,7 @@ declare
   t text;
   user_tables text[] := array['user_stats', 'training_sessions', 'session_puzzles',
                               'puzzle_attempts', 'practice_attempts', 'saved_puzzles',
-                              'opening_node_progress', 'opening_attempts'];
+                              'opening_node_progress', 'opening_attempts', 'opening_cycles'];
   puzzle_tables text[] := array['lichess_puzzles', 'lichess_puzzle_order', 'lichess_rating_ranges',
                                 'opening_repertoires', 'opening_nodes', 'opening_names'];
   internal_tables text[] := array['account_deletion_notices', 'app_email_templates'];

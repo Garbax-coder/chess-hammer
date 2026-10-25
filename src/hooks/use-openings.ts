@@ -2,11 +2,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
 import type { OpeningProgress } from '@/lib/opening-tree'
 import {
+  fetchOpeningCycles,
   fetchOpeningNames,
   fetchOpeningProgress,
   fetchRepertoires,
   learnOpeningMove,
   recordOpeningMove,
+  saveOpeningCycle,
+  type OpeningCycle,
 } from '@/lib/openings'
 
 export function openingProgressKey(userId: string | undefined) {
@@ -71,4 +74,33 @@ export function useRecordOpeningMove() {
 export function useLearnOpeningMove() {
   const updateCache = useUpdateProgressCache()
   return useMutation({ mutationFn: learnOpeningMove, onSuccess: updateCache })
+}
+
+function openingCyclesKey(userId: string | undefined, repertoireId: string) {
+  return ['opening-cycles', userId, repertoireId]
+}
+
+export function useOpeningCycles(repertoireId: string) {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: openingCyclesKey(user?.id, repertoireId),
+    queryFn: () => fetchOpeningCycles(repertoireId),
+    enabled: !!user,
+  })
+}
+
+/** Salva un ciclo completato e lo aggiunge allo storico in cache. */
+export function useSaveOpeningCycle() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (params: Omit<Parameters<typeof saveOpeningCycle>[0], 'userId'>) =>
+      saveOpeningCycle({ ...params, userId: user!.id }),
+    onSuccess: (cycle) => {
+      queryClient.setQueryData<OpeningCycle[]>(
+        openingCyclesKey(user?.id, cycle.repertoire_id),
+        (rows) => [...(rows ?? []), cycle],
+      )
+    },
+  })
 }

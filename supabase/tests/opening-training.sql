@@ -1,4 +1,4 @@
--- Prova delle migrazioni 0100-0103 (allenamento sulle aperture). Da
+-- Prova delle migrazioni 0100-0104 (allenamento sulle aperture). Da
 -- eseguire SOLO sul progetto di sviluppo: tutto avviene in una transazione
 -- annullata alla fine.
 --   psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/opening-training.sql
@@ -111,6 +111,30 @@ begin
     raise exception 'lo studio non deve registrare tentativi';
   end if;
 
+  -- Cicli Woodpecker (0104): uno per numero, solo su repertori leggibili.
+  insert into public.opening_cycles (user_id, repertoire_id, cycle, lines, moves, correct,
+                                     total_ms, started_at)
+  select (select user_a from ids), r.id, 1, 8, 34, 30, 240000, now() - interval '5 minutes'
+    from public.opening_repertoires r where r.slug = 'italian-game';
+  begin
+    insert into public.opening_cycles (user_id, repertoire_id, cycle, lines, moves, correct,
+                                       total_ms, started_at)
+    select (select user_a from ids), r.id, 1, 8, 34, 31, 200000, now()
+      from public.opening_repertoires r where r.slug = 'italian-game';
+    raise exception 'ciclo duplicato accettato';
+  exception when unique_violation then null;
+  end;
+  begin
+    insert into public.opening_cycles (user_id, repertoire_id, cycle, lines, moves, correct,
+                                       total_ms, started_at)
+    select (select user_a from ids), r.id, 1, 1, 1, 1, 1000, now()
+      from public.opening_repertoires r where r.slug = 'opening-test-private';
+    if found then
+      raise exception 'ciclo sul repertorio personale di un altro accettato';
+    end if;
+  exception when insufficient_privilege then null;
+  end;
+
   -- Esito non valido.
   begin
     perform public.record_opening_move((select e4 from ids), (select leaf from ids), 'e2e4', 'boh', 1);
@@ -129,7 +153,8 @@ set local role authenticated;
 do $$
 begin
   if exists (select 1 from public.opening_node_progress)
-     or exists (select 1 from public.opening_attempts) then
+     or exists (select 1 from public.opening_attempts)
+     or exists (select 1 from public.opening_cycles) then
     raise exception 'B vede i progressi di A';
   end if;
 end $$;
