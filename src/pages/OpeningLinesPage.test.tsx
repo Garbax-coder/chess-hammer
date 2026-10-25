@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { openingsTranslations } from '@/lib/i18n/openings'
 import { it as itTranslations } from '@/lib/i18n/translations'
 import type { OpeningProgress } from '@/lib/opening-tree'
@@ -67,6 +67,8 @@ function renderLines() {
 }
 
 describe('OpeningLinesPage', () => {
+  beforeEach(() => window.localStorage.clear())
+
   it('shows the selected move on the board, with its training data', () => {
     renderLines()
     expect(screen.getByText(o.startPosition)).toBeInTheDocument()
@@ -106,5 +108,24 @@ describe('OpeningLinesPage', () => {
     expect(screen.getByText('C40')).toBeInTheDocument()
     expect(screen.getByText('B20')).toBeInTheDocument()
     expect(screen.getAllByText(o.mastered(1, 2))).toHaveLength(2)
+  })
+
+  it('hides the variation names in the tree and in the lines, each on its own', () => {
+    renderLines()
+    // Il nome compare nell'albero (accanto a 2.Nf3) e sopra la linea.
+    expect(screen.getAllByText("King's Knight Opening")).toHaveLength(2)
+    const [treeSwitch, linesSwitch] = screen.getAllByRole('switch', { name: o.showNames })
+
+    fireEvent.click(treeSwitch)
+    expect(screen.getAllByText("King's Knight Opening")).toHaveLength(1)
+    expect(screen.getByText('C40')).toBeInTheDocument()
+
+    fireEvent.click(linesSwitch)
+    expect(screen.queryByText("King's Knight Opening")).not.toBeInTheDocument()
+    expect(screen.queryByText('C40')).not.toBeInTheDocument()
+
+    // La scelta resta per la prossima visita.
+    expect(window.localStorage.getItem('openings-tree-names')).toBe('false')
+    expect(window.localStorage.getItem('openings-line-names')).toBe('false')
   })
 })

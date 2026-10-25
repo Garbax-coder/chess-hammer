@@ -44,6 +44,7 @@ export interface OpeningsTranslations {
   nextReview: (date: string) => string
   dueNow: string
   trainLine: string
+  showNames: string
   /** Nomi dei repertori di catalogo, per slug (altrimenti il nome inglese). */
   names: Record<string, string>
 }
@@ -95,6 +96,7 @@ const it: OpeningsTranslations = {
   nextReview: (date) => `Prossimo ripasso: ${date}`,
   dueNow: 'Da ripassare ora',
   trainLine: 'Allena questa linea',
+  showNames: 'Nomi delle varianti',
   names: {
     'italian-game': 'Partita Italiana',
     'queens-gambit': 'Gambetto di Donna',
@@ -143,6 +145,7 @@ const en: OpeningsTranslations = {
   nextReview: (date) => `Next review: ${date}`,
   dueNow: 'Due now',
   trainLine: 'Train this line',
+  showNames: 'Variation names',
   names: {},
 }
 
@@ -188,6 +191,7 @@ const fr: OpeningsTranslations = {
   nextReview: (date) => `Prochaine révision : ${date}`,
   dueNow: 'À revoir maintenant',
   trainLine: 'Entraîner cette ligne',
+  showNames: 'Noms des variantes',
   names: {
     'italian-game': 'Partie italienne',
     'queens-gambit': 'Gambit dame',
@@ -241,6 +245,7 @@ const es: OpeningsTranslations = {
   nextReview: (date) => `Próximo repaso: ${date}`,
   dueNow: 'Para repasar ahora',
   trainLine: 'Entrenar esta línea',
+  showNames: 'Nombres de las variantes',
   names: {
     'italian-game': 'Apertura italiana',
     'queens-gambit': 'Gambito de dama',
@@ -290,6 +295,7 @@ const de: OpeningsTranslations = {
   nextReview: (date) => `Nächste Wiederholung: ${date}`,
   dueNow: 'Jetzt fällig',
   trainLine: 'Diese Linie trainieren',
+  showNames: 'Namen der Varianten',
   names: {
     'italian-game': 'Italienische Partie',
     'queens-gambit': 'Damengambit',

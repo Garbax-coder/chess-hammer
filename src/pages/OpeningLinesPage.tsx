@@ -9,7 +9,16 @@ import {
   OpeningTreeView,
 } from '@/components/opening-tree-view'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { useLocalToggle } from '@/hooks/use-local-toggle'
 import { useOpeningNames, useOpeningProgress, useRepertoires } from '@/hooks/use-openings'
 import { useUserStats } from '@/hooks/use-user-stats'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
@@ -84,6 +93,9 @@ function OpeningLines({
   // I nomi arrivano a parte: finche' non ci sono la pagina funziona senza.
   const { data: names = NO_NAMES } = useOpeningNames()
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  // Nomi delle varianti, da mostrare o no in ciascuna delle due card.
+  const [treeNames, setTreeNames] = useLocalToggle('openings-tree-names', true)
+  const [lineNames, setLineNames] = useLocalToggle('openings-line-names', true)
   const now = new Date()
   const color = repertoire.color
   const selected = selectedId === null ? undefined : tree.byId.get(selectedId)
@@ -168,6 +180,9 @@ function OpeningLines({
         <Card>
           <CardHeader className="gap-2">
             <CardTitle>{o.treeTitle}</CardTitle>
+            <CardAction>
+              <NamesSwitch id="tree-names" checked={treeNames} onChange={setTreeNames} />
+            </CardAction>
             <MoveStateLegend />
           </CardHeader>
           <CardContent>
@@ -178,7 +193,7 @@ function OpeningLines({
               now={now}
               selectedId={selectedId}
               onSelect={setSelectedId}
-              names={names}
+              names={treeNames ? names : NO_NAMES}
             />
           </CardContent>
         </Card>
@@ -186,6 +201,9 @@ function OpeningLines({
         <Card>
           <CardHeader>
             <CardTitle>{o.linesTitle}</CardTitle>
+            <CardAction>
+              <NamesSwitch id="line-names" checked={lineNames} onChange={setLineNames} />
+            </CardAction>
           </CardHeader>
           <CardContent>
             <ol className="flex flex-col divide-y">
@@ -194,7 +212,7 @@ function OpeningLines({
                   key={leaf.id}
                   slug={repertoire.slug}
                   tree={tree}
-                  names={names}
+                  names={lineNames ? names : NO_NAMES}
                   leaf={leaf}
                   color={color}
                   progress={progress}
@@ -208,6 +226,26 @@ function OpeningLines({
         </Card>
       </div>
     </main>
+  )
+}
+
+function NamesSwitch({
+  id,
+  checked,
+  onChange,
+}: {
+  id: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
+  const o = useOpeningsTranslations()
+  return (
+    <div className="flex items-center gap-2">
+      <Switch id={id} checked={checked} onCheckedChange={onChange} />
+      <Label htmlFor={id} className="text-muted-foreground text-xs font-normal">
+        {o.showNames}
+      </Label>
+    </div>
   )
 }
 

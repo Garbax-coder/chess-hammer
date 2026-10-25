@@ -220,14 +220,18 @@ Fatto (2026-10-25):
   dell'ultima posizione con nome lungo il percorso (vale anche per le
   trasposizioni). Nella consultazione: sopra ogni linea, accanto alle mosse
   dove il nome cambia (solo la parte nuova) e sotto la scacchiera. I nomi
-  sono solo in inglese, come su Lichess.
+  sono solo in inglese, come su Lichess. Nell'albero e nell'elenco delle linee uno
+  switch per card mostra o nasconde i nomi; la scelta resta nel browser
+  (localStorage `openings-tree-names`, `openings-line-names`).
 
 Da fare prima del merge:
 
 - **Esportazione dei dati** (profilo): includere `opening_node_progress` e
   `opening_attempts`.
 - **Informativa privacy**: verificare se i tentativi sulle aperture vanno
-  citati tra i dati di allenamento (e aggiornare la versione legale).
+  citati tra i dati di allenamento, aggiungere alle preferenze salvate nel
+  browser la visualizzazione dei nomi delle varianti, e aggiornare la
+  versione legale.
 - **Anteprima Vercel**: controllare che le variabili "Preview" puntino al
   progetto Supabase di sviluppo.
 - Un test e2e del Drill.
