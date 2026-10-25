@@ -16,10 +16,10 @@ const repertoire: RepertoireWithNodes = {
   eco: 'B12',
   color: 'b',
   nodes: [
-    { id: 1, parent_id: null, ply: 1, uci: 'e2e4', san: 'e4', epd: 'a' },
-    { id: 2, parent_id: 1, ply: 2, uci: 'c7c6', san: 'c6', epd: 'b' },
-    { id: 3, parent_id: null, ply: 1, uci: 'd2d4', san: 'd4', epd: 'c' },
-    { id: 4, parent_id: 3, ply: 2, uci: 'd7d5', san: 'd5', epd: 'd' },
+    { id: 1, parent_id: null, ply: 1, uci: 'e2e4', san: 'e4', epd: 'a', is_main: true },
+    { id: 2, parent_id: 1, ply: 2, uci: 'c7c6', san: 'c6', epd: 'b', is_main: true },
+    { id: 3, parent_id: null, ply: 1, uci: 'd2d4', san: 'd4', epd: 'c', is_main: true },
+    { id: 4, parent_id: 3, ply: 2, uci: 'd7d5', san: 'd5', epd: 'd', is_main: true },
   ],
 }
 const mastered: OpeningProgress = {

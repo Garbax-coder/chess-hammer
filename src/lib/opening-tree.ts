@@ -12,6 +12,8 @@ export interface OpeningNode {
   uci: string
   san: string
   epd: string
+  /** False per un'alternativa accettata: valida nel Drill, mai allenata. */
+  is_main: boolean
 }
 
 export interface OpeningProgress {
@@ -41,6 +43,8 @@ export function buildOpeningTree(nodes: OpeningNode[]): OpeningTree {
   const leaves: OpeningNode[] = []
   const visit = (parentId: number | null) => {
     for (const child of children.get(parentId) ?? []) {
+      // Le alternative non hanno seguito e non sono Run.
+      if (!child.is_main) continue
       if (children.has(child.id)) visit(child.id)
       else leaves.push(child)
     }
@@ -77,19 +81,19 @@ export function moveState(progress: OpeningProgress | undefined, now: Date): Mov
 
 /**
  * Il prossimo Run da allenare: quello con piu' mosse dell'utente da fare
- * (in scadenza o mai viste); a parita', quello visto meno di recente. Il Run
- * appena giocato si evita, se ce n'e' un altro.
+ * (in scadenza o mai viste); a parita', quello visto meno di recente. I Run
+ * in `exclude` (gia' giocati nella sessione) si evitano, finche' ce ne sono
+ * altri.
  */
 export function chooseRun(
   tree: OpeningTree,
   progress: Map<number, OpeningProgress>,
   color: OpeningColor,
   now: Date,
-  previousLeafId?: number,
+  exclude: ReadonlySet<number> = new Set(),
 ): number | undefined {
-  const candidates = tree.leaves.filter(
-    (leaf) => tree.leaves.length === 1 || leaf.id !== previousLeafId,
-  )
+  const fresh = tree.leaves.filter((leaf) => !exclude.has(leaf.id))
+  const candidates = fresh.length > 0 ? fresh : tree.leaves
   let best: { leafId: number; pending: number; lastSeen: number } | undefined
   for (const leaf of candidates) {
     const userMoves = runPath(tree, leaf.id).filter((n) => isUserMove(n, color))
@@ -112,6 +116,23 @@ export function chooseRun(
   return best?.leafId
 }
 
+/**
+ * Avanzamento rapido del tronco: da quale mossa del Run comincia la domanda.
+ * Le mosse prima della prima mossa dell'utente non ancora nota (`isKnown`:
+ * consolidata nell'allenamento, gia' vista nello studio) si giocano da sole.
+ * Se l'utente le conosce tutte si parte dalla sua ultima mossa: il Run non
+ * resta mai senza domande.
+ */
+export function fastForwardIndex(
+  path: OpeningNode[],
+  color: OpeningColor,
+  isKnown: (node: OpeningNode) => boolean,
+): number {
+  const userIndexes = path.flatMap((n, i) => (isUserMove(n, color) ? [i] : []))
+  if (userIndexes.length === 0) return 0
+  return userIndexes.find((i) => !isKnown(path[i])) ?? userIndexes[userIndexes.length - 1]
+}
+
 export interface OpeningCoverage {
   userMoves: number
   seen: number
@@ -127,7 +148,9 @@ export function openingCoverage(
   color: OpeningColor,
   now: Date,
 ): OpeningCoverage {
-  const userNodes = [...tree.byId.values()].filter((n) => isUserMove(n, color))
+  const userNodes = [...tree.byId.values()].filter(
+    (n) => n.is_main && isUserMove(n, color),
+  )
   const states = new Map(userNodes.map((n) => [n.id, moveState(progress.get(n.id), now)]))
   const count = (state: MoveState) =>
     [...states.values()].filter((s) => s === state).length
@@ -261,4 +284,9 @@ export function nameChange(
   if (common === 0) return name
   const rest = parts.slice(common)
   return rest.length > 0 ? rest.join(', ') : undefined
+}
+
+/** Le alternative accettate al posto della mossa `node` (stessa posizione). */
+export function alternativesTo(tree: OpeningTree, node: OpeningNode): OpeningNode[] {
+  return (tree.children.get(node.parent_id) ?? []).filter((n) => !n.is_main)
 }

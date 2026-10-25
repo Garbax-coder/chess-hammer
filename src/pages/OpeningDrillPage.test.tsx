@@ -9,10 +9,19 @@ import OpeningDrillPage from './OpeningDrillPage'
 
 const o = openingsTranslations.it
 const record = vi.fn()
+let progress = new Map<number, OpeningProgress>()
 
 // Bianco: 1.e4 e5 2.Nf3 (Run 3) oppure 1.e4 c5 2.Nc3 (Run 5).
 function node(id: number, parent: number | null, ply: number, san: string, uci: string) {
-  return { id, parent_id: parent, ply, uci, san, epd: `epd-${id}` } satisfies OpeningNode
+  return {
+    id,
+    parent_id: parent,
+    ply,
+    uci,
+    san,
+    epd: `epd-${id}`,
+    is_main: true,
+  } satisfies OpeningNode
 }
 const repertoire: RepertoireWithNodes = {
   id: 'r1',
@@ -26,6 +35,8 @@ const repertoire: RepertoireWithNodes = {
     node(3, 2, 3, 'Nf3', 'g1f3'),
     node(4, 1, 2, 'c5', 'c7c5'),
     node(5, 4, 3, 'Nc3', 'b1c3'),
+    // 2.Bc4: alternativa accettata a 2.Nf3.
+    { ...node(6, 2, 3, 'Bc4', 'f1c4'), is_main: false },
   ],
 }
 
@@ -35,7 +46,7 @@ vi.mock('@/lib/language-context', async () => {
 })
 vi.mock('@/hooks/use-openings', () => ({
   useRepertoires: () => ({ data: [repertoire], isLoading: false }),
-  useOpeningProgress: () => ({ data: new Map<number, OpeningProgress>() }),
+  useOpeningProgress: () => ({ data: progress }),
   useRecordOpeningMove: () => ({ mutate: record, isError: false }),
 }))
 vi.mock('@/hooks/use-user-stats', () => ({ useUserStats: () => ({ data: undefined }) }))
@@ -52,7 +63,7 @@ vi.mock('@/components/opening-board', () => ({
     hintUci?: string
   }) => (
     <div data-testid="board" data-hint={hintUci ?? ''}>
-      {['e2e4', 'd2d4', 'g1f3', 'b1c3'].map((uci) => (
+      {['e2e4', 'd2d4', 'g1f3', 'b1c3', 'f1c4'].map((uci) => (
         <button
           key={uci}
           type="button"
@@ -80,6 +91,8 @@ describe('OpeningDrillPage', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     record.mockReset()
+    progress = new Map()
+    window.localStorage.clear()
   })
   afterEach(() => vi.useRealTimers())
 
@@ -132,6 +145,88 @@ describe('OpeningDrillPage', () => {
       expect.objectContaining({ nodeId: 5, runLeafId: 5, result: 'correct' }),
     )
     expect(screen.getByRole('status')).toHaveTextContent(o.runDone)
+  })
+
+  it('accepts an alternative without penalty, then asks for the repertoire move', () => {
+    renderDrill()
+    fireEvent.click(screen.getByRole('button', { name: 'e2e4' }))
+    act(() => vi.advanceTimersByTime(OPPONENT_DELAY_MS))
+
+    fireEvent.click(screen.getByRole('button', { name: 'f1c4' }))
+    expect(record).toHaveBeenLastCalledWith(
+      expect.objectContaining({ nodeId: 3, playedUci: 'f1c4', result: 'alternative' }),
+    )
+    expect(screen.getByRole('status')).toHaveTextContent(
+      o.alternativePlayed('Bc4', 'Nf3'),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'g1f3' }))
+    expect(record).toHaveBeenCalledTimes(2)
+    expect(screen.getByText(o.runResult(2, 2))).toBeInTheDocument()
+  })
+
+  it('runs a session, repeats the lines with mistakes, then sums up', () => {
+    renderDrill()
+    const play = (uci: string) =>
+      fireEvent.click(screen.getByRole('button', { name: uci }))
+    const opponent = () => act(() => vi.advanceTimersByTime(OPPONENT_DELAY_MS))
+    // Due linee nel repertorio: la sessione e' di due.
+    expect(screen.getByText(o.sessionLine(1, 2))).toBeInTheDocument()
+
+    play('d2d4') // errore su 1.e4
+    play('e2e4')
+    opponent()
+    play('g1f3')
+    fireEvent.click(screen.getByRole('button', { name: o.nextRun }))
+
+    expect(screen.getByText(o.sessionLine(2, 2))).toBeInTheDocument()
+    play('e2e4')
+    opponent()
+    play('b1c3')
+    fireEvent.click(screen.getByRole('button', { name: o.continueRepeat }))
+
+    // Di nuovo la linea con l'errore.
+    expect(screen.getByText(o.repeatPhase(1, 1))).toBeInTheDocument()
+    play('e2e4')
+    opponent()
+    expect(screen.getByRole('status')).toHaveTextContent(o.yourMove)
+    play('g1f3')
+    fireEvent.click(screen.getByRole('button', { name: o.showSummary }))
+
+    expect(screen.getByText(o.sessionDone)).toBeInTheDocument()
+    expect(screen.getByText(o.sessionSummary(2, 5, 6))).toBeInTheDocument()
+    expect(screen.getByText(o.repeatedLines(1))).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: o.newSession }))
+    expect(screen.getByText(o.sessionLine(1, 2))).toBeInTheDocument()
+  })
+
+  it('plays the moves already mastered on its own (fast-forward)', () => {
+    progress = new Map([
+      [
+        1,
+        {
+          node_id: 1,
+          attempts: 3,
+          first_try_correct: 3,
+          streak: 3,
+          last_seen_at: '2026-10-24T10:00:00Z',
+          due_at: '2099-01-01T00:00:00Z',
+        },
+      ],
+    ])
+    renderDrill('/openings/italian-game?line=3')
+    // 1.e4 (consolidata) e 1...e5 si giocano da sole: la domanda e' 2.Nf3.
+    expect(screen.getByRole('status')).toHaveTextContent(o.yourMove)
+    expect(screen.getByRole('button', { name: 'g1f3' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('button', { name: 'g1f3' }))
+    expect(record).toHaveBeenCalledTimes(1)
+    expect(record).toHaveBeenLastCalledWith(expect.objectContaining({ nodeId: 3 }))
+
+    // Spento l'avanzamento rapido, la linea riparte dalla prima mossa.
+    fireEvent.click(screen.getByRole('switch', { name: o.fastForward }))
+    fireEvent.click(screen.getByRole('button', { name: o.repeatRun }))
+    fireEvent.click(screen.getByRole('button', { name: 'e2e4' }))
+    expect(record).toHaveBeenLastCalledWith(expect.objectContaining({ nodeId: 1 }))
   })
 
   it('shows the repertoire name in the user language', () => {

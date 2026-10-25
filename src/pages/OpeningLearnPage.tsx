@@ -1,23 +1,18 @@
-import { Chess } from 'chess.js'
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { OPPONENT_DELAY_MS, OpeningBoard } from '@/components/opening-board'
+import { OpeningBoard } from '@/components/opening-board'
 import { MoveList } from '@/components/opening-move-list'
 import { RepertoireGate, type RepertoireData } from '@/components/repertoire-gate'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { useLocalToggle } from '@/hooks/use-local-toggle'
+import { useOpeningRun } from '@/hooks/use-opening-run'
 import { useLearnOpeningMove, useOpeningNames } from '@/hooks/use-openings'
 import { useUserStats } from '@/hooks/use-user-stats'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
-import {
-  chooseLearnRun,
-  isUserMove,
-  moveLabel,
-  nameAt,
-  runPath,
-  sameMove,
-  type OpeningNode,
-} from '@/lib/opening-tree'
+import { chooseLearnRun, moveLabel, nameAt } from '@/lib/opening-tree'
 
 // Modalita' Learn: si studia una linea seguendo la freccia. L'avversario
 // risponde da solo; ogni mossa dell'utente si gioca guidati (o la gioca
@@ -48,55 +43,34 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
       ? requested
       : chooseLearnRun(tree, progress, color)
   })
-  const [index, setIndex] = useState(0)
-  const [missed, setMissed] = useState(false)
+  const [nonce, setNonce] = useState(0)
+  const [fastForward, setFastForward] = useLocalToggle('openings-fast-forward', true)
 
-  const path = useMemo(() => (leafId ? runPath(tree, leafId) : []), [tree, leafId])
-  const fen = useMemo(() => {
-    const chess = new Chess()
-    for (const node of path.slice(0, index)) chess.move(node.san)
-    return chess.fen()
-  }, [path, index])
-  const next: OpeningNode | undefined = path[index]
-  const done = leafId !== undefined && !next
-  const userTurn = !!next && isUserMove(next, color)
-
-  // La risposta dell'avversario, dopo una breve pausa.
-  useEffect(() => {
-    if (!next || userTurn) return
-    const timer = setTimeout(() => setIndex((i) => i + 1), OPPONENT_DELAY_MS)
-    return () => clearTimeout(timer)
-  }, [next, userTurn])
-
-  function playNext() {
-    if (!next || !userTurn) return
-    learn.mutate(next.id)
-    setMissed(false)
-    setIndex((i) => i + 1)
-  }
-
-  function handleMove(uci: string): boolean {
-    if (!next || !userTurn) return false
-    if (!sameMove(uci, next.uci)) {
-      setMissed(true)
-      return false
-    }
-    playNext()
-    return true
-  }
+  const run = useOpeningRun({
+    tree,
+    color,
+    leafId,
+    runKey: `${leafId}:${nonce}`,
+    fastForward,
+    // Nello studio sono note le mosse gia' studiate o allenate.
+    isKnown: (node) => progress.has(node.id),
+    onCorrect: (node) => learn.mutate(node.id),
+  })
+  const { path, index, next, done, userTurn, hint } = run
 
   function startLine(id: number | undefined) {
     setLeafId(id)
-    setIndex(0)
-    setMissed(false)
+    setNonce((n) => n + 1)
   }
 
   const lineName = leafId ? nameAt(tree, leafId, names ?? new Map()) : undefined
   const label = next ? moveLabel(next, true) : ''
   const status = done
     ? o.lineLearned
-    : missed
-      ? o.followArrow(label)
+    : hint
+      ? hint.alternative
+        ? o.alternativePlayed(hint.alternative.san, hint.node.san)
+        : o.followArrow(label)
       : userTurn
         ? o.playMove(label)
         : o.opponentMoving
@@ -131,6 +105,20 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
 
         <p className="text-muted-foreground text-xs">{o.learnIntro}</p>
 
+        <div className="flex items-center gap-2">
+          <Switch
+            id="fast-forward"
+            checked={fastForward}
+            onCheckedChange={setFastForward}
+          />
+          <Label
+            htmlFor="fast-forward"
+            className="text-muted-foreground text-xs font-normal"
+          >
+            {o.fastForward}
+          </Label>
+        </div>
+
         <Card size="sm">
           <CardHeader>
             <CardTitle className="text-sm">{o.movesTitle}</CardTitle>
@@ -164,23 +152,33 @@ function OpeningLearn({ repertoire, tree, progress }: RepertoireData) {
           <>
             <p
               role="status"
-              className={`text-sm font-medium ${missed ? 'text-destructive' : 'text-foreground'}`}
+              className={`text-sm font-medium ${
+                hint
+                  ? hint.alternative
+                    ? 'text-amber-700 dark:text-amber-300'
+                    : 'text-destructive'
+                  : 'text-foreground'
+              }`}
             >
               {status}
             </p>
             <OpeningBoard
-              fen={fen}
+              fen={run.fen}
               orientation={color === 'w' ? 'white' : 'black'}
               interactive={userTurn}
-              onMove={handleMove}
+              onMove={run.handleMove}
               hintUci={userTurn ? next.uci : undefined}
-              lastMoveUci={path[index - 1]?.uci}
+              lastMoveUci={run.lastMoveUci}
               boardTheme={stats?.board_theme}
               pieceSet={stats?.piece_set}
             />
             {learn.isError && <p className="text-destructive text-xs">{o.saveError}</p>}
             {userTurn && (
-              <Button variant="outline" className="w-fit" onClick={playNext}>
+              <Button
+                variant="outline"
+                className="w-fit"
+                onClick={() => next && run.handleMove(next.uci)}
+              >
                 {o.playForMe}
               </Button>
             )}

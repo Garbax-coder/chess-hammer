@@ -55,6 +55,17 @@ export interface OpeningsTranslations {
   learnNext: string
   repeatLearn: string
   allLearned: string
+  alternativeLabel: string
+  alternativePlayed: (played: string, main: string) => string
+  fastForward: string
+  sessionLine: (n: number, total: number) => string
+  repeatPhase: (n: number, total: number) => string
+  continueRepeat: string
+  showSummary: string
+  sessionDone: string
+  sessionSummary: (lines: number, correct: number, total: number) => string
+  repeatedLines: (n: number) => string
+  newSession: string
   /** Nomi dei repertori di catalogo, per slug (altrimenti il nome inglese). */
   names: Record<string, string>
 }
@@ -118,6 +129,22 @@ const it: OpeningsTranslations = {
   learnNext: 'Studia la prossima linea',
   repeatLearn: 'Rivedi questa linea',
   allLearned: 'Hai già studiato tutte le linee di questo repertorio: ora allenale.',
+  alternativeLabel: 'Alternativa accettata',
+  alternativePlayed: (played, main) =>
+    `${played} è una buona mossa, ma in questa linea alleniamo ${main}.`,
+  fastForward: 'Salta le mosse già note',
+  sessionLine: (n, total) => `Linea ${n} di ${total}`,
+  repeatPhase: (n, total) => `Ripasso degli errori: ${n} di ${total}`,
+  continueRepeat: 'Ripassa gli errori',
+  showSummary: 'Vedi il riepilogo',
+  sessionDone: 'Sessione completata',
+  sessionSummary: (lines, ok, total) =>
+    `${lines} ${lines === 1 ? 'linea' : 'linee'} · ${ok} su ${total} al primo colpo`,
+  repeatedLines: (n) =>
+    n === 0
+      ? 'Nessun errore da ripassare.'
+      : `${n} ${n === 1 ? 'linea ripassata' : 'linee ripassate'} alla fine.`,
+  newSession: 'Nuova sessione',
   names: {
     'italian-game': 'Partita Italiana',
     'queens-gambit': 'Gambetto di Donna',
@@ -178,6 +205,22 @@ const en: OpeningsTranslations = {
   learnNext: 'Learn the next line',
   repeatLearn: 'Go through this line again',
   allLearned: 'You have learned every line of this repertoire: now train them.',
+  alternativeLabel: 'Accepted alternative',
+  alternativePlayed: (played, main) =>
+    `${played} is a good move, but in this line we train ${main}.`,
+  fastForward: 'Skip moves you know',
+  sessionLine: (n, total) => `Line ${n} of ${total}`,
+  repeatPhase: (n, total) => `Reviewing mistakes: ${n} of ${total}`,
+  continueRepeat: 'Review the mistakes',
+  showSummary: 'See the summary',
+  sessionDone: 'Session complete',
+  sessionSummary: (lines, ok, total) =>
+    `${lines} ${lines === 1 ? 'line' : 'lines'} · ${ok} of ${total} on the first try`,
+  repeatedLines: (n) =>
+    n === 0
+      ? 'No mistakes to review.'
+      : `${n} ${n === 1 ? 'line' : 'lines'} reviewed at the end.`,
+  newSession: 'New session',
   names: {},
 }
 
@@ -236,6 +279,22 @@ const fr: OpeningsTranslations = {
   repeatLearn: 'Revoir cette ligne',
   allLearned:
     'Vous avez appris toutes les lignes de ce répertoire : entraînez-les maintenant.',
+  alternativeLabel: 'Alternative acceptée',
+  alternativePlayed: (played, main) =>
+    `${played} est un bon coup, mais dans cette ligne on entraîne ${main}.`,
+  fastForward: 'Passer les coups déjà connus',
+  sessionLine: (n, total) => `Ligne ${n} sur ${total}`,
+  repeatPhase: (n, total) => `Révision des erreurs : ${n} sur ${total}`,
+  continueRepeat: 'Revoir les erreurs',
+  showSummary: 'Voir le bilan',
+  sessionDone: 'Session terminée',
+  sessionSummary: (lines, ok, total) =>
+    `${lines} ${lines === 1 ? 'ligne' : 'lignes'} · ${ok} sur ${total} du premier coup`,
+  repeatedLines: (n) =>
+    n === 0
+      ? 'Aucune erreur à revoir.'
+      : `${n} ${n === 1 ? 'ligne revue' : 'lignes revues'} à la fin.`,
+  newSession: 'Nouvelle session',
   names: {
     'italian-game': 'Partie italienne',
     'queens-gambit': 'Gambit dame',
@@ -301,6 +360,22 @@ const es: OpeningsTranslations = {
   learnNext: 'Aprender la siguiente línea',
   repeatLearn: 'Repasar esta línea',
   allLearned: 'Ya has aprendido todas las líneas de este repertorio: ahora entrénalas.',
+  alternativeLabel: 'Alternativa aceptada',
+  alternativePlayed: (played, main) =>
+    `${played} es una buena jugada, pero en esta línea entrenamos ${main}.`,
+  fastForward: 'Saltar las jugadas ya conocidas',
+  sessionLine: (n, total) => `Línea ${n} de ${total}`,
+  repeatPhase: (n, total) => `Repaso de errores: ${n} de ${total}`,
+  continueRepeat: 'Repasar los errores',
+  showSummary: 'Ver el resumen',
+  sessionDone: 'Sesión completada',
+  sessionSummary: (lines, ok, total) =>
+    `${lines} ${lines === 1 ? 'línea' : 'líneas'} · ${ok} de ${total} a la primera`,
+  repeatedLines: (n) =>
+    n === 0
+      ? 'Ningún error que repasar.'
+      : `${n} ${n === 1 ? 'línea repasada' : 'líneas repasadas'} al final.`,
+  newSession: 'Nueva sesión',
   names: {
     'italian-game': 'Apertura italiana',
     'queens-gambit': 'Gambito de dama',
@@ -362,6 +437,22 @@ const de: OpeningsTranslations = {
   learnNext: 'Nächste Linie lernen',
   repeatLearn: 'Diese Linie noch einmal ansehen',
   allLearned: 'Du hast alle Linien dieses Repertoires gelernt: Trainiere sie jetzt.',
+  alternativeLabel: 'Akzeptierte Alternative',
+  alternativePlayed: (played, main) =>
+    `${played} ist ein guter Zug, aber in dieser Linie trainieren wir ${main}.`,
+  fastForward: 'Bekannte Züge überspringen',
+  sessionLine: (n, total) => `Linie ${n} von ${total}`,
+  repeatPhase: (n, total) => `Fehler wiederholen: ${n} von ${total}`,
+  continueRepeat: 'Fehler wiederholen',
+  showSummary: 'Zur Zusammenfassung',
+  sessionDone: 'Sitzung abgeschlossen',
+  sessionSummary: (lines, ok, total) =>
+    `${lines} ${lines === 1 ? 'Linie' : 'Linien'} · ${ok} von ${total} im ersten Versuch`,
+  repeatedLines: (n) =>
+    n === 0
+      ? 'Keine Fehler zu wiederholen.'
+      : `${n} ${n === 1 ? 'Linie' : 'Linien'} am Ende wiederholt.`,
+  newSession: 'Neue Sitzung',
   names: {
     'italian-game': 'Italienische Partie',
     'queens-gambit': 'Damengambit',

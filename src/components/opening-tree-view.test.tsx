@@ -14,7 +14,7 @@ vi.mock('@/lib/language-context', () => ({ useLanguage: () => ({ language: 'it' 
 
 // Bianco: 1.e4 e5 2.Nf3 oppure 1.e4 c5 2.Nc3.
 function node(id: number, parent: number | null, ply: number, san: string): OpeningNode {
-  return { id, parent_id: parent, ply, uci: san, san, epd: `epd-${id}` }
+  return { id, parent_id: parent, ply, uci: san, san, epd: `epd-${id}`, is_main: true }
 }
 const tree = buildOpeningTree([
   node(1, null, 1, 'e4'),
@@ -91,6 +91,32 @@ describe('OpeningTreeView', () => {
     expect(screen.getByText("King's Pawn Game")).toBeInTheDocument()
     expect(screen.getByText('Knight Variation')).toBeInTheDocument()
     expect(screen.getByText('Sicilian Defense')).toBeInTheDocument()
+  })
+
+  it('marks an accepted alternative apart, without mastery colours', () => {
+    render(
+      <OpeningTreeView
+        tree={buildOpeningTree([
+          node(1, null, 1, 'e4'),
+          node(2, 1, 2, 'e5'),
+          node(3, 2, 3, 'Nf3'),
+          { ...node(4, 2, 3, 'Bc4'), is_main: false },
+        ])}
+        color="w"
+        progress={new Map()}
+        now={new Date('2026-10-25T12:00:00Z')}
+        selectedId={null}
+        onSelect={() => {}}
+      />,
+    )
+    expect(screen.getByRole('button', { name: '2.Bc4' })).toHaveAttribute(
+      'title',
+      o.alternativeLabel,
+    )
+    expect(screen.getByRole('button', { name: '2.Nf3' })).toHaveAttribute(
+      'title',
+      o.legend.new,
+    )
   })
 
   it('selects a move and collapses a branch', () => {

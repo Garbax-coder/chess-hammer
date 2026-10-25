@@ -157,17 +157,22 @@ function Move({
   onSelect,
 }: LineProps & { node: OpeningNode; startsRow: boolean }) {
   const o = useOpeningsTranslations()
+  const alternative = !node.is_main
   const userMove = isUserMove(node, color)
-  const state = userMove ? moveState(progress.get(node.id), now) : null
+  const state = userMove && !alternative ? moveState(progress.get(node.id), now) : null
   const selected = node.id === selectedId
   return (
     <button
       type="button"
       aria-current={selected ? 'true' : undefined}
-      title={state ? o.legend[state] : o.opponentMove}
+      title={alternative ? o.alternativeLabel : state ? o.legend[state] : o.opponentMove}
       onClick={() => onSelect(node.id)}
       className={`rounded px-1 py-0.5 font-mono text-xs tabular-nums transition-colors ${
-        state ? MOVE_STATE_CLASSES[state] : 'text-foreground hover:bg-muted'
+        alternative
+          ? 'border-muted-foreground/60 text-muted-foreground border border-dashed'
+          : state
+            ? MOVE_STATE_CLASSES[state]
+            : 'text-foreground hover:bg-muted'
       } ${selected ? 'ring-primary ring-2' : ''}`}
     >
       {moveLabel(node, startsRow)}

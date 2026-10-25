@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
+  buildRepertoire,
   buildRepertoireNodes,
   catalogSql,
   colorAtPly,
@@ -20,14 +21,20 @@ function source(lines: string[], color: 'w' | 'b' = 'w'): RepertoireSource {
 
 describe('the catalog repertoires', () => {
   it.each(sources.map((s) => [s.slug, s] as const))(
-    '%s: every line is legal and becomes one Run',
+    '%s: every line is legal and becomes one Run, alternatives aside',
     (_slug, repertoire) => {
       const nodes = buildRepertoireNodes(repertoire)
       const parents = new Set(nodes.map((n) => n.parentPath))
-      const leaves = nodes.filter((n) => !parents.has(n.path))
+      const leaves = nodes.filter((n) => n.isMain && !parents.has(n.path))
       expect(leaves).toHaveLength(repertoire.lines.length)
       // Ogni Run finisce con una domanda all'utente.
       for (const leaf of leaves) expect(colorAtPly(leaf.ply)).toBe(repertoire.color)
+      // Le alternative dichiarate ci sono, senza seguito.
+      const alternatives = nodes.filter((n) => !n.isMain)
+      expect(alternatives).toHaveLength(repertoire.alternatives?.length ?? 0)
+      for (const alternative of alternatives) {
+        expect(parents.has(alternative.path)).toBe(false)
+      }
     },
   )
 
@@ -93,6 +100,63 @@ describe('catalogSql', () => {
   it('stores the position without move counters', () => {
     expect(epdOf('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1')).toBe(
       'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq -',
+    )
+  })
+})
+
+describe('alternatives', () => {
+  it('adds a declared alternative next to the repertoire move', () => {
+    const nodes = buildRepertoireNodes({
+      ...source(['e4 e5 Nf3']),
+      alternatives: ['e4 e5 Bc4'],
+    })
+    expect(nodes.find((n) => n.san === 'Bc4')).toMatchObject({
+      parentPath: 'e2e4.e7e5',
+      isMain: false,
+    })
+    expect(nodes.find((n) => n.san === 'Nf3')?.isMain).toBe(true)
+  })
+
+  it('rejects an alternative with no repertoire move to stand beside', () => {
+    expect(() =>
+      buildRepertoireNodes({ ...source(['e4 e5 Nf3']), alternatives: ['e4 c5 Nf3'] }),
+    ).toThrow(/alternativa 1/)
+  })
+
+  it('rejects a line that continues after an alternative', () => {
+    expect(() =>
+      buildRepertoireNodes({
+        ...source(['e4 e5 Nf3', 'e4 e5 Bc4 Nc6 Nf3']),
+        alternatives: ['e4 e5 Bc4'],
+      }),
+    ).toThrow()
+  })
+})
+
+describe('buildRepertoire in lenient mode (PGN import)', () => {
+  it('trims a trailing opponent move and keeps a second user move as an alternative', () => {
+    const report = buildRepertoire(
+      source(['e4 e5 Nf3 Nc6', 'e4 e5 Bc4 Bc5 c3', 'e4 c5 Nf3']),
+      { lenient: true },
+    )
+    expect(report.trimmed).toBe(1)
+    expect(report.alternatives).toBe(1)
+    const bc4 = report.nodes.find((n) => n.san === 'Bc4')!
+    expect(bc4.isMain).toBe(false)
+    // Il seguito dell'alternativa si lascia cadere.
+    expect(report.nodes.some((n) => n.parentPath === bc4.path)).toBe(false)
+    expect(report.nodes.filter((n) => n.isMain).map((n) => n.san)).toEqual([
+      'e4',
+      'c5',
+      'e5',
+      'Nf3',
+      'Nf3',
+    ])
+  })
+
+  it('still rejects an illegal move', () => {
+    expect(() => buildRepertoire(source(['e4 e5 Ke3']), { lenient: true })).toThrow(
+      /non legale/,
     )
   })
 })

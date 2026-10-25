@@ -16,6 +16,12 @@ export interface RepertoireSource {
   color: OpeningColor
   source: string | null
   lines: string[]
+  /**
+   * Mosse alternative accettate: linee che finiscono con una mossa
+   * dell'utente diversa da quella del repertorio nella stessa posizione. Nel
+   * Drill sono valide ma non si allenano (niente seguito, niente Run).
+   */
+  alternatives?: string[]
 }
 
 export interface CatalogNode {
@@ -27,6 +33,8 @@ export interface CatalogNode {
   san: string
   /** Posizione dopo la mossa senza i contatori (riconosce le trasposizioni). */
   epd: string
+  /** False per un'alternativa accettata. */
+  isMain: boolean
 }
 
 export function epdOf(fen: string): string {
@@ -38,65 +46,143 @@ export function colorAtPly(ply: number): OpeningColor {
   return ply % 2 === 1 ? 'w' : 'b'
 }
 
-/**
- * I nodi di un repertorio, in ordine di ply. Lancia un errore se una mossa
- * non e' legale, se una linea finisce con una mossa dell'avversario (un Run
- * finisce con una domanda all'utente) o se in una posizione l'utente ha piu'
- * di una mossa (le alternative accettate arriveranno con il flag is_main).
- */
-export function buildRepertoireNodes(source: RepertoireSource): CatalogNode[] {
-  const nodes = new Map<string, CatalogNode>()
+export interface BuildReport {
+  nodes: CatalogNode[]
+  /** Mosse dell'avversario in fondo alle linee, tolte (solo in modo tollerante). */
+  trimmed: number
+  /** Seconde mosse dell'utente nella stessa posizione, tenute come alternative. */
+  alternatives: number
+}
 
-  source.lines.forEach((line, lineIndex) => {
-    const sans = line.trim().split(/\s+/)
-    if (colorAtPly(sans.length) !== source.color) {
-      throw new Error(
-        `${source.slug}, linea ${lineIndex + 1}: deve finire con una mossa di chi allena il repertorio`,
-      )
-    }
+/**
+ * I nodi di un repertorio, in ordine di ply. Un Run finisce con una domanda
+ * all'utente, e in ogni posizione l'utente ha una sola mossa da allenare (le
+ * altre sono alternative accettate, senza seguito).
+ *
+ * In modo rigido (catalogo) una linea che non rispetta queste regole e' un
+ * errore. In modo tollerante (import PGN) si aggiusta: le mosse
+ * dell'avversario in fondo si tolgono, e una seconda mossa dell'utente
+ * diventa un'alternativa senza il suo seguito. Una mossa illegale e' sempre
+ * un errore.
+ */
+export function buildRepertoire(
+  source: RepertoireSource,
+  { lenient = false }: { lenient?: boolean } = {},
+): BuildReport {
+  const nodes = new Map<string, CatalogNode>()
+  // Per ogni posizione (percorso del padre) la mossa principale dell'utente.
+  const mainUserMove = new Map<string, string>()
+  let trimmed = 0
+  let alternatives = 0
+  const fail = (message: string): never => {
+    throw new Error(`${source.slug}, ${message}`)
+  }
+
+  function addLine(sans: string[], label: string, asAlternative: boolean) {
     const chess = new Chess()
     let path: string | null = null
-    sans.forEach((san, index) => {
+    for (const [index, san] of sans.entries()) {
       let move
       try {
         move = chess.move(san)
       } catch {
-        throw new Error(
-          `${source.slug}, linea ${lineIndex + 1}: mossa ${index + 1} (${san}) non legale`,
-        )
+        return fail(`${label}: mossa ${index + 1} (${san}) non legale`)
       }
       const uci = `${move.from}${move.to}${move.promotion ?? ''}`
+      const ply = index + 1
       const childPath: string = path ? `${path}.${uci}` : uci
-      if (!nodes.has(childPath)) {
-        nodes.set(childPath, {
-          path: childPath,
-          parentPath: path,
-          ply: index + 1,
-          uci,
-          san: move.san,
-          epd: epdOf(chess.fen()),
-        })
+      const existing = nodes.get(childPath)
+      const isLast = index === sans.length - 1
+      if (existing && !existing.isMain) {
+        // Un'alternativa gia' presente: va bene come ultima mossa, non come
+        // inizio di un seguito (che in modo tollerante si lascia cadere).
+        if (isLast || lenient) return
+        return fail(`${label}: ${move.san} e' un'alternativa, non puo' avere un seguito`)
+      }
+      const userMove = colorAtPly(ply) === source.color
+      const parentKey = path ?? ''
+      const main = mainUserMove.get(parentKey)
+      if (!existing && userMove && main !== undefined && main !== childPath) {
+        // Una seconda mossa dell'utente nella stessa posizione.
+        if (asAlternative && isLast) {
+          nodes.set(
+            childPath,
+            node(childPath, path, ply, uci, move.san, chess.fen(), false),
+          )
+          return
+        }
+        if (!lenient) {
+          return fail(
+            `${label}: piu' mosse dell'utente dopo ${path || 'la posizione iniziale'} (${nodes.get(main)!.san}, ${move.san})`,
+          )
+        }
+        nodes.set(
+          childPath,
+          node(childPath, path, ply, uci, move.san, chess.fen(), false),
+        )
+        alternatives++
+        return
+      }
+      if (asAlternative && isLast) {
+        return fail(
+          `${label}: l'alternativa ${move.san} non ha una mossa principale da affiancare`,
+        )
+      }
+      if (!existing) {
+        nodes.set(childPath, node(childPath, path, ply, uci, move.san, chess.fen(), true))
+        if (userMove) mainUserMove.set(parentKey, childPath)
       }
       path = childPath
-    })
-  })
-
-  const all = [...nodes.values()]
-  const userMovesByParent = new Map<string, string[]>()
-  for (const node of all) {
-    if (colorAtPly(node.ply) !== source.color) continue
-    const key = node.parentPath ?? ''
-    userMovesByParent.set(key, [...(userMovesByParent.get(key) ?? []), node.san])
-  }
-  for (const [parent, moves] of userMovesByParent) {
-    if (moves.length > 1) {
-      throw new Error(
-        `${source.slug}: piu' mosse dell'utente dopo ${parent || 'la posizione iniziale'} (${moves.join(', ')})`,
-      )
     }
   }
 
-  return all.sort((a, b) => a.ply - b.ply || a.path.localeCompare(b.path))
+  source.lines.forEach((line, lineIndex) => {
+    let sans = line.trim().split(/\s+/).filter(Boolean)
+    if (sans.length > 0 && colorAtPly(sans.length) !== source.color) {
+      if (!lenient) {
+        fail(
+          `linea ${lineIndex + 1}: deve finire con una mossa di chi allena il repertorio`,
+        )
+      }
+      trimmed++
+      sans = sans.slice(0, -1)
+    }
+    if (sans.length > 0) addLine(sans, `linea ${lineIndex + 1}`, false)
+  })
+  for (const [index, line] of (source.alternatives ?? []).entries()) {
+    const sans = line.trim().split(/\s+/)
+    if (colorAtPly(sans.length) !== source.color) {
+      fail(
+        `alternativa ${index + 1}: deve finire con una mossa di chi allena il repertorio`,
+      )
+    }
+    addLine(sans, `alternativa ${index + 1}`, true)
+  }
+
+  return {
+    nodes: [...nodes.values()].sort(
+      (a, b) => a.ply - b.ply || a.path.localeCompare(b.path),
+    ),
+    trimmed,
+    alternatives,
+  }
+}
+
+function node(
+  path: string,
+  parentPath: string | null,
+  ply: number,
+  uci: string,
+  san: string,
+  fen: string,
+  isMain: boolean,
+): CatalogNode {
+  return { path, parentPath, ply, uci, san, epd: epdOf(fen), isMain }
+}
+
+/** I nodi di un repertorio del catalogo (modo rigido: un errore blocca). */
+export function buildRepertoireNodes(source: RepertoireSource): CatalogNode[] {
+  return buildRepertoire(source).nodes
 }
 
 function sqlText(value: string | null): string {
@@ -106,7 +192,7 @@ function sqlText(value: string | null): string {
 /**
  * La migrazione che carica il catalogo. Idempotente: un repertorio gia'
  * presente aggiorna nome e dati, i nodi gia' presenti restano (con i
- * progressi degli utenti). I nodi si inseriscono un ply alla volta, perche'
+ * progressi degli utenti) e aggiornano solo il flag di alternativa. I nodi si inseriscono un ply alla volta, perche'
  * ognuno cerca il proprio padre tra quelli gia' inseriti.
  */
 export function catalogSql(sources: RepertoireSource[]): string {
@@ -114,7 +200,7 @@ export function catalogSql(sources: RepertoireSource[]): string {
   for (const source of sources) {
     const nodes = buildRepertoireNodes(source)
     parts.push(
-      `-- ${source.name} (${source.color === 'w' ? 'Bianco' : 'Nero'}): ${source.lines.length} Run, ${nodes.length} mosse`,
+      `-- ${source.name} (${source.color === 'w' ? 'Bianco' : 'Nero'}): ${source.lines.length} Run, ${nodes.length} mosse (${source.alternatives?.length ?? 0} alternative)`,
       `insert into public.opening_repertoires (slug, name, eco, color, source)
 values (${sqlText(source.slug)}, ${sqlText(source.name)}, ${sqlText(source.eco)}, ${sqlText(source.color)}, ${sqlText(source.source)})
 on conflict (slug) do update
@@ -126,17 +212,17 @@ on conflict (slug) do update
         .filter((n) => n.ply === ply)
         .map(
           (n) =>
-            `  (${sqlText(n.path)}, ${sqlText(n.parentPath)}, ${n.ply}, ${sqlText(n.uci)}, ${sqlText(n.san)}, ${sqlText(n.epd)})`,
+            `  (${sqlText(n.path)}, ${sqlText(n.parentPath)}, ${n.ply}, ${sqlText(n.uci)}, ${sqlText(n.san)}, ${sqlText(n.epd)}, ${n.isMain})`,
         )
-      parts.push(`insert into public.opening_nodes (repertoire_id, parent_id, path, ply, uci, san, epd)
-select r.id, p.id, v.path::extensions.ltree, v.ply, v.uci, v.san, v.epd
+      parts.push(`insert into public.opening_nodes (repertoire_id, parent_id, path, ply, uci, san, epd, is_main)
+select r.id, p.id, v.path::extensions.ltree, v.ply, v.uci, v.san, v.epd, v.is_main
   from (values
 ${rows.join(',\n')}
-  ) as v (path, parent_path, ply, uci, san, epd)
+  ) as v (path, parent_path, ply, uci, san, epd, is_main)
   join public.opening_repertoires r on r.slug = ${sqlText(source.slug)}
   left join public.opening_nodes p
     on p.repertoire_id = r.id and p.path = v.parent_path::extensions.ltree
-on conflict (repertoire_id, path) do nothing;`)
+on conflict (repertoire_id, path) do update set is_main = excluded.is_main;`)
     }
   }
   return parts.join('\n\n') + '\n'

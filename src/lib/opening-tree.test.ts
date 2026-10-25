@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  alternativesTo,
   buildOpeningTree,
   chainFrom,
   chooseLearnRun,
   chooseRun,
+  fastForwardIndex,
   moveLabel,
   moveState,
   nameAt,
@@ -18,7 +20,7 @@ import {
 
 // Repertorio del Bianco: 1.e4 e5 2.Nf3 (Run 3) oppure 1.e4 c5 2.Nf3 (Run 5).
 function node(id: number, parent: number | null, ply: number, san: string): OpeningNode {
-  return { id, parent_id: parent, ply, uci: san, san, epd: `epd-${id}` }
+  return { id, parent_id: parent, ply, uci: san, san, epd: `epd-${id}`, is_main: true }
 }
 const nodes = [
   node(1, null, 1, 'e4'),
@@ -84,9 +86,11 @@ describe('chooseRun', () => {
     expect(chooseRun(tree, done, 'w', now)).toBe(5)
   })
 
-  it('avoids the Run just played when there is another', () => {
-    expect(chooseRun(tree, new Map(), 'w', now, 3)).toBe(5)
-    expect(chooseRun(tree, new Map(), 'w', now, 5)).toBe(3)
+  it('avoids the Runs already played in the session while there are others', () => {
+    expect(chooseRun(tree, new Map(), 'w', now, new Set([3]))).toBe(5)
+    expect(chooseRun(tree, new Map(), 'w', now, new Set([5]))).toBe(3)
+    // Tutti gia' giocati: si sceglie comunque.
+    expect(chooseRun(tree, new Map(), 'w', now, new Set([3, 5]))).toBe(3)
   })
 
   it('with nothing to do, picks the Run seen least recently', () => {
@@ -99,7 +103,7 @@ describe('chooseRun', () => {
     // Run 3: ultima mossa vista alle 11 (Nf3); Run 5: alle 10 (1.e4, in
     // comune; il suo Nf3 e' di giorni prima).
     expect(chooseRun(tree, all, 'w', now)).toBe(5)
-    expect(chooseRun(tree, all, 'w', now, 5)).toBe(3)
+    expect(chooseRun(tree, all, 'w', now, new Set([5]))).toBe(3)
   })
 })
 
@@ -212,5 +216,36 @@ describe('chooseLearnRun', () => {
     expect(chooseLearnRun(tree, new Map(), 'w', 3)).toBe(5)
     learned.set(5, progress(5, 0, '2026-10-25T16:00:00Z'))
     expect(chooseLearnRun(tree, learned, 'w')).toBeUndefined()
+  })
+})
+
+describe('fastForwardIndex', () => {
+  const path = runPath(tree, 3) // 1.e4 e5 2.Nf3
+  it('starts from the first user move not yet known', () => {
+    expect(fastForwardIndex(path, 'w', () => false)).toBe(0)
+    expect(fastForwardIndex(path, 'w', (n) => n.id === 1)).toBe(2)
+  })
+
+  it('keeps at least the last user move to ask', () => {
+    expect(fastForwardIndex(path, 'w', () => true)).toBe(2)
+  })
+
+  it('also for Black, whose first move comes after the opponent', () => {
+    expect(fastForwardIndex(path, 'b', () => false)).toBe(1)
+  })
+})
+
+describe('alternativesTo', () => {
+  it('finds the accepted alternatives in the same position', () => {
+    const withAlternative = buildOpeningTree([
+      ...nodes,
+      { ...node(6, 2, 3, 'Bc4'), is_main: false },
+    ])
+    expect(
+      alternativesTo(withAlternative, withAlternative.byId.get(3)!).map((n) => n.san),
+    ).toEqual(['Bc4'])
+    // Non e' un Run, e non conta tra le mosse da allenare.
+    expect(withAlternative.leaves.map((l) => l.id)).toEqual([3, 5])
+    expect(openingCoverage(withAlternative, new Map(), 'w', now).userMoves).toBe(3)
   })
 })

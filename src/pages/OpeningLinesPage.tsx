@@ -254,7 +254,7 @@ function SelectedMove({
   const label = moveLabel(node, true)
   const name = nameAt(tree, node.id, names)
   const row = progress.get(node.id)
-  const state = isUserMove(node, color) ? moveState(row, now) : null
+  const state = node.is_main && isUserMove(node, color) ? moveState(row, now) : null
   return (
     <div className="flex min-w-0 flex-col text-xs">
       {name && (
@@ -269,7 +269,7 @@ function SelectedMove({
             {o.legend[state]}
           </span>
         ) : (
-          <span>· {o.opponentMove}</span>
+          <span>· {node.is_main ? o.opponentMove : o.alternativeLabel}</span>
         )}
       </p>
       {state && (

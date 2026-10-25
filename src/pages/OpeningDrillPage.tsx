@@ -1,30 +1,29 @@
-import { Chess } from 'chess.js'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { OPPONENT_DELAY_MS, OpeningBoard } from '@/components/opening-board'
+import { OpeningBoard } from '@/components/opening-board'
 import { MoveList } from '@/components/opening-move-list'
-import { RepertoireGate } from '@/components/repertoire-gate'
+import { RepertoireGate, type RepertoireData } from '@/components/repertoire-gate'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { useLocalToggle } from '@/hooks/use-local-toggle'
+import { useOpeningRun, type RunResult } from '@/hooks/use-opening-run'
 import { useRecordOpeningMove } from '@/hooks/use-openings'
 import { useUserStats } from '@/hooks/use-user-stats'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
-import {
-  chooseRun,
-  isUserMove,
-  openingCoverage,
-  runPath,
-  sameMove,
-  type OpeningNode,
-  type OpeningProgress,
-  type OpeningTree,
-} from '@/lib/opening-tree'
-import type { RepertoireWithNodes } from '@/lib/openings'
+import { chooseRun, moveState, openingCoverage } from '@/lib/opening-tree'
 
-// Allenamento (Drill) su un repertorio: un Run alla volta, scelto tra quelli
-// con piu' mosse da ripassare. L'avversario risponde da solo; alla mossa
-// dell'utente conta solo il primo tentativo, e dopo un errore la freccia
-// mostra la mossa del repertorio, da giocare per continuare.
+/** Linee di una sessione di allenamento, prima del ripasso degli errori. */
+export const SESSION_LINES = 5
+
+// Allenamento (Drill) su un repertorio, a sessioni: SESSION_LINES linee
+// scelte tra quelle con piu' mosse da ripassare, poi di nuovo quelle in cui
+// si e' sbagliata almeno una mossa, poi il riepilogo. L'avversario risponde
+// da solo; alla mossa dell'utente conta solo il primo tentativo, e dopo un
+// errore la freccia mostra la mossa del repertorio, da giocare per
+// continuare. Le mosse gia' consolidate in testa alla linea si possono
+// saltare (avanzamento rapido).
 export default function OpeningDrillPage() {
   const { slug } = useParams<{ slug: string }>()
   return (
@@ -34,97 +33,148 @@ export default function OpeningDrillPage() {
   )
 }
 
-interface RunState {
+interface Session {
+  phase: 'main' | 'repeat' | 'done'
   leafId: number
-  /** Indice, nel cammino del Run, della prossima mossa da giocare. */
-  index: number
-  /** Dopo un errore: la mossa del repertorio, da giocare per continuare. */
-  hint: OpeningNode | null
-  /** Primo tentativo di ogni mossa dell'utente in questo Run. */
-  results: { nodeId: number; ok: boolean }[]
+  /** Cambia per ripartire da capo, anche sulla stessa linea. */
+  nonce: number
+  /** Linee giocate (fase principale) e linee con errori da ripassare. */
+  played: number[]
+  mistakes: number[]
+  repeatIndex: number
+  /** Primo tentativo di ogni mossa, di tutte le linee della sessione. */
+  results: RunResult[]
 }
 
-function newRun(leafId: number): RunState {
-  return { leafId, index: 0, hint: null, results: [] }
+function newSession(firstLeafId: number): Session {
+  return {
+    phase: 'main',
+    leafId: firstLeafId,
+    nonce: 0,
+    played: [firstLeafId],
+    mistakes: [],
+    repeatIndex: 0,
+    results: [],
+  }
 }
 
-function OpeningDrill({
-  repertoire,
-  tree,
-  progress,
-}: {
-  repertoire: RepertoireWithNodes
-  tree: OpeningTree
-  progress: Map<number, OpeningProgress>
-}) {
+function OpeningDrill({ repertoire, tree, progress }: RepertoireData) {
   const o = useOpeningsTranslations()
   const { data: stats } = useUserStats()
   const record = useRecordOpeningMove()
   const color = repertoire.color
-  // Una linea scelta dalla pagina di consultazione (?line=<foglia>), oppure
-  // quella con piu' mosse da fare.
+  const base = `/openings/${repertoire.slug}`
+  const [fastForward, setFastForward] = useLocalToggle('openings-fast-forward', true)
+  const sessionLines = Math.min(SESSION_LINES, tree.leaves.length)
+
+  // La prima linea: quella scelta dalla consultazione (?line=<foglia>),
+  // oppure quella con piu' mosse da fare.
   const [searchParams] = useSearchParams()
-  const [run, setRun] = useState<RunState>(() => {
+  const [session, setSession] = useState<Session>(() => {
     const requested = Number(searchParams.get('line'))
-    return newRun(
-      tree.leaves.some((leaf) => leaf.id === requested)
-        ? requested
-        : chooseRun(tree, progress, color, new Date())!,
-    )
+    const first = tree.leaves.some((leaf) => leaf.id === requested)
+      ? requested
+      : chooseRun(tree, progress, color, new Date())!
+    return newSession(first)
   })
 
-  const path = useMemo(() => runPath(tree, run.leafId), [tree, run.leafId])
-  const fen = useMemo(() => {
-    const chess = new Chess()
-    for (const node of path.slice(0, run.index)) chess.move(node.san)
-    return chess.fen()
-  }, [path, run.index])
-  const next: OpeningNode | undefined = path[run.index]
-  const done = !next
-  const userTurn = !!next && isUserMove(next, color)
-
-  // La risposta dell'avversario, dopo una breve pausa.
-  useEffect(() => {
-    if (!next || userTurn) return
-    const timer = setTimeout(
-      () => setRun((r) => ({ ...r, index: r.index + 1 })),
-      OPPONENT_DELAY_MS,
-    )
-    return () => clearTimeout(timer)
-  }, [next, userTurn])
-
-  // Da quando l'utente ha la mossa, per il tempo di risposta.
-  const turnStartedAt = useRef(0)
-  useEffect(() => {
-    if (userTurn) turnStartedAt.current = Date.now()
-  }, [userTurn, run.index])
-
-  function handleMove(uci: string): boolean {
-    if (!next || !userTurn) return false
-    const ok = sameMove(uci, next.uci)
-    if (!run.results.some((r) => r.nodeId === next.id)) {
+  const run = useOpeningRun({
+    tree,
+    color,
+    leafId: session.phase === 'done' ? undefined : session.leafId,
+    runKey: `${session.leafId}:${session.nonce}`,
+    fastForward,
+    isKnown: (node) => moveState(progress.get(node.id), new Date()) === 'mastered',
+    onFirstTry: (node, playedUci, result, ms) =>
       record.mutate({
-        nodeId: next.id,
-        runLeafId: run.leafId,
-        playedUci: uci,
-        result: ok ? 'correct' : 'wrong',
-        ms: Date.now() - turnStartedAt.current,
-      })
-      setRun((r) => ({ ...r, results: [...r.results, { nodeId: next.id, ok }] }))
-    }
-    setRun((r) => (ok ? { ...r, index: r.index + 1, hint: null } : { ...r, hint: next }))
-    return ok
+        nodeId: node.id,
+        runLeafId: session.leafId,
+        playedUci,
+        result,
+        ms,
+      }),
+  })
+
+  const lineHasMistakes = run.results.some((r) => !r.ok)
+  const lastMainLine = session.phase === 'main' && session.played.length >= sessionLines
+  const mistakesAfterThis =
+    session.mistakes.length +
+    (lineHasMistakes && !session.mistakes.includes(session.leafId) ? 1 : 0)
+  const nextLabel =
+    session.phase === 'repeat'
+      ? session.repeatIndex + 1 < session.mistakes.length
+        ? o.nextRun
+        : o.showSummary
+      : lastMainLine
+        ? mistakesAfterThis > 0
+          ? o.continueRepeat
+          : o.showSummary
+        : o.nextRun
+
+  // Fine della linea: la prossima della sessione, il ripasso degli errori o
+  // il riepilogo.
+  function nextLine() {
+    setSession((s) => {
+      const results = [...s.results, ...run.results]
+      if (s.phase === 'main') {
+        const mistakes =
+          lineHasMistakes && !s.mistakes.includes(s.leafId)
+            ? [...s.mistakes, s.leafId]
+            : s.mistakes
+        if (s.played.length < sessionLines) {
+          const leafId = chooseRun(tree, progress, color, new Date(), new Set(s.played))!
+          return {
+            ...s,
+            leafId,
+            nonce: s.nonce + 1,
+            played: [...s.played, leafId],
+            mistakes,
+            results,
+          }
+        }
+        if (mistakes.length > 0) {
+          return {
+            ...s,
+            phase: 'repeat',
+            leafId: mistakes[0],
+            nonce: s.nonce + 1,
+            mistakes,
+            repeatIndex: 0,
+            results,
+          }
+        }
+        return { ...s, phase: 'done', mistakes, results }
+      }
+      const repeatIndex = s.repeatIndex + 1
+      if (repeatIndex < s.mistakes.length) {
+        return {
+          ...s,
+          leafId: s.mistakes[repeatIndex],
+          nonce: s.nonce + 1,
+          repeatIndex,
+          results,
+        }
+      }
+      return { ...s, phase: 'done', results }
+    })
   }
 
   const coverage = openingCoverage(tree, progress, color, new Date())
   const firstTryCorrect = run.results.filter((r) => r.ok).length
-  const status = done
+  const hint = run.hint
+  const status = run.done
     ? o.runDone
-    : run.hint
-      ? o.wrong(run.hint.san)
-      : userTurn
+    : hint
+      ? hint.alternative
+        ? o.alternativePlayed(hint.alternative.san, hint.node.san)
+        : o.wrong(hint.node.san)
+      : run.userTurn
         ? o.yourMove
         : o.opponentMoving
+  const sessionLabel =
+    session.phase === 'repeat'
+      ? o.repeatPhase(session.repeatIndex + 1, session.mistakes.length)
+      : o.sessionLine(session.played.length, sessionLines)
 
   return (
     <main className="flex w-full flex-1 flex-col items-center gap-4 px-4 py-8 lg:flex-row lg:items-start lg:justify-center lg:gap-6">
@@ -144,18 +194,32 @@ function OpeningDrill({
               {o.back}
             </Link>
             <Link
-              to={`/openings/${repertoire.slug}/learn`}
+              to={`${base}/learn`}
               className="text-primary underline-offset-4 hover:underline"
             >
               {o.learn}
             </Link>
             <Link
-              to={`/openings/${repertoire.slug}/lines`}
+              to={`${base}/lines`}
               className="text-primary underline-offset-4 hover:underline"
             >
               {o.browse}
             </Link>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Switch
+            id="fast-forward"
+            checked={fastForward}
+            onCheckedChange={setFastForward}
+          />
+          <Label
+            htmlFor="fast-forward"
+            className="text-muted-foreground text-xs font-normal"
+          >
+            {o.fastForward}
+          </Label>
         </div>
 
         <Card size="sm">
@@ -171,56 +235,113 @@ function OpeningDrill({
           </CardContent>
         </Card>
 
-        <Card size="sm">
-          <CardHeader>
-            <CardTitle className="text-sm">{o.movesTitle}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <MoveList nodes={path.slice(0, run.index)} results={run.results} />
-          </CardContent>
-        </Card>
+        {session.phase !== 'done' && (
+          <Card size="sm">
+            <CardHeader>
+              <CardTitle className="text-sm">{o.movesTitle}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MoveList nodes={run.path.slice(0, run.index)} results={run.results} />
+            </CardContent>
+          </Card>
+        )}
       </aside>
 
       <div className="order-1 flex w-full max-w-[min(36rem,calc(100svh-10rem))] flex-col gap-3 lg:order-2">
-        <p
-          role="status"
-          className={`text-sm font-medium ${run.hint ? 'text-destructive' : 'text-foreground'}`}
-        >
-          {status}
-        </p>
-        <OpeningBoard
-          fen={fen}
-          orientation={color === 'w' ? 'white' : 'black'}
-          interactive={userTurn}
-          onMove={handleMove}
-          hintUci={run.hint?.uci}
-          lastMoveUci={path[run.index - 1]?.uci}
-          boardTheme={stats?.board_theme}
-          pieceSet={stats?.piece_set}
-        />
-        {record.isError && <p className="text-destructive text-xs">{o.saveError}</p>}
-        {done && (
-          <div className="flex flex-col gap-2">
-            <p className="text-muted-foreground text-sm">
-              {o.runResult(firstTryCorrect, run.results.length)}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() =>
-                  setRun(
-                    newRun(chooseRun(tree, progress, color, new Date(), run.leafId)!),
-                  )
-                }
+        {session.phase === 'done' ? (
+          <SessionSummary
+            lines={session.played.length}
+            results={session.results}
+            repeated={session.mistakes.length}
+            onRestart={() =>
+              setSession(newSession(chooseRun(tree, progress, color, new Date())!))
+            }
+            browsePath={`${base}/lines`}
+          />
+        ) : (
+          <>
+            <div className="flex items-baseline justify-between gap-2">
+              <p
+                role="status"
+                className={`text-sm font-medium ${
+                  hint
+                    ? hint.alternative
+                      ? 'text-amber-700 dark:text-amber-300'
+                      : 'text-destructive'
+                    : 'text-foreground'
+                }`}
               >
-                {o.nextRun}
-              </Button>
-              <Button variant="outline" onClick={() => setRun(newRun(run.leafId))}>
-                {o.repeatRun}
-              </Button>
+                {status}
+              </p>
+              <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+                {sessionLabel}
+              </span>
             </div>
-          </div>
+            <OpeningBoard
+              fen={run.fen}
+              orientation={color === 'w' ? 'white' : 'black'}
+              interactive={run.userTurn}
+              onMove={run.handleMove}
+              hintUci={hint?.node.uci}
+              lastMoveUci={run.lastMoveUci}
+              boardTheme={stats?.board_theme}
+              pieceSet={stats?.piece_set}
+            />
+            {record.isError && <p className="text-destructive text-xs">{o.saveError}</p>}
+            {run.done && (
+              <div className="flex flex-col gap-2">
+                <p className="text-muted-foreground text-sm">
+                  {o.runResult(firstTryCorrect, run.results.length)}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={nextLine}>{nextLabel}</Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setSession((s) => ({ ...s, nonce: s.nonce + 1 }))}
+                  >
+                    {o.repeatRun}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </main>
+  )
+}
+
+function SessionSummary({
+  lines,
+  results,
+  repeated,
+  onRestart,
+  browsePath,
+}: {
+  lines: number
+  results: RunResult[]
+  repeated: number
+  onRestart: () => void
+  browsePath: string
+}) {
+  const o = useOpeningsTranslations()
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{o.sessionDone}</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <p className="text-foreground text-sm tabular-nums">
+          {o.sessionSummary(lines, results.filter((r) => r.ok).length, results.length)}
+        </p>
+        <p className="text-muted-foreground text-sm">{o.repeatedLines(repeated)}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={onRestart}>{o.newSession}</Button>
+          <Button asChild variant="outline">
+            <Link to={browsePath}>{o.browse}</Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

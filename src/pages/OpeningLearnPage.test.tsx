@@ -12,7 +12,15 @@ let progress = new Map<number, OpeningProgress>()
 
 // Bianco: 1.e4 e5 2.Nf3 (Run 3) oppure 1.e4 c5 2.Nc3 (Run 5).
 function node(id: number, parent: number | null, ply: number, san: string, uci: string) {
-  return { id, parent_id: parent, ply, uci, san, epd: `epd-${id}` } satisfies OpeningNode
+  return {
+    id,
+    parent_id: parent,
+    ply,
+    uci,
+    san,
+    epd: `epd-${id}`,
+    is_main: true,
+  } satisfies OpeningNode
 }
 const repertoire: RepertoireWithNodes = {
   id: 'r1',
@@ -139,11 +147,18 @@ describe('OpeningLearnPage', () => {
     }
   })
 
-  it('opens the line chosen from the browse page, even if already learned', () => {
+  it('opens the line chosen from the browse page, skipping the moves already known', () => {
     progress = new Map([1, 3, 5].map((id) => [id, learned(id)]))
     renderLearn('/openings/italian-game/learn?line=5')
-    fireEvent.click(screen.getByRole('button', { name: 'e2e4' }))
-    act(() => vi.advanceTimersByTime(500))
+    // Avanzamento rapido: 1.e4 c5 si giocano da sole, resta l'ultima mossa.
     expect(screen.getByRole('status')).toHaveTextContent(o.playMove('2.Nc3'))
+  })
+
+  it('plays the whole line when fast-forward is off', () => {
+    window.localStorage.setItem('openings-fast-forward', 'false')
+    progress = new Map([1, 3, 5].map((id) => [id, learned(id)]))
+    renderLearn('/openings/italian-game/learn?line=5')
+    expect(screen.getByRole('status')).toHaveTextContent(o.playMove('1.e4'))
+    window.localStorage.removeItem('openings-fast-forward')
   })
 })

@@ -18,7 +18,7 @@ export interface RepertoireWithNodes extends OpeningRepertoire {
   nodes: OpeningNode[]
 }
 
-const NODE_COLUMNS = 'id, parent_id, ply, uci, san, epd'
+const NODE_COLUMNS = 'id, parent_id, ply, uci, san, epd, is_main'
 
 /** Tutti i repertori leggibili, con le mosse (servono per la copertura). */
 export async function fetchRepertoires(): Promise<RepertoireWithNodes[]> {
@@ -46,7 +46,7 @@ export async function recordOpeningMove(params: {
   nodeId: number
   runLeafId: number
   playedUci: string
-  result: 'correct' | 'wrong'
+  result: 'correct' | 'alternative' | 'wrong'
   ms: number
 }): Promise<OpeningProgress> {
   const { data, error } = await supabase.rpc('record_opening_move', {

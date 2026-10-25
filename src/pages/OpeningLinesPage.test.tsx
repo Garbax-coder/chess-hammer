@@ -17,11 +17,11 @@ const repertoire: RepertoireWithNodes = {
   eco: 'C50',
   color: 'w',
   nodes: [
-    { id: 1, parent_id: null, ply: 1, uci: 'e2e4', san: 'e4', epd: 'a' },
-    { id: 2, parent_id: 1, ply: 2, uci: 'e7e5', san: 'e5', epd: 'b' },
-    { id: 3, parent_id: 2, ply: 3, uci: 'g1f3', san: 'Nf3', epd: 'c' },
-    { id: 4, parent_id: 1, ply: 2, uci: 'c7c5', san: 'c5', epd: 'd' },
-    { id: 5, parent_id: 4, ply: 3, uci: 'b1c3', san: 'Nc3', epd: 'e' },
+    { id: 1, parent_id: null, ply: 1, uci: 'e2e4', san: 'e4', epd: 'a', is_main: true },
+    { id: 2, parent_id: 1, ply: 2, uci: 'e7e5', san: 'e5', epd: 'b', is_main: true },
+    { id: 3, parent_id: 2, ply: 3, uci: 'g1f3', san: 'Nf3', epd: 'c', is_main: true },
+    { id: 4, parent_id: 1, ply: 2, uci: 'c7c5', san: 'c5', epd: 'd', is_main: true },
+    { id: 5, parent_id: 4, ply: 3, uci: 'b1c3', san: 'Nc3', epd: 'e', is_main: true },
   ],
 }
 const e4: OpeningProgress = {
