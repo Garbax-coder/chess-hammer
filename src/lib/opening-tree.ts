@@ -191,3 +191,54 @@ export function runMastery(
     total: userMoves.length,
   }
 }
+
+export interface OpeningName {
+  eco: string
+  name: string
+}
+
+/** Il nome della posizione dopo una mossa: quello dell'ultima mossa con nome lungo il percorso. */
+export function nameAt(
+  tree: OpeningTree,
+  nodeId: number | null,
+  names: Map<number, OpeningName>,
+): OpeningName | undefined {
+  let node = nodeId === null ? undefined : tree.byId.get(nodeId)
+  while (node) {
+    const name = names.get(node.id)
+    if (name) return name
+    node = node.parent_id === null ? undefined : tree.byId.get(node.parent_id)
+  }
+  return undefined
+}
+
+/** "Italian Game: Classical Variation, Greco Gambit" -> famiglia e varianti. */
+function nameParts(name: string): string[] {
+  const [family, variations] = name.split(/:\s*/, 2)
+  return [family, ...(variations ? variations.split(/,\s*/) : [])]
+}
+
+/**
+ * Nell'albero: il nome da scrivere accanto a una mossa, se con lei il nome
+ * cambia. Si scrive solo la parte nuova rispetto al nome di prima ("Italian
+ * Game: Classical Variation" -> "..., Greco Gambit" diventa "Greco Gambit");
+ * il nome intero quando cambia la famiglia. Un nome piu' generico di quello
+ * di prima non aggiunge nulla e non si scrive.
+ */
+export function nameChange(
+  tree: OpeningTree,
+  node: OpeningNode,
+  names: Map<number, OpeningName>,
+): string | undefined {
+  const name = names.get(node.id)?.name
+  if (!name) return undefined
+  const before = nameAt(tree, node.parent_id, names)?.name
+  if (!before) return name
+  const parts = nameParts(name)
+  const previous = nameParts(before)
+  let common = 0
+  while (common < parts.length && parts[common] === previous[common]) common++
+  if (common === 0) return name
+  const rest = parts.slice(common)
+  return rest.length > 0 ? rest.join(', ') : undefined
+}

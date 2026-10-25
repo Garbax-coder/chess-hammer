@@ -11,7 +11,7 @@ declare
                               'puzzle_attempts', 'practice_attempts', 'saved_puzzles',
                               'opening_node_progress', 'opening_attempts'];
   puzzle_tables text[] := array['lichess_puzzles', 'lichess_puzzle_order', 'lichess_rating_ranges',
-                                'opening_repertoires', 'opening_nodes'];
+                                'opening_repertoires', 'opening_nodes', 'opening_names'];
   internal_tables text[] := array['account_deletion_notices', 'app_email_templates'];
   priv text;
 begin
@@ -57,7 +57,9 @@ begin
     raise exception 'anon puo'' leggere lichess_puzzle_order';
   end if;
   if has_table_privilege('anon', 'public.opening_repertoires', 'select')
-     or has_table_privilege('anon', 'public.opening_nodes', 'select') then
+     or has_table_privilege('anon', 'public.opening_nodes', 'select')
+     or has_table_privilege('anon', 'public.opening_names', 'select')
+     or has_table_privilege('anon', 'public.opening_node_names', 'select') then
     raise exception 'anon puo'' leggere il catalogo delle aperture';
   end if;
 

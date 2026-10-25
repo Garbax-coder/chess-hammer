@@ -70,6 +70,29 @@ describe('OpeningTreeView', () => {
     )
   })
 
+  it('writes the opening name where it changes, only the new part', () => {
+    render(
+      <OpeningTreeView
+        tree={tree}
+        color="w"
+        progress={new Map()}
+        now={new Date('2026-10-25T12:00:00Z')}
+        selectedId={null}
+        onSelect={() => {}}
+        names={
+          new Map([
+            [2, { eco: 'C20', name: "King's Pawn Game" }],
+            [3, { eco: 'C40', name: "King's Pawn Game: Knight Variation" }],
+            [4, { eco: 'B20', name: 'Sicilian Defense' }],
+          ])
+        }
+      />,
+    )
+    expect(screen.getByText("King's Pawn Game")).toBeInTheDocument()
+    expect(screen.getByText('Knight Variation')).toBeInTheDocument()
+    expect(screen.getByText('Sicilian Defense')).toBeInTheDocument()
+  })
+
   it('selects a move and collapses a branch', () => {
     const onSelect = renderTree(vi.fn(), 3)
     expect(screen.getByRole('button', { name: '2.Nf3' })).toHaveAttribute(

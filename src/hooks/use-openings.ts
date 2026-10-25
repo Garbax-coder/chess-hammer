@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
 import type { OpeningProgress } from '@/lib/opening-tree'
-import { fetchOpeningProgress, fetchRepertoires, recordOpeningMove } from '@/lib/openings'
+import {
+  fetchOpeningNames,
+  fetchOpeningProgress,
+  fetchRepertoires,
+  recordOpeningMove,
+} from '@/lib/openings'
 
 export function openingProgressKey(userId: string | undefined) {
   return ['opening-progress', userId]
@@ -15,6 +20,19 @@ export function useRepertoires() {
     queryFn: fetchRepertoires,
     enabled: !!user,
     staleTime: Infinity,
+  })
+}
+
+// I nomi delle aperture, per mossa: cambiano solo con una migrazione.
+export function useOpeningNames() {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: ['opening-names', user?.id],
+    queryFn: fetchOpeningNames,
+    enabled: !!user,
+    staleTime: Infinity,
+    select: (rows) =>
+      new Map(rows.map(({ node_id, eco, name }) => [node_id, { eco, name }])),
   })
 }
 

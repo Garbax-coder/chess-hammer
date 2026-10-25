@@ -1,4 +1,4 @@
--- Prova delle migrazioni 0100 e 0101 (allenamento sulle aperture). Da
+-- Prova delle migrazioni 0100, 0101 e 0102 (allenamento sulle aperture). Da
 -- eseguire SOLO sul progetto di sviluppo: tutto avviene in una transazione
 -- annullata alla fine.
 --   psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/opening-training.sql
@@ -58,6 +58,15 @@ begin
   end if;
   if exists (select 1 from public.opening_repertoires where slug = 'opening-test-private') then
     raise exception 'A vede il repertorio personale di B';
+  end if;
+
+  -- Nomi delle aperture (migrazione 0102): 1.e4 e5 2.Nf3 Nf6 e' la Petrov.
+  if (select v.name from public.opening_node_names v
+        join public.opening_nodes n on n.id = v.node_id
+        join public.opening_repertoires r on r.id = n.repertoire_id
+       where r.slug = 'italian-game'
+         and n.path = 'e2e4.e7e5.g1f3.g8f6'::extensions.ltree) is distinct from 'Petrov''s Defense' then
+    raise exception 'nomi: 2...Nf6 dovrebbe essere la Petrov';
   end if;
 
   -- Prima risposta giusta: serie 1, ripasso fra 4 ore.

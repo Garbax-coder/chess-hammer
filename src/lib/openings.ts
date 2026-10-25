@@ -59,3 +59,18 @@ export async function recordOpeningMove(params: {
   if (error) throw error
   return data as OpeningProgress
 }
+
+export interface OpeningNameRow {
+  node_id: number
+  eco: string
+  name: string
+}
+
+/** I nomi delle mosse dei repertori leggibili (vista opening_node_names, 0102). */
+export async function fetchOpeningNames(): Promise<OpeningNameRow[]> {
+  const { data, error } = await supabase
+    .from('opening_node_names')
+    .select('node_id, eco, name')
+  if (error) throw error
+  return data
+}

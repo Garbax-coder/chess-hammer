@@ -41,6 +41,12 @@ vi.mock('@/lib/language-context', () => ({
 vi.mock('@/hooks/use-openings', () => ({
   useRepertoires: () => ({ data: [repertoire], isLoading: false }),
   useOpeningProgress: () => ({ data: new Map([[1, e4]]) }),
+  useOpeningNames: () => ({
+    data: new Map([
+      [3, { eco: 'C40', name: "King's Knight Opening" }],
+      [4, { eco: 'B20', name: 'Sicilian Defense' }],
+    ]),
+  }),
 }))
 vi.mock('@/hooks/use-user-stats', () => ({ useUserStats: () => ({ data: undefined }) }))
 vi.mock('@/components/opening-board', () => ({
@@ -70,6 +76,11 @@ describe('OpeningLinesPage', () => {
     expect(board.lastMoveUci).toBe('e2e4')
     expect(screen.getByText(o.moveStats(4, 75))).toBeInTheDocument()
 
+    // Sotto la scacchiera, il nome dell'apertura a quel punto.
+    fireEvent.click(screen.getByRole('button', { name: '1...c5' }))
+    expect(screen.getByText('B20 · Sicilian Defense')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '1.e4' }))
+
     // Avanti segue il primo ramo; indietro torna alla mossa precedente.
     fireEvent.click(
       screen.getByRole('button', { name: itTranslations.puzzleBoard.nextMove }),
@@ -90,6 +101,10 @@ describe('OpeningLinesPage', () => {
       '/openings/italian-game?line=5',
     ])
     expect(screen.getByRole('button', { name: '1.e4 e5 2.Nf3' })).toBeInTheDocument()
+    // Il nome di ogni linea, con il codice ECO.
+    expect(screen.getAllByText("King's Knight Opening").length).toBeGreaterThan(0)
+    expect(screen.getByText('C40')).toBeInTheDocument()
+    expect(screen.getByText('B20')).toBeInTheDocument()
     expect(screen.getAllByText(o.mastered(1, 2))).toHaveLength(2)
   })
 })

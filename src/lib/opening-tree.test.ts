@@ -5,6 +5,8 @@ import {
   chooseRun,
   moveLabel,
   moveState,
+  nameAt,
+  nameChange,
   openingCoverage,
   runMastery,
   runPath,
@@ -148,5 +150,42 @@ describe('runMastery', () => {
     ])
     expect(runMastery(tree, 5, map, 'w', now)).toEqual({ mastered: 1, due: 1, total: 2 })
     expect(runMastery(tree, 3, map, 'w', now)).toEqual({ mastered: 1, due: 0, total: 2 })
+  })
+})
+
+describe('nameAt / nameChange', () => {
+  // 1.e4 (King's Pawn Game) e5 2.Nf3 (Italian Game: Classical Variation)
+  // e 1...c5 (Sicilian Defense) 2.Nc3 (Sicilian Defense: Closed).
+  const names = new Map([
+    [1, { eco: 'B00', name: "King's Pawn Game" }],
+    [3, { eco: 'C53', name: 'Italian Game: Classical Variation' }],
+    [4, { eco: 'B20', name: 'Sicilian Defense' }],
+    [5, { eco: 'B23', name: 'Sicilian Defense: Closed' }],
+  ])
+
+  it('takes the name of the last named move on the way', () => {
+    expect(nameAt(tree, 2, names)?.name).toBe("King's Pawn Game")
+    expect(nameAt(tree, 5, names)?.eco).toBe('B23')
+    expect(nameAt(tree, null, names)).toBeUndefined()
+  })
+
+  it('writes only what is new, the full name when the family changes', () => {
+    const n = (id: number) => tree.byId.get(id)!
+    expect(nameChange(tree, n(1), names)).toBe("King's Pawn Game")
+    expect(nameChange(tree, n(2), names)).toBeUndefined()
+    expect(nameChange(tree, n(3), names)).toBe('Italian Game: Classical Variation')
+    expect(nameChange(tree, n(4), names)).toBe('Sicilian Defense')
+    expect(nameChange(tree, n(5), names)).toBe('Closed')
+
+    const deeper = new Map([
+      [1, { eco: 'C53', name: 'Italian Game: Classical Variation' }],
+      [2, { eco: 'C54', name: 'Italian Game: Classical Variation, Greco Gambit' }],
+      [3, { eco: 'C50', name: 'Italian Game: Giuoco Piano' }],
+      [4, { eco: 'C53', name: 'Italian Game' }],
+    ])
+    expect(nameChange(tree, n(2), deeper)).toBe('Greco Gambit')
+    expect(nameChange(tree, n(3), deeper)).toBe('Giuoco Piano')
+    // Piu' generico del nome di prima: niente da aggiungere.
+    expect(nameChange(tree, n(4), deeper)).toBeUndefined()
   })
 })

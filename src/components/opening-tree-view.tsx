@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
 import type { OpeningColor } from '@/lib/opening-catalog'
 import {
@@ -7,7 +7,9 @@ import {
   isUserMove,
   moveLabel,
   moveState,
+  nameChange,
   type MoveState,
+  type OpeningName,
   type OpeningNode,
   type OpeningProgress,
   type OpeningTree,
@@ -36,6 +38,7 @@ export function OpeningTreeView({
   now,
   selectedId,
   onSelect,
+  names = new Map(),
 }: {
   tree: OpeningTree
   color: OpeningColor
@@ -43,6 +46,8 @@ export function OpeningTreeView({
   now: Date
   selectedId: number | null
   onSelect: (nodeId: number) => void
+  /** Nomi delle aperture per mossa: scritti dove il nome cambia. */
+  names?: Map<number, OpeningName>
 }) {
   const [collapsed, setCollapsed] = useState<ReadonlySet<number>>(new Set())
   const roots = tree.children.get(null) ?? []
@@ -56,7 +61,17 @@ export function OpeningTreeView({
     })
   }
 
-  const props = { tree, color, progress, now, selectedId, onSelect, collapsed, toggle }
+  const props = {
+    tree,
+    color,
+    progress,
+    now,
+    selectedId,
+    onSelect,
+    names,
+    collapsed,
+    toggle,
+  }
   return roots.length === 1 ? (
     <Line start={roots[0]} {...props} />
   ) : (
@@ -71,6 +86,7 @@ interface LineProps {
   now: Date
   selectedId: number | null
   onSelect: (nodeId: number) => void
+  names: Map<number, OpeningName>
   collapsed: ReadonlySet<number>
   toggle: (nodeId: number) => void
 }
@@ -100,9 +116,19 @@ function Line({ start, ...props }: LineProps & { start: OpeningNode }) {
             )}
           </button>
         )}
-        {chain.map((node, index) => (
-          <Move key={node.id} node={node} startsRow={index === 0} {...props} />
-        ))}
+        {chain.map((node, index) => {
+          const name = nameChange(props.tree, node, props.names)
+          return (
+            <Fragment key={node.id}>
+              <Move node={node} startsRow={index === 0} {...props} />
+              {name && (
+                <span className="text-muted-foreground px-1 text-[0.7rem] italic">
+                  {name}
+                </span>
+              )}
+            </Fragment>
+          )
+        })}
       </div>
       {branches.length > 1 && !isCollapsed && <Branches nodes={branches} {...props} />}
     </div>

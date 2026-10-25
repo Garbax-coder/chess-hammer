@@ -212,6 +212,15 @@ Fatto (2026-10-25):
   di sola lettura sulla mossa selezionata con tentativi, % al primo colpo e
   prossimo ripasso, ed elenco delle linee nell'ordine dell'albero, ognuna da
   allenare da sola (`/openings/:slug?line=<foglia>`).
+- **Nomi delle aperture** (2026-10-25): migrazione `0102_opening_names.sql`
+  generata dal dataset CC0 di Lichess (copia in
+  `scripts/openings/lichess-openings`, 3.865 posizioni con nome), tabella
+  `opening_names` (posizione -> ECO e nome) e vista `opening_node_names` che
+  li lega alle mosse dei repertori. Il nome di una linea è quello
+  dell'ultima posizione con nome lungo il percorso (vale anche per le
+  trasposizioni). Nella consultazione: sopra ogni linea, accanto alle mosse
+  dove il nome cambia (solo la parte nuova) e sotto la scacchiera. I nomi
+  sono solo in inglese, come su Lichess.
 
 Da fare prima del merge:
 
@@ -222,6 +231,8 @@ Da fare prima del merge:
 - **Anteprima Vercel**: controllare che le variabili "Preview" puntino al
   progetto Supabase di sviluppo.
 - Un test e2e del Drill.
+- Citare `lichess-org/chess-openings` nella pagina Crediti (CC0 non lo
+  richiede, ma è corretto).
 
 Idee per i passi successivi: modalità Learn; alternative accettate
 (`is_main`); avanzamento rapido del tronco già consolidato; errori ripetuti a
