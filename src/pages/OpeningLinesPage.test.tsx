@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { formatScore } from '@/lib/chess-format'
 import { openingsTranslations } from '@/lib/i18n/openings'
 import { it as itTranslations } from '@/lib/i18n/translations'
 import type { OpeningProgress } from '@/lib/opening-tree'
@@ -101,7 +102,10 @@ vi.mock('@/hooks/use-user-stats', () => ({ useUserStats: () => ({ data: undefine
 vi.mock('@/hooks/use-stockfish-analysis', () => ({
   useStockfishAnalysis: (position: { fen: string; moves: string[] } | null) => {
     engineCalls.push(position)
-    return { lines: position ? [{ pvUci: ['g8f6'] }] : [], analyzing: false }
+    return {
+      lines: position ? [{ pvUci: ['g8f6'], scoreCp: 50, scoreMate: null }] : [],
+      analyzing: false,
+    }
   },
 }))
 vi.mock('@/components/analysis-panel', () => ({
@@ -267,6 +271,9 @@ describe('OpeningLinesPage', () => {
       moves: ['e2e4'],
     })
     expect(board.hintUci).toBe('g8f6')
+    // La barra di valutazione: accanto alla scacchiera (desktop) e sotto
+    // (mobile), dal punto di vista del Bianco dopo 1.e4.
+    expect(screen.getAllByText(formatScore(50, null, 'b'))).toHaveLength(2)
     expect(window.localStorage.getItem('openings-stockfish')).toBe('true')
   })
 

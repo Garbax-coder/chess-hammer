@@ -19,6 +19,10 @@ const SIDES = {
   browse: { lg: 224 + 384 + 64, xl: 256 + 448 + 96 },
 }
 
+// La barra di valutazione accanto alla scacchiera su desktop: larghezza e
+// gap (w-5 + gap-2).
+const EVAL_BAR_WIDTH = 20 + 8
+
 const RIGHT_WIDTH = {
   play: 'lg:w-60 xl:w-72',
   browse: 'lg:w-96 xl:w-[28rem]',
@@ -41,17 +45,24 @@ export function OpeningPageLayout({
   board,
   right,
   variant = 'play',
+  evalBar,
 }: {
   left: ReactNode
   board: ReactNode
   right: ReactNode
   variant?: 'play' | 'browse'
+  /**
+   * La barra di valutazione (es. con Stockfish acceso): su desktop in
+   * verticale accanto alla scacchiera, su mobile in orizzontale sotto.
+   */
+  evalBar?: (orientation: 'vertical' | 'horizontal') => ReactNode
 }) {
   const sides = SIDES[variant]
+  const bar = evalBar ? EVAL_BAR_WIDTH : 0
   const style = {
     '--board-sm': MOBILE_SIZE,
-    '--board-lg': `min(calc(100vw - ${sides.lg}px), ${DESKTOP_HEIGHT})`,
-    '--board-xl': `min(calc(100vw - ${sides.xl}px), ${DESKTOP_HEIGHT})`,
+    '--board-lg': `min(calc(100vw - ${sides.lg + bar}px), ${DESKTOP_HEIGHT})`,
+    '--board-xl': `min(calc(100vw - ${sides.xl + bar}px), ${DESKTOP_HEIGHT})`,
   } as CSSProperties
 
   return (
@@ -65,10 +76,18 @@ export function OpeningPageLayout({
       {/* Su mobile ferma sotto l'intestazione (53px), con lo sfondo della
           pagina attorno: quello che scorre sotto non si vede. Su desktop la
           pagina non scorre e basta la sua posizione. */}
-      <div className="bg-background sticky top-[53px] z-[5] order-1 -mx-4 shrink-0 px-4 py-2 lg:static lg:order-2 lg:mx-0 lg:bg-transparent lg:p-0">
+      <div className="bg-background sticky top-[53px] z-[5] order-1 -mx-4 flex shrink-0 flex-col gap-2 px-4 py-2 lg:static lg:order-2 lg:mx-0 lg:flex-row lg:bg-transparent lg:p-0">
+        {evalBar && (
+          <div className="hidden w-5 shrink-0 lg:block lg:h-[var(--board-lg)] xl:h-[var(--board-xl)]">
+            {evalBar('vertical')}
+          </div>
+        )}
         <div className="size-[var(--board-sm)] lg:size-[var(--board-lg)] xl:size-[var(--board-xl)]">
           {board}
         </div>
+        {evalBar && (
+          <div className="w-[var(--board-sm)] lg:hidden">{evalBar('horizontal')}</div>
+        )}
       </div>
       <aside
         className={`order-2 flex w-full flex-col gap-3 lg:order-3 lg:min-h-0 lg:shrink-0 lg:overflow-y-auto [&>*]:shrink-0 ${RIGHT_WIDTH[variant]}`}

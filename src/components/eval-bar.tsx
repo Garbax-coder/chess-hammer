@@ -7,6 +7,8 @@ interface EvalBarProps {
   sideToMove: 'w' | 'b'
   isCheckmate?: boolean
   orientation?: 'horizontal' | 'vertical'
+  /** Verticale con la scacchiera vista dal Nero: il Bianco in alto. */
+  flipped?: boolean
 }
 
 export function EvalBar({
@@ -16,6 +18,7 @@ export function EvalBar({
   sideToMove,
   isCheckmate = false,
   orientation = 'horizontal',
+  flipped = false,
 }: EvalBarProps) {
   const label = formatScore(scoreCp, scoreMate, sideToMove, isCheckmate)
 
@@ -24,7 +27,7 @@ export function EvalBar({
       <div className="relative h-full w-full" title={label}>
         <div className="bg-muted absolute inset-0 overflow-hidden rounded-full">
           <div
-            className="bg-foreground absolute inset-x-0 bottom-0 transition-all duration-500"
+            className={`bg-foreground absolute inset-x-0 transition-all duration-500 ${flipped ? 'top-0' : 'bottom-0'}`}
             style={{ height: `${whitePercent}%` }}
           />
         </div>
@@ -32,7 +35,9 @@ export function EvalBar({
             barra e' stretta (poche decine di px), quindi l'etichetta in
             orizzontale deve poter sporgere oltre i suoi bordi senza
             essere tagliata. */}
-        <span className="bg-background text-foreground absolute top-2 left-1/2 -translate-x-1/2 rounded px-1 text-[0.65rem] font-semibold whitespace-nowrap shadow-sm">
+        <span
+          className={`bg-background text-foreground absolute left-1/2 -translate-x-1/2 rounded px-1 text-[0.65rem] font-semibold whitespace-nowrap shadow-sm ${flipped ? 'bottom-2' : 'top-2'}`}
+        >
           {label}
         </span>
       </div>

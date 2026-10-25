@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AnalysisPanel } from '@/components/analysis-panel'
+import { EvalBar } from '@/components/eval-bar'
 import { OpeningBoard } from '@/components/opening-board'
 import { OpeningCommentDialog } from '@/components/opening-comment-dialog'
 import { OpeningPageHeader } from '@/components/opening-page-header'
@@ -34,6 +35,7 @@ import {
 } from '@/hooks/use-openings'
 import { useStockfishAnalysis } from '@/hooks/use-stockfish-analysis'
 import { useUserStats } from '@/hooks/use-user-stats'
+import { evalToWhitePercent } from '@/lib/chess-format'
 import { useEngineSettings } from '@/lib/engine-settings'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
 import { toggleArrow, type MoveArrow } from '@/lib/opening-arrows'
@@ -164,6 +166,12 @@ function OpeningLines({
     for (const node of pathToSelected) chess.move(node.san)
     return chess.fen()
   }, [pathToSelected])
+  // Per la barra di valutazione: chi muove e se la posizione e' matto
+  // (Stockfish allora non da' righe).
+  const evaluation = useMemo(() => {
+    const chess = new Chess(fen)
+    return { turn: chess.turn(), checkmate: chess.isCheckmate() }
+  }, [fen])
   const engine = useStockfishAnalysis(
     engineOn ? { fen: START_FEN, moves: pathToSelected.map((n) => n.uci) } : null,
     { multiPv: engineSettings.multiPv, depth: engineSettings.depth, enabled: engineOn },
@@ -317,6 +325,26 @@ function OpeningLines({
       />
       <OpeningPageLayout
         variant="browse"
+        evalBar={
+          engineOn
+            ? (orientation) => (
+                <EvalBar
+                  orientation={orientation}
+                  flipped={color === 'b'}
+                  whitePercent={evalToWhitePercent(
+                    engine.lines[0]?.scoreCp ?? null,
+                    engine.lines[0]?.scoreMate ?? null,
+                    evaluation.turn,
+                    evaluation.checkmate,
+                  )}
+                  scoreCp={engine.lines[0]?.scoreCp ?? null}
+                  scoreMate={engine.lines[0]?.scoreMate ?? null}
+                  sideToMove={evaluation.turn}
+                  isCheckmate={evaluation.checkmate}
+                />
+              )
+            : undefined
+        }
         left={
           <>
             <OpeningPageHeader
