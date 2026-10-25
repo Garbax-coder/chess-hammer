@@ -58,6 +58,9 @@ export interface OpeningsTranslations {
   deleteMove: string
   confirmDeleteMove: string
   alternativeNoContinuation: string
+  makeAlternative: string
+  makeLine: string
+  endsWithOpponent: string
   copyToEdit: string
   copyName: (name: string) => string
   rename: string
@@ -182,11 +185,15 @@ const it: OpeningsTranslations = {
   editLines: 'Modifica le linee',
   doneEditing: 'Fine modifiche',
   editHint:
-    'Gioca una mossa sulla scacchiera per aggiungerla dopo quella selezionata (o all’inizio, se non ne hai selezionata nessuna).',
+    'Gioca una mossa sulla scacchiera per aggiungerla dopo quella selezionata (o all’inizio, se non ne hai selezionata nessuna): le tue e quelle dell’avversario, per allungare una linea o aprirne una nuova.',
   deleteMove: 'Elimina la mossa e il seguito',
   confirmDeleteMove: 'Conferma: elimina',
   alternativeNoContinuation:
-    'Dopo un’alternativa non si aggiungono mosse: eliminala o scegli la mossa principale.',
+    'Dopo un’alternativa non si aggiungono mosse: rendila una linea per continuare.',
+  makeAlternative: 'Rendi alternativa accettata',
+  makeLine: 'Rendi una linea',
+  endsWithOpponent:
+    'La linea finisce con una mossa dell’avversario: aggiungi la tua risposta.',
   copyToEdit: 'Crea una copia personale per modificarla',
   copyName: (name) => `${name} (mia)`,
   rename: 'Rinomina il repertorio',
@@ -322,11 +329,14 @@ const en: OpeningsTranslations = {
   editLines: 'Edit the lines',
   doneEditing: 'Done editing',
   editHint:
-    'Play a move on the board to add it after the selected one (or at the start, if none is selected).',
+    'Play a move on the board to add it after the selected one (or at the start, if none is selected): yours and your opponent’s, to extend a line or start a new one.',
   deleteMove: 'Delete the move and what follows',
   confirmDeleteMove: 'Confirm: delete',
   alternativeNoContinuation:
-    'No moves can follow an alternative: delete it or pick the main move.',
+    'No moves can follow an alternative: make it a line to continue.',
+  makeAlternative: 'Make it an accepted alternative',
+  makeLine: 'Make it a line',
+  endsWithOpponent: 'The line ends with an opponent move: add your reply.',
   copyToEdit: 'Make a personal copy to edit it',
   copyName: (name) => `${name} (mine)`,
   rename: 'Rename the repertoire',
@@ -458,11 +468,15 @@ const fr: OpeningsTranslations = {
   editLines: 'Modifier les lignes',
   doneEditing: 'Terminer',
   editHint:
-    'Jouez un coup sur l’échiquier pour l’ajouter après le coup sélectionné (ou au début, si aucun n’est sélectionné).',
+    'Jouez un coup sur l’échiquier pour l’ajouter après le coup sélectionné (ou au début, si aucun n’est sélectionné) : les vôtres et ceux de l’adversaire, pour prolonger une ligne ou en ouvrir une nouvelle.',
   deleteMove: 'Supprimer le coup et la suite',
   confirmDeleteMove: 'Confirmer : supprimer',
   alternativeNoContinuation:
-    'Aucun coup ne peut suivre une alternative : supprimez-la ou choisissez le coup principal.',
+    'Aucun coup ne peut suivre une alternative : faites-en une ligne pour continuer.',
+  makeAlternative: 'En faire une alternative acceptée',
+  makeLine: 'En faire une ligne',
+  endsWithOpponent:
+    'La ligne se termine par un coup de l’adversaire : ajoutez votre réponse.',
   copyToEdit: 'Créer une copie personnelle pour la modifier',
   copyName: (name) => `${name} (à moi)`,
   rename: 'Renommer le répertoire',
@@ -603,11 +617,14 @@ const es: OpeningsTranslations = {
   editLines: 'Editar las líneas',
   doneEditing: 'Terminar',
   editHint:
-    'Juega una jugada en el tablero para añadirla tras la seleccionada (o al principio, si no hay ninguna seleccionada).',
+    'Juega una jugada en el tablero para añadirla tras la seleccionada (o al principio, si no hay ninguna seleccionada): las tuyas y las del rival, para alargar una línea o abrir una nueva.',
   deleteMove: 'Eliminar la jugada y lo que sigue',
   confirmDeleteMove: 'Confirmar: eliminar',
   alternativeNoContinuation:
-    'Tras una alternativa no se añaden jugadas: elimínala o elige la jugada principal.',
+    'Tras una alternativa no se añaden jugadas: conviértela en una línea para continuar.',
+  makeAlternative: 'Convertir en alternativa aceptada',
+  makeLine: 'Convertir en una línea',
+  endsWithOpponent: 'La línea termina con una jugada del rival: añade tu respuesta.',
   copyToEdit: 'Crear una copia personal para editarla',
   copyName: (name) => `${name} (mía)`,
   rename: 'Renombrar el repertorio',
@@ -744,11 +761,15 @@ const de: OpeningsTranslations = {
   editLines: 'Linien bearbeiten',
   doneEditing: 'Fertig',
   editHint:
-    'Spiele einen Zug auf dem Brett, um ihn nach dem ausgewählten hinzuzufügen (oder am Anfang, wenn keiner ausgewählt ist).',
+    'Spiele einen Zug auf dem Brett, um ihn nach dem ausgewählten hinzuzufügen (oder am Anfang, wenn keiner ausgewählt ist): deine und die des Gegners, um eine Linie zu verlängern oder eine neue zu beginnen.',
   deleteMove: 'Zug und Fortsetzung löschen',
   confirmDeleteMove: 'Bestätigen: löschen',
   alternativeNoContinuation:
-    'Nach einer Alternative folgen keine Züge: Lösche sie oder wähle den Hauptzug.',
+    'Nach einer Alternative folgen keine Züge: Mach sie zu einer Linie, um fortzufahren.',
+  makeAlternative: 'Zur akzeptierten Alternative machen',
+  makeLine: 'Zu einer Linie machen',
+  endsWithOpponent:
+    'Die Linie endet mit einem Zug des Gegners: Füge deine Antwort hinzu.',
   copyToEdit: 'Persönliche Kopie zum Bearbeiten erstellen',
   copyName: (name) => `${name} (meine)`,
   rename: 'Repertoire umbenennen',

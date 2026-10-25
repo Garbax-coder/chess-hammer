@@ -27,6 +27,7 @@ import {
   useOpeningNames,
   useOpeningNotes,
   useSaveOpeningNote,
+  useSetMoveAlternative,
 } from '@/hooks/use-openings'
 import { useStockfishAnalysis } from '@/hooks/use-stockfish-analysis'
 import { useUserStats } from '@/hooks/use-user-stats'
@@ -94,6 +95,7 @@ function OpeningLines({
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const addMove = useAddOpeningMove()
   const deleteMove = useDeleteOpeningMove()
+  const setAlternative = useSetMoveAlternative()
   const copyRepertoire = useCopyRepertoire()
   // Stockfish sulla posizione mostrata.
   const [engineOn, setEngineOn] = useLocalToggle('openings-stockfish', false)
@@ -212,6 +214,16 @@ function OpeningLines({
     return true
   }
 
+  // La mossa selezionata, se e' dell'utente: alternativa accettata (senza
+  // seguito, accanto a un'altra sua mossa principale) o linea.
+  const selectedIsUser = !!selected && isUserMove(selected, color)
+  const canMakeAlternative =
+    selectedIsUser &&
+    selected.is_main &&
+    !firstChild &&
+    siblings.some((n) => n.id !== selected.id && n.is_main)
+  const endsWithOpponent = !!selected && !selectedIsUser && !firstChild
+
   function handleDelete() {
     if (!selected) return
     deleteMove.mutate(selected.id, {
@@ -324,12 +336,35 @@ function OpeningLines({
                           {o.deleteMove}
                         </Button>
                       ))}
+                    {selected && (canMakeAlternative || !selected.is_main) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-fit"
+                        loading={setAlternative.isPending}
+                        onClick={() =>
+                          setAlternative.mutate({
+                            nodeId: selected.id,
+                            alternative: selected.is_main,
+                          })
+                        }
+                      >
+                        {selected.is_main ? o.makeAlternative : o.makeLine}
+                      </Button>
+                    )}
+                    {endsWithOpponent && (
+                      <p className="text-xs text-amber-700 dark:text-amber-300">
+                        {o.endsWithOpponent}
+                      </p>
+                    )}
                     {editMessage && (
                       <p className="text-xs text-amber-700 dark:text-amber-300">
                         {editMessage}
                       </p>
                     )}
-                    {(addMove.isError || deleteMove.isError) && (
+                    {(addMove.isError ||
+                      deleteMove.isError ||
+                      setAlternative.isError) && (
                       <p className="text-destructive text-xs">{o.editError}</p>
                     )}
                   </>

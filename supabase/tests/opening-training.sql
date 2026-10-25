@@ -1,4 +1,4 @@
--- Prova delle migrazioni 0100-0106 (allenamento sulle aperture). Da
+-- Prova delle migrazioni 0100-0107 (allenamento sulle aperture). Da
 -- eseguire SOLO sul progetto di sviluppo: tutto avviene in una transazione
 -- annullata alla fine.
 --   psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/opening-training.sql
@@ -178,29 +178,61 @@ begin
   end if;
   insert into ids_import select (r ->> 'id')::uuid;
 
-  -- Modifica delle linee (0106) sul repertorio importato: 1.e4 e5 2.Nf3.
+  -- Modifica delle linee (0106, 0107) sul repertorio importato: 1.e4 e5 2.Nf3.
   declare
     rep uuid := (r ->> 'id')::uuid;
     e5 bigint := (select id from public.opening_nodes where repertoire_id = (r ->> 'id')::uuid and san = 'e5');
     nf3 bigint := (select id from public.opening_nodes where repertoire_id = (r ->> 'id')::uuid and san = 'Nf3');
     m jsonb;
     bc4 bigint;
+    nc6 bigint;
   begin
-    -- Una seconda mossa del Bianco dopo 1...e5: alternativa.
+    -- Una seconda mossa del Bianco dopo 1...e5: una linea nuova, con seguito.
     m := public.add_opening_move(rep, e5, 'f1c4', 'Bc4', 'x');
     bc4 := (m ->> 'id')::bigint;
-    if (m ->> 'is_main')::boolean or m ->> 'path' <> 'e2e4.e7e5.f1c4' then
-      raise exception 'aggiunta di un''alternativa: nodo inatteso %', m;
+    if not (m ->> 'is_main')::boolean or m ->> 'path' <> 'e2e4.e7e5.f1c4' then
+      raise exception 'aggiunta di una linea: nodo inatteso %', m;
     end if;
     -- La stessa mossa di nuovo: si restituisce quella che c'e'.
     if (public.add_opening_move(rep, e5, 'f1c4', 'Bc4', 'x') ->> 'id')::bigint <> bc4 then
       raise exception 'mossa esistente aggiunta di nuovo';
+    end if;
+    nc6 := (public.add_opening_move(rep, bc4, 'b8c6', 'Nc6', 'x') ->> 'id')::bigint;
+    -- Con un seguito non diventa un'alternativa.
+    begin
+      perform public.set_opening_move_alternative(bc4, true);
+      raise exception 'alternativa con seguito accettata';
+    exception when raise_exception then
+      if sqlerrm not like 'Un''alternativa non ha seguito%' then raise; end if;
+    end;
+    -- Tolto 1...Nc6 (dell'avversario, foglia), 2.Bc4 resta.
+    perform public.delete_opening_move(nc6);
+    if not exists (select 1 from public.opening_nodes where id = bc4) then
+      raise exception 'eliminazione: tolta anche la mossa dell''utente';
+    end if;
+    perform public.set_opening_move_alternative(bc4, true);
+    if (select is_main from public.opening_nodes where id = bc4) then
+      raise exception 'alternativa non impostata';
     end if;
     begin
       perform public.add_opening_move(rep, bc4, 'b8c6', 'Nc6', 'x');
       raise exception 'seguito dopo un''alternativa accettato';
     exception when raise_exception then
       if sqlerrm not like 'Un''alternativa non ha seguito%' then raise; end if;
+    end;
+    -- 2.Nf3 e' l'unica principale: non diventa alternativa. 1...e5 non e'
+    -- dell'utente.
+    begin
+      perform public.set_opening_move_alternative(nf3, true);
+      raise exception 'nessuna mossa principale rimasta';
+    exception when raise_exception then
+      if sqlerrm not like 'Serve un''altra tua mossa principale%' then raise; end if;
+    end;
+    begin
+      perform public.set_opening_move_alternative(e5, true);
+      raise exception 'mossa dell''avversario come alternativa';
+    exception when raise_exception then
+      if sqlerrm not like 'Solo una tua mossa%' then raise; end if;
     end;
     -- Togliendo 2.Nf3 l'alternativa 2.Bc4 diventa principale.
     perform public.add_opening_move(rep, nf3, 'b8c6', 'Nc6', 'x');
@@ -285,8 +317,10 @@ do $$
 begin
   if has_function_privilege('anon',
        'public.record_opening_move(bigint, bigint, text, text, integer)', 'execute')
-     or has_function_privilege('anon', 'public.learn_opening_move(bigint)', 'execute') then
-    raise exception 'anon puo'' registrare mosse';
+     or has_function_privilege('anon', 'public.learn_opening_move(bigint)', 'execute')
+     or has_function_privilege('anon',
+       'public.set_opening_move_alternative(bigint, boolean)', 'execute') then
+    raise exception 'anon puo'' registrare o modificare mosse';
   end if;
   raise notice 'opening-training: tutti i controlli superati';
 end $$;

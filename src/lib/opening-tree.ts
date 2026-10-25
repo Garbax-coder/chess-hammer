@@ -288,9 +288,13 @@ export function nameChange(
   return rest.length > 0 ? rest.join(', ') : undefined
 }
 
-/** Le alternative accettate al posto della mossa `node` (stessa posizione). */
+/**
+ * Le mosse accettate al posto di `node` (stessa posizione): le alternative e
+ * le mosse che aprono altre linee del repertorio. In questa linea si chiede
+ * comunque `node`.
+ */
 export function alternativesTo(tree: OpeningTree, node: OpeningNode): OpeningNode[] {
-  return (tree.children.get(node.parent_id) ?? []).filter((n) => !n.is_main)
+  return (tree.children.get(node.parent_id) ?? []).filter((n) => n.id !== node.id)
 }
 
 /**

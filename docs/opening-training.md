@@ -272,10 +272,17 @@ Fatto (2026-10-25):
 - **Modifica delle linee** in Consulta, solo sui repertori personali
   (funzioni `add_opening_move`, `delete_opening_move`): con "Modifica le
   linee" la scacchiera diventa giocabile e una mossa si aggiunge dopo quella
-  selezionata (se c'è già si seleziona; una seconda mossa dell'utente nella
-  stessa posizione è un'alternativa, che non ha seguito); "Elimina la mossa
-  e il seguito" chiede conferma, e se toglie la mossa principale
-  l'alternativa ne prende il posto. Un repertorio del catalogo si copia
+  selezionata (se c'è già si seleziona). Si aggiungono mosse di entrambi i
+  colori, quindi linee intere: dalla migrazione
+  `0107_opening_user_branches.sql` anche una seconda mossa dell'utente
+  nella stessa posizione apre una linea nuova, con seguito (nel Drill,
+  giocata al posto di quella della linea, vale come alternativa). Una mossa
+  dell'utente senza seguito, accanto a un'altra sua mossa principale, si
+  può rendere "alternativa accettata" (e tornare linea) con
+  `set_opening_move_alternative`. Se la mossa selezionata è dell'avversario
+  e chiude la linea, un avviso chiede la risposta. "Elimina la mossa e il
+  seguito" chiede conferma, e se toglie l'ultima mossa principale di una
+  posizione l'alternativa ne prende il posto. Un repertorio del catalogo si copia
   (`copy_opening_repertoire`, con le note dell'utente) e si apre la copia in
   modifica. Un repertorio personale si rinomina dalla matita accanto al
   nome.

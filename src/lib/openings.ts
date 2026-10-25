@@ -218,6 +218,21 @@ export async function addOpeningMove(params: {
   return data as OpeningNode
 }
 
+/**
+ * Una mossa dell'utente diventa alternativa accettata (senza seguito, non si
+ * allena) o torna una linea.
+ */
+export async function setOpeningMoveAlternative(params: {
+  nodeId: number
+  alternative: boolean
+}): Promise<void> {
+  const { error } = await supabase.rpc('set_opening_move_alternative', {
+    p_node_id: params.nodeId,
+    p_alternative: params.alternative,
+  })
+  if (error) throw error
+}
+
 /** Toglie una mossa di un repertorio personale con tutto il suo seguito. */
 export async function deleteOpeningMove(nodeId: number): Promise<void> {
   const { error } = await supabase.rpc('delete_opening_move', { p_node_id: nodeId })

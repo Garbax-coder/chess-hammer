@@ -33,12 +33,19 @@ const e4: OpeningProgress = {
   last_seen_at: '2026-10-24T10:00:00Z',
   due_at: '2099-01-01T00:00:00Z',
 }
-// Una copia personale dello stesso repertorio, modificabile.
+// Una copia personale dello stesso repertorio, modificabile, con in piu' la
+// linea 1.e4 e5 2.Bc4 e la risposta 2...Nc6 dopo 2.Nc3 (ancora senza la
+// mossa dell'utente).
 const copy: RepertoireWithNodes = {
   ...repertoire,
   id: 'r2',
   slug: 'u-copy',
   owner_id: 'me',
+  nodes: [
+    ...repertoire.nodes,
+    { id: 6, parent_id: 2, ply: 3, uci: 'f1c4', san: 'Bc4', epd: 'f', is_main: true },
+    { id: 7, parent_id: 5, ply: 4, uci: 'b8c6', san: 'Nc6', epd: 'g', is_main: true },
+  ],
 }
 let board: {
   fen: string
@@ -50,6 +57,7 @@ let board: {
 const saveNote = vi.fn()
 const addMove = vi.fn()
 const deleteMove = vi.fn()
+const setAlternative = vi.fn()
 const copyRepertoire = vi.fn()
 const rename = vi.fn()
 const engineCalls: ({ fen: string; moves: string[] } | null)[] = []
@@ -66,6 +74,11 @@ vi.mock('@/hooks/use-openings', () => ({
   useSaveOpeningNote: () => ({ mutate: saveNote, isPending: false }),
   useAddOpeningMove: () => ({ mutate: addMove, isError: false }),
   useDeleteOpeningMove: () => ({ mutate: deleteMove, isPending: false, isError: false }),
+  useSetMoveAlternative: () => ({
+    mutate: setAlternative,
+    isPending: false,
+    isError: false,
+  }),
   useCopyRepertoire: () => ({ mutate: copyRepertoire, isPending: false, isError: false }),
   useRenameRepertoire: () => ({ mutate: rename, isPending: false, isError: false }),
   useOpeningNames: () => ({
@@ -105,7 +118,8 @@ function renderLines(path = '/openings/italian-game/lines') {
 describe('OpeningLinesPage', () => {
   beforeEach(() => {
     window.localStorage.clear()
-    for (const mock of [addMove, deleteMove, copyRepertoire, rename]) mock.mockReset()
+    for (const mock of [addMove, deleteMove, setAlternative, copyRepertoire, rename])
+      mock.mockReset()
   })
 
   it('shows the selected move on the board, with its training data', () => {
@@ -292,6 +306,31 @@ describe('OpeningLinesPage', () => {
     fireEvent.click(screen.getByRole('button', { name: o.confirmDeleteMove }))
     expect(deleteMove).toHaveBeenCalledWith(5, expect.anything())
     expect(board.lastMoveUci).toBe('c7c5')
+  })
+
+  it('builds new lines with moves of both sides, and marks accepted alternatives', () => {
+    renderLines('/openings/u-copy/lines')
+    fireEvent.click(screen.getByRole('button', { name: o.editLines }))
+
+    // Una linea che finisce con la mossa dell'avversario chiede la risposta.
+    fireEvent.click(screen.getByRole('button', { name: 'Nc6' }))
+    expect(screen.getByText(o.endsWithOpponent)).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: o.makeAlternative }),
+    ).not.toBeInTheDocument()
+
+    // 2.Nf3 e 2.Bc4 aprono due linee: una delle due puo' diventare
+    // un'alternativa accettata.
+    fireEvent.click(screen.getByRole('button', { name: '2.Bc4' }))
+    expect(screen.queryByText(o.endsWithOpponent)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: o.makeAlternative }))
+    expect(setAlternative).toHaveBeenCalledWith({ nodeId: 6, alternative: true })
+
+    // 2.Nc3 ha un seguito ed e' l'unica mossa in quella posizione.
+    fireEvent.click(screen.getByRole('button', { name: '2.Nc3' }))
+    expect(
+      screen.queryByRole('button', { name: o.makeAlternative }),
+    ).not.toBeInTheDocument()
   })
 
   it('renames a personal repertoire from the header', () => {

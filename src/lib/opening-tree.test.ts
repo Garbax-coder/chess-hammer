@@ -249,6 +249,17 @@ describe('alternativesTo', () => {
     expect(withAlternative.leaves.map((l) => l.id)).toEqual([3, 5])
     expect(openingCoverage(withAlternative, new Map(), 'w', now).userMoves).toBe(3)
   })
+
+  it('accepts the moves that open other lines from the same position', () => {
+    const branched = buildOpeningTree([...nodes, node(6, 2, 3, 'Bc4')])
+    expect(alternativesTo(branched, branched.byId.get(3)!).map((n) => n.san)).toEqual([
+      'Bc4',
+    ])
+    expect(alternativesTo(branched, branched.byId.get(6)!).map((n) => n.san)).toEqual([
+      'Nf3',
+    ])
+    expect(branched.leaves.map((l) => l.id)).toEqual([3, 6, 5])
+  })
 })
 
 describe('commentOf', () => {

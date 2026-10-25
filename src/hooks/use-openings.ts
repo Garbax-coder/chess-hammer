@@ -17,6 +17,7 @@ import {
   renameOpeningRepertoire,
   saveOpeningCycle,
   saveOpeningNote,
+  setOpeningMoveAlternative,
   type OpeningCycle,
 } from '@/lib/openings'
 
@@ -181,6 +182,11 @@ export function useAddOpeningMove() {
 export function useDeleteOpeningMove() {
   const refresh = useRefreshRepertoires()
   return useMutation({ mutationFn: deleteOpeningMove, onSuccess: refresh })
+}
+
+export function useSetMoveAlternative() {
+  const refresh = useRefreshRepertoires()
+  return useMutation({ mutationFn: setOpeningMoveAlternative, onSuccess: refresh })
 }
 
 export function useCopyRepertoire() {
