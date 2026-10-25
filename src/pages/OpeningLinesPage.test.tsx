@@ -95,13 +95,15 @@ describe('OpeningLinesPage', () => {
     expect(board.lastMoveUci).toBe('e2e4')
   })
 
-  it('lists the lines, each to be trained on its own', () => {
+  it('lists the lines, each to be learned or trained on its own', () => {
     renderLines()
-    const links = screen.getAllByRole('link', { name: o.trainLine })
+    // Entrambe le linee hanno una mossa mai vista (2.Nf3, 2.Nc3): si studiano.
+    const links = screen.getAllByRole('link', { name: o.learnLine })
     expect(links.map((a) => a.getAttribute('href'))).toEqual([
-      '/openings/italian-game?line=3',
-      '/openings/italian-game?line=5',
+      '/openings/italian-game/learn?line=3',
+      '/openings/italian-game/learn?line=5',
     ])
+    expect(screen.queryByRole('link', { name: o.trainLine })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '1.e4 e5 2.Nf3' })).toBeInTheDocument()
     // Il nome di ogni linea, con il codice ECO.
     expect(screen.getAllByText("King's Knight Opening").length).toBeGreaterThan(0)

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildOpeningTree,
   chainFrom,
+  chooseLearnRun,
   chooseRun,
   moveLabel,
   moveState,
@@ -148,8 +149,18 @@ describe('runMastery', () => {
       [1, progress(1, 3, '2026-11-01T00:00:00Z')],
       [5, progress(5, 0, '2026-10-25T10:00:00Z')],
     ])
-    expect(runMastery(tree, 5, map, 'w', now)).toEqual({ mastered: 1, due: 1, total: 2 })
-    expect(runMastery(tree, 3, map, 'w', now)).toEqual({ mastered: 1, due: 0, total: 2 })
+    expect(runMastery(tree, 5, map, 'w', now)).toEqual({
+      mastered: 1,
+      due: 1,
+      new: 0,
+      total: 2,
+    })
+    expect(runMastery(tree, 3, map, 'w', now)).toEqual({
+      mastered: 1,
+      due: 0,
+      new: 1,
+      total: 2,
+    })
   })
 })
 
@@ -187,5 +198,19 @@ describe('nameAt / nameChange', () => {
     expect(nameChange(tree, n(3), deeper)).toBe('Giuoco Piano')
     // Piu' generico del nome di prima: niente da aggiungere.
     expect(nameChange(tree, n(4), deeper)).toBeUndefined()
+  })
+})
+
+describe('chooseLearnRun', () => {
+  it('picks the first line in tree order with moves never seen', () => {
+    expect(chooseLearnRun(tree, new Map(), 'w')).toBe(3)
+    const learned = new Map([
+      [1, progress(1, 0, '2026-10-25T16:00:00Z')],
+      [3, progress(3, 0, '2026-10-25T16:00:00Z')],
+    ])
+    expect(chooseLearnRun(tree, learned, 'w')).toBe(5)
+    expect(chooseLearnRun(tree, new Map(), 'w', 3)).toBe(5)
+    learned.set(5, progress(5, 0, '2026-10-25T16:00:00Z'))
+    expect(chooseLearnRun(tree, learned, 'w')).toBeUndefined()
   })
 })

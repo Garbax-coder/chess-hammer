@@ -223,6 +223,14 @@ Fatto (2026-10-25):
   sono solo in inglese, come su Lichess. Nell'albero e nell'elenco delle linee uno
   switch per card mostra o nasconde i nomi; la scelta resta nel browser
   (localStorage `openings-tree-names`, `openings-line-names`).
+- **Modalità Learn** `/openings/:slug/learn` (2026-10-25): propone la prima
+  linea, nell'ordine dell'albero, con mosse mai viste (o quella scelta con
+  `?line=`); l'avversario risponde da solo, le mosse dell'utente si giocano
+  seguendo la freccia (o con "Gioca la mossa"). Una mossa studiata diventa
+  "in apprendimento" con il primo ripasso fra 4 ore (migrazione
+  `0103_opening_learn.sql`, funzione `learn_opening_move`), senza tentativi:
+  non era a memoria. "Studia" compare nell'elenco dei repertori e sulle
+  linee con mosse nuove; poi si allena.
 
 Da fare prima del merge:
 
@@ -238,7 +246,7 @@ Da fare prima del merge:
 - Citare `lichess-org/chess-openings` nella pagina Crediti (CC0 non lo
   richiede, ma è corretto).
 
-Idee per i passi successivi: modalità Learn; alternative accettate
+Idee per i passi successivi: alternative accettate
 (`is_main`); avanzamento rapido del tronco già consolidato; errori ripetuti a
 fine sessione; pesi dall'Opening Explorer (serve un token); cicli Woodpecker
 sui Run; import PGN dagli studi Lichess.

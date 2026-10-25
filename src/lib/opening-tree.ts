@@ -182,14 +182,34 @@ export function runMastery(
   progress: Map<number, OpeningProgress>,
   color: OpeningColor,
   now: Date,
-): { mastered: number; due: number; total: number } {
+): { mastered: number; due: number; new: number; total: number } {
   const userMoves = runPath(tree, leafId).filter((n) => isUserMove(n, color))
   const states = userMoves.map((n) => moveState(progress.get(n.id), now))
   return {
     mastered: states.filter((s) => s === 'mastered').length,
     due: states.filter((s) => s === 'due').length,
+    new: states.filter((s) => s === 'new').length,
     total: userMoves.length,
   }
+}
+
+/**
+ * La prossima linea da studiare in modalita' Learn: la prima, nell'ordine
+ * dell'albero, con mosse dell'utente mai viste (saltando `skipLeafId`, la
+ * linea appena studiata, le cui ultime mosse possono essere ancora in
+ * salvataggio). Undefined se sono state studiate tutte.
+ */
+export function chooseLearnRun(
+  tree: OpeningTree,
+  progress: Map<number, OpeningProgress>,
+  color: OpeningColor,
+  skipLeafId?: number,
+): number | undefined {
+  return tree.leaves.find(
+    (leaf) =>
+      leaf.id !== skipLeafId &&
+      runPath(tree, leaf.id).some((n) => isUserMove(n, color) && !progress.has(n.id)),
+  )?.id
 }
 
 export interface OpeningName {

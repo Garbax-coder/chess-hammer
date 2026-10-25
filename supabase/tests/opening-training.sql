@@ -1,4 +1,4 @@
--- Prova delle migrazioni 0100, 0101 e 0102 (allenamento sulle aperture). Da
+-- Prova delle migrazioni 0100-0103 (allenamento sulle aperture). Da
 -- eseguire SOLO sul progetto di sviluppo: tutto avviene in una transazione
 -- annullata alla fine.
 --   psql "$DEV_SUPABASE_DB_URL" -f supabase/tests/opening-training.sql
@@ -94,6 +94,23 @@ begin
     raise exception 'attesi 3 tentativi registrati';
   end if;
 
+  -- Modalita' Learn (0103): una mossa nuova diventa "in apprendimento",
+  -- senza tentativi e con il primo ripasso fra 4 ore.
+  r := public.learn_opening_move((select leaf from ids));
+  if (r ->> 'attempts')::int <> 0 or (r ->> 'streak')::int <> 0
+     or (r ->> 'due_at')::timestamptz < now() + interval '3 hours 59 minutes'
+     or (r ->> 'due_at')::timestamptz > now() + interval '4 hours 1 minute' then
+    raise exception 'studio di una mossa nuova: progresso inatteso %', r;
+  end if;
+  -- Una mossa gia' allenata resta com'e'.
+  r := public.learn_opening_move((select e4 from ids));
+  if (r ->> 'attempts')::int <> 3 or (r ->> 'first_try_correct')::int <> 2 then
+    raise exception 'studio di una mossa gia'' allenata: progresso cambiato %', r;
+  end if;
+  if (select count(*) from public.opening_attempts) <> 3 then
+    raise exception 'lo studio non deve registrare tentativi';
+  end if;
+
   -- Esito non valido.
   begin
     perform public.record_opening_move((select e4 from ids), (select leaf from ids), 'e2e4', 'boh', 1);
@@ -121,7 +138,8 @@ reset role;
 do $$
 begin
   if has_function_privilege('anon',
-       'public.record_opening_move(bigint, bigint, text, text, integer)', 'execute') then
+       'public.record_opening_move(bigint, bigint, text, text, integer)', 'execute')
+     or has_function_privilege('anon', 'public.learn_opening_move(bigint)', 'execute') then
     raise exception 'anon puo'' registrare mosse';
   end if;
   raise notice 'opening-training: tutti i controlli superati';

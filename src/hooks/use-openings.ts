@@ -5,6 +5,7 @@ import {
   fetchOpeningNames,
   fetchOpeningProgress,
   fetchRepertoires,
+  learnOpeningMove,
   recordOpeningMove,
 } from '@/lib/openings'
 
@@ -49,17 +50,25 @@ export function useOpeningProgress() {
   })
 }
 
-export function useRecordOpeningMove() {
+// Il progresso restituito da una mossa (allenata o studiata) sostituisce
+// quello in cache: niente rilettura di tutti i progressi.
+function useUpdateProgressCache() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: recordOpeningMove,
-    onSuccess: (progress) => {
-      queryClient.setQueryData<OpeningProgress[]>(openingProgressKey(user?.id), (rows) =>
-        rows
-          ? [...rows.filter((row) => row.node_id !== progress.node_id), progress]
-          : [progress],
-      )
-    },
-  })
+  return (progress: OpeningProgress) =>
+    queryClient.setQueryData<OpeningProgress[]>(openingProgressKey(user?.id), (rows) =>
+      rows
+        ? [...rows.filter((row) => row.node_id !== progress.node_id), progress]
+        : [progress],
+    )
+}
+
+export function useRecordOpeningMove() {
+  const updateCache = useUpdateProgressCache()
+  return useMutation({ mutationFn: recordOpeningMove, onSuccess: updateCache })
+}
+
+export function useLearnOpeningMove() {
+  const updateCache = useUpdateProgressCache()
+  return useMutation({ mutationFn: learnOpeningMove, onSuccess: updateCache })
 }

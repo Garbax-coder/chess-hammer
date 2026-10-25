@@ -13,6 +13,9 @@ const TARGET_STYLE: CSSProperties = {
   background: 'radial-gradient(circle, rgba(0, 0, 0, 0.22) 24%, transparent 26%)',
 }
 const LAST_MOVE_STYLE: CSSProperties = { backgroundColor: 'rgba(250, 204, 21, 0.3)' }
+/** Pausa prima della risposta dell'avversario, per seguirla sulla scacchiera. */
+export const OPPONENT_DELAY_MS = 500
+
 const HINT_ARROW_COLOR = 'rgba(16, 185, 129, 0.85)'
 
 /**

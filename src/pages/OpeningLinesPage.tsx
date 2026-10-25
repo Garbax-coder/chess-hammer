@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { OpeningBoard } from '@/components/opening-board'
+import { RepertoireGate } from '@/components/repertoire-gate'
 import {
   MOVE_STATE_CLASSES,
   MoveStateLegend,
@@ -19,12 +20,11 @@ import {
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useLocalToggle } from '@/hooks/use-local-toggle'
-import { useOpeningNames, useOpeningProgress, useRepertoires } from '@/hooks/use-openings'
+import { useOpeningNames } from '@/hooks/use-openings'
 import { useUserStats } from '@/hooks/use-user-stats'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
 import { useTranslations } from '@/lib/language-context'
 import {
-  buildOpeningTree,
   isUserMove,
   moveLabel,
   moveState,
@@ -45,37 +45,9 @@ const NO_NAMES = new Map<number, OpeningName>()
 // ognuna da allenare da sola.
 export default function OpeningLinesPage() {
   const { slug } = useParams<{ slug: string }>()
-  const t = useTranslations()
-  const o = useOpeningsTranslations()
-  const { data: repertoires, isLoading } = useRepertoires()
-  const { data: progress } = useOpeningProgress()
-  const repertoire = repertoires?.find((r) => r.slug === slug)
-  const tree = useMemo(
-    () => (repertoire ? buildOpeningTree(repertoire.nodes) : undefined),
-    [repertoire],
+  return (
+    <RepertoireGate slug={slug}>{(data) => <OpeningLines {...data} />}</RepertoireGate>
   )
-
-  if (isLoading || !repertoires || !progress) {
-    return (
-      <main className="flex flex-1 items-center justify-center">
-        <p className="text-muted-foreground text-sm">{t.common.loading}</p>
-      </main>
-    )
-  }
-  if (!repertoire || !tree) {
-    return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-3">
-        <p className="text-muted-foreground text-sm">{o.notFound}</p>
-        <Link
-          to="/openings"
-          className="text-primary text-sm underline-offset-4 hover:underline"
-        >
-          {o.back}
-        </Link>
-      </main>
-    )
-  }
-  return <OpeningLines repertoire={repertoire} tree={tree} progress={progress} />
 }
 
 function OpeningLines({
@@ -126,6 +98,12 @@ function OpeningLines({
               className="text-primary underline-offset-4 hover:underline"
             >
               {o.back}
+            </Link>
+            <Link
+              to={`/openings/${repertoire.slug}/learn`}
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              {o.learn}
             </Link>
             <Link
               to={`/openings/${repertoire.slug}`}
@@ -371,9 +349,16 @@ function LineRow({
               {o.mastered(mastery.mastered, mastery.total)}
             </span>
           </div>
-          <Button asChild size="sm" variant="outline">
-            <Link to={`/openings/${slug}?line=${leaf.id}`}>{o.trainLine}</Link>
-          </Button>
+          {/* Una linea con mosse mai viste si studia; poi si allena. */}
+          {mastery.new > 0 ? (
+            <Button asChild size="sm">
+              <Link to={`/openings/${slug}/learn?line=${leaf.id}`}>{o.learnLine}</Link>
+            </Button>
+          ) : (
+            <Button asChild size="sm" variant="outline">
+              <Link to={`/openings/${slug}?line=${leaf.id}`}>{o.trainLine}</Link>
+            </Button>
+          )}
         </div>
       </div>
     </li>

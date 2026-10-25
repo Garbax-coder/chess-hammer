@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { openingsTranslations } from '@/lib/i18n/openings'
 import type { OpeningNode, OpeningProgress } from '@/lib/opening-tree'
 import type { RepertoireWithNodes } from '@/lib/openings'
-import OpeningDrillPage, { OPPONENT_DELAY_MS } from './OpeningDrillPage'
+import { OPPONENT_DELAY_MS } from '@/components/opening-board'
+import OpeningDrillPage from './OpeningDrillPage'
 
 const o = openingsTranslations.it
 const record = vi.fn()
@@ -40,6 +41,7 @@ vi.mock('@/hooks/use-openings', () => ({
 vi.mock('@/hooks/use-user-stats', () => ({ useUserStats: () => ({ data: undefined }) }))
 // Al posto della scacchiera: la posizione e un pulsante per mossa giocabile.
 vi.mock('@/components/opening-board', () => ({
+  OPPONENT_DELAY_MS: 500,
   OpeningBoard: ({
     interactive,
     onMove,

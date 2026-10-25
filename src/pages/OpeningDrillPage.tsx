@@ -1,19 +1,15 @@
 import { Chess } from 'chess.js'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { OpeningBoard } from '@/components/opening-board'
+import { OPPONENT_DELAY_MS, OpeningBoard } from '@/components/opening-board'
+import { MoveList } from '@/components/opening-move-list'
+import { RepertoireGate } from '@/components/repertoire-gate'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  useOpeningProgress,
-  useRecordOpeningMove,
-  useRepertoires,
-} from '@/hooks/use-openings'
+import { useRecordOpeningMove } from '@/hooks/use-openings'
 import { useUserStats } from '@/hooks/use-user-stats'
 import { useOpeningsTranslations } from '@/lib/i18n/openings'
-import { useTranslations } from '@/lib/language-context'
 import {
-  buildOpeningTree,
   chooseRun,
   isUserMove,
   openingCoverage,
@@ -25,54 +21,16 @@ import {
 } from '@/lib/opening-tree'
 import type { RepertoireWithNodes } from '@/lib/openings'
 
-/** Pausa prima della risposta dell'avversario, per seguirla sulla scacchiera. */
-export const OPPONENT_DELAY_MS = 500
-
 // Allenamento (Drill) su un repertorio: un Run alla volta, scelto tra quelli
 // con piu' mosse da ripassare. L'avversario risponde da solo; alla mossa
 // dell'utente conta solo il primo tentativo, e dopo un errore la freccia
 // mostra la mossa del repertorio, da giocare per continuare.
 export default function OpeningDrillPage() {
   const { slug } = useParams<{ slug: string }>()
-  const t = useTranslations()
-  const o = useOpeningsTranslations()
-  const { data: repertoires, isLoading } = useRepertoires()
-  const { data: progress } = useOpeningProgress()
-  const repertoire = repertoires?.find((r) => r.slug === slug)
-  const tree = useMemo(
-    () => (repertoire ? buildOpeningTree(repertoire.nodes) : undefined),
-    [repertoire],
-  )
-
-  if (isLoading || !repertoires || !progress) {
-    return (
-      <main className="flex flex-1 items-center justify-center">
-        <p className="text-muted-foreground text-sm">{t.common.loading}</p>
-      </main>
-    )
-  }
-
-  if (!repertoire || !tree || tree.leaves.length === 0) {
-    return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-3">
-        <p className="text-muted-foreground text-sm">{o.notFound}</p>
-        <Link
-          to="/openings"
-          className="text-primary text-sm underline-offset-4 hover:underline"
-        >
-          {o.back}
-        </Link>
-      </main>
-    )
-  }
-
   return (
-    <OpeningDrill
-      key={repertoire.id}
-      repertoire={repertoire}
-      tree={tree}
-      progress={progress}
-    />
+    <RepertoireGate slug={slug}>
+      {(data) => <OpeningDrill key={data.repertoire.id} {...data} />}
+    </RepertoireGate>
   )
 }
 
@@ -186,6 +144,12 @@ function OpeningDrill({
               {o.back}
             </Link>
             <Link
+              to={`/openings/${repertoire.slug}/learn`}
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              {o.learn}
+            </Link>
+            <Link
               to={`/openings/${repertoire.slug}/lines`}
               className="text-primary underline-offset-4 hover:underline"
             >
@@ -258,41 +222,5 @@ function OpeningDrill({
         )}
       </div>
     </main>
-  )
-}
-
-/** Le mosse gia' giocate del Run, numerate; quelle dell'utente col loro esito. */
-function MoveList({
-  nodes,
-  results,
-}: {
-  nodes: OpeningNode[]
-  results: { nodeId: number; ok: boolean }[]
-}) {
-  if (nodes.length === 0) return <p className="text-muted-foreground text-xs">—</p>
-  return (
-    <ol className="flex flex-wrap gap-x-1.5 gap-y-1 text-xs tabular-nums">
-      {nodes.map((node) => {
-        const result = results.find((r) => r.nodeId === node.id)
-        return (
-          <li key={node.id} className="flex items-baseline gap-1">
-            {node.ply % 2 === 1 && (
-              <span className="text-muted-foreground">{(node.ply + 1) / 2}.</span>
-            )}
-            <span
-              className={
-                result
-                  ? result.ok
-                    ? 'font-medium text-emerald-600 dark:text-emerald-400'
-                    : 'text-destructive font-medium'
-                  : 'text-foreground'
-              }
-            >
-              {node.san}
-            </span>
-          </li>
-        )
-      })}
-    </ol>
   )
 }

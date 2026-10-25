@@ -74,3 +74,10 @@ export async function fetchOpeningNames(): Promise<OpeningNameRow[]> {
   if (error) throw error
   return data
 }
+
+/** Una mossa studiata in modalita' Learn (migrazione 0103); restituisce il progresso. */
+export async function learnOpeningMove(nodeId: number): Promise<OpeningProgress> {
+  const { data, error } = await supabase.rpc('learn_opening_move', { p_node_id: nodeId })
+  if (error) throw error
+  return data as OpeningProgress
+}

@@ -45,6 +45,16 @@ export interface OpeningsTranslations {
   dueNow: string
   trainLine: string
   showNames: string
+  learn: string
+  learnLine: string
+  learnIntro: string
+  playMove: (move: string) => string
+  followArrow: (move: string) => string
+  playForMe: string
+  lineLearned: string
+  learnNext: string
+  repeatLearn: string
+  allLearned: string
   /** Nomi dei repertori di catalogo, per slug (altrimenti il nome inglese). */
   names: Record<string, string>
 }
@@ -97,6 +107,17 @@ const it: OpeningsTranslations = {
   dueNow: 'Da ripassare ora',
   trainLine: 'Allena questa linea',
   showNames: 'Nomi delle varianti',
+  learn: 'Studia',
+  learnLine: 'Studia questa linea',
+  learnIntro:
+    'Segui la freccia e gioca le mosse nuove: poi le ripasserai nell’allenamento.',
+  playMove: (move) => `Gioca ${move}`,
+  followArrow: (move) => `Non è questa: segui la freccia e gioca ${move}.`,
+  playForMe: 'Gioca la mossa',
+  lineLearned: 'Linea studiata: le sue mosse torneranno da ripassare nell’allenamento.',
+  learnNext: 'Studia la prossima linea',
+  repeatLearn: 'Rivedi questa linea',
+  allLearned: 'Hai già studiato tutte le linee di questo repertorio: ora allenale.',
   names: {
     'italian-game': 'Partita Italiana',
     'queens-gambit': 'Gambetto di Donna',
@@ -146,6 +167,17 @@ const en: OpeningsTranslations = {
   dueNow: 'Due now',
   trainLine: 'Train this line',
   showNames: 'Variation names',
+  learn: 'Learn',
+  learnLine: 'Learn this line',
+  learnIntro:
+    'Follow the arrow and play the new moves: you will review them in training.',
+  playMove: (move) => `Play ${move}`,
+  followArrow: (move) => `Not that one: follow the arrow and play ${move}.`,
+  playForMe: 'Play the move',
+  lineLearned: 'Line learned: its moves will come back for review in training.',
+  learnNext: 'Learn the next line',
+  repeatLearn: 'Go through this line again',
+  allLearned: 'You have learned every line of this repertoire: now train them.',
   names: {},
 }
 
@@ -192,6 +224,18 @@ const fr: OpeningsTranslations = {
   dueNow: 'À revoir maintenant',
   trainLine: 'Entraîner cette ligne',
   showNames: 'Noms des variantes',
+  learn: 'Apprendre',
+  learnLine: 'Apprendre cette ligne',
+  learnIntro:
+    'Suivez la flèche et jouez les nouveaux coups : vous les réviserez à l’entraînement.',
+  playMove: (move) => `Jouez ${move}`,
+  followArrow: (move) => `Pas celui-ci : suivez la flèche et jouez ${move}.`,
+  playForMe: 'Jouer le coup',
+  lineLearned: 'Ligne apprise : ses coups reviendront à réviser à l’entraînement.',
+  learnNext: 'Apprendre la ligne suivante',
+  repeatLearn: 'Revoir cette ligne',
+  allLearned:
+    'Vous avez appris toutes les lignes de ce répertoire : entraînez-les maintenant.',
   names: {
     'italian-game': 'Partie italienne',
     'queens-gambit': 'Gambit dame',
@@ -246,6 +290,17 @@ const es: OpeningsTranslations = {
   dueNow: 'Para repasar ahora',
   trainLine: 'Entrenar esta línea',
   showNames: 'Nombres de las variantes',
+  learn: 'Aprender',
+  learnLine: 'Aprender esta línea',
+  learnIntro:
+    'Sigue la flecha y juega las jugadas nuevas: luego las repasarás en el entrenamiento.',
+  playMove: (move) => `Juega ${move}`,
+  followArrow: (move) => `Esa no: sigue la flecha y juega ${move}.`,
+  playForMe: 'Jugar la jugada',
+  lineLearned: 'Línea aprendida: sus jugadas volverán para repasar en el entrenamiento.',
+  learnNext: 'Aprender la siguiente línea',
+  repeatLearn: 'Repasar esta línea',
+  allLearned: 'Ya has aprendido todas las líneas de este repertorio: ahora entrénalas.',
   names: {
     'italian-game': 'Apertura italiana',
     'queens-gambit': 'Gambito de dama',
@@ -296,6 +351,17 @@ const de: OpeningsTranslations = {
   dueNow: 'Jetzt fällig',
   trainLine: 'Diese Linie trainieren',
   showNames: 'Namen der Varianten',
+  learn: 'Lernen',
+  learnLine: 'Diese Linie lernen',
+  learnIntro:
+    'Folge dem Pfeil und spiele die neuen Züge: Du wiederholst sie danach im Training.',
+  playMove: (move) => `Spiele ${move}`,
+  followArrow: (move) => `Nicht dieser: Folge dem Pfeil und spiele ${move}.`,
+  playForMe: 'Zug spielen',
+  lineLearned: 'Linie gelernt: Ihre Züge kommen im Training zur Wiederholung.',
+  learnNext: 'Nächste Linie lernen',
+  repeatLearn: 'Diese Linie noch einmal ansehen',
+  allLearned: 'Du hast alle Linien dieses Repertoires gelernt: Trainiere sie jetzt.',
   names: {
     'italian-game': 'Italienische Partie',
     'queens-gambit': 'Damengambit',

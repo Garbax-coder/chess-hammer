@@ -75,7 +75,16 @@ export default function OpeningsPage() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button asChild>
+                    {/* Con mosse mai viste si comincia studiandole. */}
+                    {coverage.userMoves > coverage.seen && (
+                      <Button asChild>
+                        <Link to={`/openings/${repertoire.slug}/learn`}>{o.learn}</Link>
+                      </Button>
+                    )}
+                    <Button
+                      asChild
+                      variant={coverage.userMoves > coverage.seen ? 'outline' : 'default'}
+                    >
                       <Link to={`/openings/${repertoire.slug}`}>{o.train}</Link>
                     </Button>
                     <Button asChild variant="outline">
