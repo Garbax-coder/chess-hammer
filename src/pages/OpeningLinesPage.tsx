@@ -440,12 +440,6 @@ function OpeningLines({
                 )}
               </div>
             )}
-            <LabeledSwitch
-              id="stockfish"
-              label="Stockfish"
-              checked={engineOn}
-              onChange={setEngineOn}
-            />
             <Button variant="outline" size="sm" className="w-fit" onClick={exportPgn}>
               {o.exportPgn}
             </Button>
@@ -570,16 +564,16 @@ function OpeningLines({
         }
         right={
           <>
-            {engineOn && (
-              <AnalysisPanel
-                fen={fen}
-                lines={engine.lines}
-                analyzing={engine.analyzing}
-                settings={engineSettings}
-                onUpdateSettings={updateEngineSettings}
-                className="w-full"
-              />
-            )}
+            <AnalysisPanel
+              fen={fen}
+              lines={engine.lines}
+              analyzing={engine.analyzing}
+              settings={engineSettings}
+              onUpdateSettings={updateEngineSettings}
+              className="w-full"
+              enabled={engineOn}
+              onEnabledChange={setEngineOn}
+            />
             <Card>
               <CardHeader className="gap-2">
                 <CardTitle>{o.treeTitle}</CardTitle>

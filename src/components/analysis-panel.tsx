@@ -28,6 +28,12 @@ interface AnalysisPanelProps {
   onUpdateSettings: (patch: Partial<EngineSettings>) => void
   /** Sostituisce la larghezza predefinita (w-full lg:w-72). */
   className?: string
+  /**
+   * Con onEnabledChange l'interruttore di Stockfish sta nell'intestazione,
+   * sempre visibile: spento, il pannello mostra solo l'intestazione.
+   */
+  enabled?: boolean
+  onEnabledChange?: (enabled: boolean) => void
 }
 
 export function AnalysisPanel({
@@ -37,6 +43,8 @@ export function AnalysisPanel({
   settings,
   onUpdateSettings,
   className = 'w-full lg:w-72',
+  enabled = true,
+  onEnabledChange,
 }: AnalysisPanelProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const sideToMove = fen.split(' ')[1] === 'b' ? 'b' : 'w'
@@ -46,38 +54,65 @@ export function AnalysisPanel({
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between gap-2 py-3">
         <CardTitle className="text-sm">{t.analysisPanel.title}</CardTitle>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => setDialogOpen(true)}
-          aria-label={t.analysisPanel.settingsAria}
-        >
-          <Settings className="size-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          {onEnabledChange && (
+            <Switch
+              aria-label="Stockfish"
+              checked={enabled}
+              onCheckedChange={onEnabledChange}
+            />
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setDialogOpen(true)}
+            aria-label={t.analysisPanel.settingsAria}
+          >
+            <Settings className="size-4" />
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent className="flex flex-col gap-1.5 pt-0">
-        {lines.length === 0 && (
-          <p className="text-muted-foreground text-xs">
-            {analyzing ? t.analysisPanel.analyzing : t.analysisPanel.noAnalysis}
+      {enabled && (
+        // Altezza fissa: una riga per ogni linea impostata e quella della
+        // profondita', anche vuote, cosi' il pannello non cambia altezza
+        // mentre arrivano le valutazioni.
+        <CardContent className="flex flex-col gap-1.5 pt-0">
+          {Array.from({ length: settings.multiPv }, (_, i) => {
+            const line = lines[i]
+            return (
+              <div
+                key={i}
+                data-slot="engine-line"
+                className="flex h-4 items-baseline gap-2 text-xs"
+              >
+                {line ? (
+                  <>
+                    <span className="text-foreground w-12 shrink-0 font-mono font-semibold">
+                      {formatScore(line.scoreCp, line.scoreMate, sideToMove)}
+                    </span>
+                    <span className="text-muted-foreground truncate">
+                      {pvToSan(fen, line.pvUci)}
+                    </span>
+                  </>
+                ) : (
+                  i === 0 &&
+                  lines.length === 0 && (
+                    <span className="text-muted-foreground">
+                      {analyzing ? t.analysisPanel.analyzing : t.analysisPanel.noAnalysis}
+                    </span>
+                  )
+                )}
+              </div>
+            )
+          })}
+          <p className="text-muted-foreground h-4 text-[0.65rem]">
+            {analyzing &&
+              lines.length > 0 &&
+              t.analysisPanel.depth(lines[0]?.depth ?? '…', settings.depth)}
           </p>
-        )}
-        {lines.map((line) => (
-          <div key={line.multiPv} className="flex items-baseline gap-2 text-xs">
-            <span className="text-foreground w-12 shrink-0 font-mono font-semibold">
-              {formatScore(line.scoreCp, line.scoreMate, sideToMove)}
-            </span>
-            <span className="text-muted-foreground truncate">
-              {pvToSan(fen, line.pvUci)}
-            </span>
-          </div>
-        ))}
-        {analyzing && lines.length > 0 && (
-          <p className="text-muted-foreground text-[0.65rem]">
-            {t.analysisPanel.depth(lines[0]?.depth ?? '…', settings.depth)}
-          </p>
-        )}
-      </CardContent>
+        </CardContent>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-sm">
