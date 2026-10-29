@@ -175,4 +175,42 @@ describe('OpeningTreeView', () => {
     expect(screen.getByRole('button', { name: 'Nc6' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '3.Bb5' })).not.toBeInTheDocument()
   })
+
+  it('opens the collapsed branches that hold the newly selected move', () => {
+    // 1.e4 e5 2.Nf3 Nc6 (3.Bc4 | 3.Bb5) | 2.Bc4 ; 1...c5 2.Nc3
+    const deep = buildOpeningTree([
+      node(1, null, 1, 'e4'),
+      node(2, 1, 2, 'e5'),
+      node(3, 2, 3, 'Nf3'),
+      node(4, 1, 2, 'c5'),
+      node(5, 4, 3, 'Nc3'),
+      node(6, 3, 4, 'Nc6'),
+      node(7, 6, 5, 'Bc4'),
+      node(8, 6, 5, 'Bb5'),
+      node(9, 2, 3, 'Bc4'),
+    ])
+    const view = (selectedId: number | null) => (
+      <OpeningTreeView
+        tree={deep}
+        color="w"
+        progress={new Map()}
+        now={new Date('2026-10-25T12:00:00Z')}
+        selectedId={selectedId}
+        onSelect={vi.fn()}
+      />
+    )
+    const { rerender } = render(view(null))
+    fireEvent.click(screen.getByRole('button', { name: o.collapseAll }))
+    expect(screen.queryByRole('button', { name: '3.Bb5' })).not.toBeInTheDocument()
+
+    // Es. con le frecce: la selezione arriva su 2.Bc4, dentro due rami chiusi
+    // (quelli di 1.e4 e di 1...e5), che si riaprono.
+    rerender(view(9))
+    expect(screen.getByRole('button', { name: '2.Bc4' })).toHaveAttribute(
+      'aria-current',
+      'true',
+    )
+    // Il ramo di 2...Nc6, che non la contiene, resta chiuso.
+    expect(screen.queryByRole('button', { name: '3.Bb5' })).not.toBeInTheDocument()
+  })
 })
