@@ -108,8 +108,27 @@ vi.mock('@/hooks/use-stockfish-analysis', () => ({
     }
   },
 }))
+// Il pannello del motore: l'interruttore di Stockfish nell'intestazione,
+// le righe solo se acceso.
 vi.mock('@/components/analysis-panel', () => ({
-  AnalysisPanel: () => <div>Analisi del motore</div>,
+  AnalysisPanel: ({
+    enabled,
+    onEnabledChange,
+  }: {
+    enabled: boolean
+    onEnabledChange: (on: boolean) => void
+  }) => (
+    <div>
+      <button
+        type="button"
+        role="switch"
+        aria-label="Stockfish"
+        aria-checked={enabled}
+        onClick={() => onEnabledChange(!enabled)}
+      />
+      {enabled && 'Analisi del motore'}
+    </div>
+  ),
 }))
 vi.mock('@/components/opening-board', () => ({
   OpeningBoard: (props: typeof board) => {

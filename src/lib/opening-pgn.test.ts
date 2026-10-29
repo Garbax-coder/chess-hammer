@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildOpeningTree, type OpeningNode } from './opening-tree'
 import { repertoirePgn } from './opening-pgn'
+import { buildRepertoire } from './opening-catalog'
 import { pgnLines } from './pgn-lines'
 
 function node(
@@ -71,5 +72,72 @@ describe('repertoirePgn', () => {
     )
     expect(back.mistakes).toEqual(['e4 e5 Qh5'])
     expect(back.comments['e4 e5 Nf3']).toBe('Il cavallo prima')
+  })
+})
+
+describe('repertoirePgn round trip', () => {
+  it('keeps every wrong line, also nested ones, and every comment when imported back', () => {
+    // 1.e4 e5 2.Nf3 Nc6 3.Bc4 (2.Qh5? Nc6 3.Bc4 (3.Qxf7+?? Kxf7) Nf6) ;
+    // commenti sulla mossa principale, dentro la linea sbagliata e
+    // sull'errore annidato.
+    const nested = buildOpeningTree([
+      node(1, null, 1, 'e4'),
+      node(2, 1, 2, 'e5'),
+      node(3, 2, 3, 'Nf3'),
+      node(4, 3, 4, 'Nc6'),
+      node(11, 4, 5, 'Bc4'),
+      node(5, 2, 3, 'Qh5', { is_mistake: true }),
+      node(6, 5, 4, 'Nc6'),
+      node(7, 6, 5, 'Bc4'),
+      node(8, 7, 6, 'Nf6'),
+      node(9, 6, 5, 'Qxf7+', { is_mistake: true }),
+      node(10, 9, 6, 'Kxf7'),
+    ])
+    const pgn = repertoirePgn({
+      name: 'Prova',
+      eco: null,
+      color: 'w',
+      tree: nested,
+      comments: new Map([
+        [3, 'Sviluppo'],
+        [5, 'Troppo presto'],
+        [9, 'Perde un pezzo'],
+        [10, 'Il re riprende'],
+      ]),
+      arrows: new Map(),
+      date: new Date('2026-10-29T12:00:00Z'),
+    })
+
+    const back = pgnLines(pgn)
+    expect(back.mistakes.sort()).toEqual(['e4 e5 Qh5', 'e4 e5 Qh5 Nc6 Qxf7+'])
+    expect(back.comments).toEqual({
+      'e4 e5 Nf3': 'Sviluppo',
+      'e4 e5 Qh5': 'Troppo presto',
+      'e4 e5 Qh5 Nc6 Qxf7+': 'Perde un pezzo',
+      'e4 e5 Qh5 Nc6 Qxf7+ Kxf7': 'Il re riprende',
+    })
+
+    // E reimportato diventa lo stesso repertorio, confutazioni comprese.
+    const report = buildRepertoire(
+      {
+        slug: 'import',
+        name: '',
+        eco: null,
+        color: 'w',
+        source: null,
+        lines: back.lines,
+        comments: back.comments,
+        mistakes: back.mistakes,
+      },
+      { lenient: true },
+    )
+    expect(report.nodes).toHaveLength(11)
+    expect(
+      report.nodes
+        .filter((n) => n.isMistake)
+        .map((n) => n.san)
+        .sort(),
+    ).toEqual(['Qh5', 'Qxf7+'])
+    expect(report.nodes.filter((n) => n.comment)).toHaveLength(4)
   })
 })

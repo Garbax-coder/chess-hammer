@@ -52,6 +52,25 @@ export function OpeningTreeView({
   const [collapsed, setCollapsed] = useState<ReadonlySet<number>>(new Set())
   const roots = tree.children.get(null) ?? []
 
+  // Quando la selezione cambia (es. con le frecce della tastiera) e finisce
+  // in un ramo compresso, i rami che la contengono si riaprono.
+  const [shownSelection, setShownSelection] = useState(selectedId)
+  if (selectedId !== shownSelection) {
+    setShownSelection(selectedId)
+    const ancestors = new Set<number>()
+    for (
+      let id =
+        selectedId === null ? null : (tree.byId.get(selectedId)?.parent_id ?? null);
+      id !== null;
+      id = tree.byId.get(id)?.parent_id ?? null
+    ) {
+      ancestors.add(id)
+    }
+    if ([...collapsed].some((id) => ancestors.has(id))) {
+      setCollapsed(new Set([...collapsed].filter((id) => !ancestors.has(id))))
+    }
+  }
+
   function toggle(nodeId: number) {
     setCollapsed((current) => {
       const next = new Set(current)
