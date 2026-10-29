@@ -86,6 +86,9 @@ const AUTO_MOVE_DELAY_MS = 400
 const FEEDBACK_HOLD_MS = 900
 const WRONG_SQUARE_STYLE = { backgroundColor: 'rgba(220, 38, 38, 0.55)' }
 const SELECTED_SQUARE_STYLE = { backgroundColor: 'rgba(59, 130, 246, 0.35)' }
+// Premossa: la mossa lasciata mentre l'avversario risponde, giocata appena
+// tocca di nuovo al risolutore (vedi premoveRef).
+const PREMOVE_STYLE = { backgroundColor: 'rgba(20, 85, 30, 0.5)' }
 const LAST_MOVE_STYLE = { backgroundColor: 'rgba(250, 204, 21, 0.35)' }
 const MOVE_HINT_STYLE = {
   backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.22) 22%, transparent 24%)',
@@ -200,6 +203,11 @@ export function PuzzleBoard({
   const solutionIndexRef = useRef(1)
   const startedAtRef = useRef(0)
   const lockedRef = useRef(false)
+  // True mentre si aspetta la mossa dell'avversario (quella d'apertura o la
+  // risposta a una mossa giusta): intanto il risolutore puo' gia' prendere i
+  // suoi pezzi, e una mossa lasciata in anticipo diventa una premossa.
+  const waitingRef = useRef(false)
+  const premoveRef = useRef<{ from: string; to: string } | null>(null)
   const nodeIdCounterRef = useRef(0)
   const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const autoAdvanceRef = useRef(autoAdvance)
@@ -228,6 +236,9 @@ export function PuzzleBoard({
     null,
   )
   const [selection, setSelection] = useState<SquareSelection | null>(null)
+  // Le case della premossa in attesa, per evidenziarle (la mossa vera e'
+  // in premoveRef, letto dai timer).
+  const [premove, setPremove] = useState<{ from: string; to: string } | null>(null)
   // Case segnate col tasto destro, legate alla posizione in cui sono state
   // segnate: con una mossa (o un puzzle nuovo) la posizione cambia e i segni
   // spariscono da soli, come su Lichess.
@@ -266,6 +277,7 @@ export function PuzzleBoard({
     setWrongMove(null)
     setPendingCompletion(null)
     setSelection(null)
+    setPremove(null)
     setPendingPromotion(null)
     setOutcomeVisible(false)
     nodeIdCounterRef.current = 0
@@ -309,19 +321,59 @@ export function PuzzleBoard({
     )
     setNodes(newNodes)
     setCurrentId(id)
-    setSelection(null)
+    // Aggiornati subito (non al prossimo render): una premossa giocata
+    // appena dopo questa mossa deve agganciarsi al nodo nuovo.
+    nodesRef.current = newNodes
+    currentIdRef.current = id
+    // Un pezzo selezionato mentre l'avversario muoveva resta selezionato,
+    // con le sue mosse nella posizione nuova.
+    setSelection((current) => {
+      if (!current) return null
+      const game = gameRef.current
+      const piece = game.get(current.square as Square)
+      if (!piece || piece.color !== game.turn()) return null
+      return {
+        square: current.square,
+        targets: game
+          .moves({ square: current.square as Square, verbose: true })
+          .map((m) => ({ to: m.to, capture: !!game.get(m.to) })),
+      }
+    })
   }
+
+  // La mossa lasciata mentre l'avversario rispondeva: si gioca appena
+  // tocca al risolutore, se e' ancora legale (altrimenti si scarta).
+  function playPremove() {
+    const pending = premoveRef.current
+    premoveRef.current = null
+    setPremove(null)
+    if (!pending) return
+    const legal = gameRef.current
+      .moves({ verbose: true })
+      .some((m) => m.from === pending.from && m.to === pending.to)
+    if (legal) attemptMove(pending.from, pending.to)
+  }
+  // Per il timer della mossa d'apertura, creato una volta per puzzle: la
+  // versione di playPremove dell'ultimo render.
+  const playPremoveRef = useRef(playPremove)
+  useEffect(() => {
+    playPremoveRef.current = playPremove
+  })
 
   useEffect(() => {
     gameRef.current = new Chess(puzzle.fen)
     solutionIndexRef.current = 1
     startedAtRef.current = Date.now()
     lockedRef.current = true
+    waitingRef.current = true
+    premoveRef.current = null
 
     const introTimer = setTimeout(() => {
       applyMoveAndAdvanceView(puzzle.moves[0])
       lockedRef.current = false
+      waitingRef.current = false
       setFeedback('playing')
+      playPremoveRef.current()
     }, INTRO_DELAY_MS)
 
     const tickInterval = setInterval(() => {
@@ -487,6 +539,12 @@ export function PuzzleBoard({
       : 50
 
   const effectiveSelection = isLive || analysisEnabled ? selection : null
+  // Il colore di chi risolve, e se si sta aspettando la mossa
+  // dell'avversario (quella d'apertura o la risposta a una mossa giusta).
+  const solverTurn = solverColorFor(puzzle.fen) === 'white' ? 'w' : 'b'
+  const waitingForOpponent =
+    !analysisEnabled && isLive && (feedback === 'intro' || feedback === 'correct')
+  const shownPremove = waitingForOpponent ? premove : null
 
   // La casella con l'esito finale (segno di spunta verde/croce rossa) si
   // mostra solo appena finito il puzzle, sulla mossa che lo ha concluso:
@@ -527,6 +585,10 @@ export function PuzzleBoard({
     if (effectiveWrongMove) {
       merge(effectiveWrongMove.square, WRONG_SQUARE_STYLE)
     }
+    if (shownPremove) {
+      merge(shownPremove.from, PREMOVE_STYLE)
+      merge(shownPremove.to, PREMOVE_STYLE)
+    }
     if (effectiveSelection) {
       merge(effectiveSelection.square, SELECTED_SQUARE_STYLE)
       for (const target of effectiveSelection.targets) {
@@ -538,7 +600,7 @@ export function PuzzleBoard({
     }
 
     return Object.keys(styles).length > 0 ? styles : undefined
-  }, [lastMoveSquares, effectiveWrongMove, effectiveSelection, markedSquares])
+  }, [lastMoveSquares, effectiveWrongMove, shownPremove, effectiveSelection, markedSquares])
 
   // Contenuto di ogni casa. Come il default di react-chessboard (un livello
   // a tutta casa con squareStyles, sopra il colore della scacchiera), piu':
@@ -633,6 +695,28 @@ export function PuzzleBoard({
       return
     }
 
+    // Mentre l'avversario muove: si sceglie gia' il pezzo (le sue mosse
+    // compaiono dopo la risposta) e un secondo clic prepara la premossa. Un
+    // clic annulla la premossa gia' preparata.
+    if (waitingRef.current && isLive) {
+      if (premoveRef.current) {
+        premoveRef.current = null
+        setPremove(null)
+      }
+      if (selection && selection.square !== square) {
+        premoveRef.current = { from: selection.square, to: square }
+        setPremove(premoveRef.current)
+        setSelection(null)
+        return
+      }
+      if (piece && piece.pieceType[0] === solverTurn && selection?.square !== square) {
+        setSelection({ square, targets: [] })
+        return
+      }
+      setSelection(null)
+      return
+    }
+
     if (lockedRef.current || !isLive) return
 
     if (selection) {
@@ -707,6 +791,8 @@ export function PuzzleBoard({
 
   function finish(result: 'solved' | 'failed') {
     lockedRef.current = true
+    premoveRef.current = null
+    setPremove(null)
     if (tickIntervalRef.current) {
       clearInterval(tickIntervalRef.current)
       tickIntervalRef.current = null
@@ -815,9 +901,12 @@ export function PuzzleBoard({
 
     setFeedback('correct')
     lockedRef.current = true
+    waitingRef.current = true
     setTimeout(() => {
       lockedRef.current = false
+      waitingRef.current = false
       playOpponentReply()
+      playPremove()
     }, AUTO_MOVE_DELAY_MS)
 
     return true
@@ -832,6 +921,16 @@ export function PuzzleBoard({
   }): boolean {
     if (!targetSquare) return false
     if (analysisEnabled) return attemptFreeMove(sourceSquare, targetSquare)
+    // Lasciato prima che l'avversario abbia mosso: il pezzo torna a posto e
+    // la mossa si gioca appena possibile (premossa).
+    if (waitingRef.current) {
+      if (sourceSquare !== targetSquare) {
+        premoveRef.current = { from: sourceSquare, to: targetSquare }
+        setPremove(premoveRef.current)
+      }
+      setSelection(null)
+      return false
+    }
     return attemptMove(sourceSquare, targetSquare)
   }
 
@@ -985,13 +1084,16 @@ export function PuzzleBoard({
                 onSquareClick: handleSquareClick,
                 onSquareRightClick: handleSquareRightClick,
                 boardOrientation: orientation,
+                // I pezzi del risolutore si prendono anche mentre
+                // l'avversario muove (vedi waitingForOpponent).
                 canDragPiece: ({ piece }) =>
                   !pendingPromotion &&
                   (analysisEnabled
                     ? piece.pieceType[0] === displayTurn
                     : isLive &&
-                      !lockedRef.current &&
-                      piece.pieceType[0] === gameRef.current.turn()),
+                      piece.pieceType[0] === solverTurn &&
+                      (waitingForOpponent ||
+                        (!lockedRef.current && gameRef.current.turn() === solverTurn))),
                 animationDurationInMs: 200,
                 boardStyle: { borderRadius: '0.5rem', overflow: 'hidden' },
                 lightSquareStyle: { backgroundColor: theme.light },

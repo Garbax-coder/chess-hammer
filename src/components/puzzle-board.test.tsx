@@ -359,4 +359,66 @@ describe('PuzzleBoard', () => {
       )
     })
   })
+
+  // Mentre l'avversario muove (qui la mossa d'apertura) si puo' gia'
+  // preparare la propria: si gioca appena l'avversario ha mosso.
+  describe('moves prepared while the opponent moves (premoves)', () => {
+    const puzzle = makeLichessPuzzle({
+      fen: '6k1/p4ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1',
+      moves: ['a7a6', 'd1d8'],
+    })
+
+    function prepareDuringOpening(from: string, to: string) {
+      const onComplete = vi.fn()
+      const { container } = render(
+        <PuzzleBoard
+          puzzle={puzzle}
+          autoAdvance={false}
+          onComplete={onComplete}
+          onAdvance={() => {}}
+        />,
+      )
+      const square = (name: string) => container.querySelector(`[data-square="${name}"]`)!
+      act(() => {
+        fireEvent.click(square(from))
+      })
+      act(() => {
+        fireEvent.click(square(to))
+      })
+      return { onComplete, container }
+    }
+
+    it('plays the prepared move right after the opponent move', () => {
+      const { onComplete, container } = prepareDuringOpening('d1', 'd8')
+      expect(onComplete).not.toHaveBeenCalled()
+      // Le case della premossa evidenziate in attesa.
+      expect(container.innerHTML).toContain('rgba(20, 85, 30, 0.5)')
+
+      act(() => vi.advanceTimersByTime(500))
+      expect(onComplete).toHaveBeenCalledWith('solved', expect.any(Number))
+    })
+
+    it('counts a prepared move that is not the solution as a mistake', () => {
+      const { onComplete } = prepareDuringOpening('e1', 'e7')
+      act(() => vi.advanceTimersByTime(500))
+      expect(onComplete).toHaveBeenCalledWith('failed', expect.any(Number))
+    })
+
+    it('drops a prepared move that is not legal, and keeps playing', () => {
+      const { onComplete, container } = prepareDuringOpening('d1', 'e2')
+      act(() => vi.advanceTimersByTime(500))
+      expect(onComplete).not.toHaveBeenCalled()
+      expect(container.innerHTML).not.toContain('rgba(20, 85, 30, 0.5)')
+
+      // La mossa si gioca poi normalmente.
+      const square = (name: string) => container.querySelector(`[data-square="${name}"]`)!
+      act(() => {
+        fireEvent.click(square('d1'))
+      })
+      act(() => {
+        fireEvent.click(square('d8'))
+      })
+      expect(onComplete).toHaveBeenCalledWith('solved', expect.any(Number))
+    })
+  })
 })
