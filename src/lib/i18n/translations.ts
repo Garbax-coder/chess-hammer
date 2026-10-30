@@ -85,6 +85,10 @@ export interface Translations {
   socialLogin: {
     continueWith: (provider: string) => string
   }
+  turnstile: {
+    loadError: string
+    retry: string
+  }
   dashboard: {
     loggedInAs: (email: string) => string
     stats: (elo: number, solved: number, failed: number) => string
@@ -523,6 +527,11 @@ export const it: Translations = {
   },
   socialLogin: {
     continueWith: (provider) => `Continua con ${provider}`,
+  },
+  turnstile: {
+    loadError:
+      'La verifica di sicurezza non si è caricata. Disattiva eventuali blocchi (ad blocker, VPN) e riprova.',
+    retry: 'Riprova',
   },
   dashboard: {
     loggedInAs: (email) => `Accesso effettuato come ${email}`,
@@ -1133,6 +1142,11 @@ export const en: Translations = {
   },
   socialLogin: {
     continueWith: (provider) => `Continue with ${provider}`,
+  },
+  turnstile: {
+    loadError:
+      'The security check didn’t load. Turn off any blockers (ad blocker, VPN) and try again.',
+    retry: 'Try again',
   },
   dashboard: {
     loggedInAs: (email) => `Logged in as ${email}`,

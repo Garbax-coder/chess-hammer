@@ -69,6 +69,11 @@ export const es: Translations = {
   socialLogin: {
     continueWith: (provider) => `Continuar con ${provider}`,
   },
+  turnstile: {
+    loadError:
+      'La verificación de seguridad no se ha cargado. Desactiva los posibles bloqueos (bloqueador de anuncios, VPN) e inténtalo de nuevo.',
+    retry: 'Reintentar',
+  },
   dashboard: {
     loggedInAs: (email) => `Sesión iniciada como ${email}`,
     stats: (elo, solved, failed) =>

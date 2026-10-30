@@ -71,6 +71,11 @@ export const de: Translations = {
   socialLogin: {
     continueWith: (provider) => `Weiter mit ${provider}`,
   },
+  turnstile: {
+    loadError:
+      'Die Sicherheitsprüfung wurde nicht geladen. Deaktiviere mögliche Blocker (Werbeblocker, VPN) und versuche es erneut.',
+    retry: 'Erneut versuchen',
+  },
   dashboard: {
     loggedInAs: (email) => `Angemeldet als ${email}`,
     stats: (elo, solved, failed) => `ELO ${elo} · ${solved} gelöst · ${failed} verfehlt`,
