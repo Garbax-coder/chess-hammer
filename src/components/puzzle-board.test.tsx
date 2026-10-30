@@ -427,6 +427,40 @@ describe('PuzzleBoard', () => {
     })
   })
 
+  it('marks the side to move with a badge of that colour, only while solving', () => {
+    const puzzle = makeLichessPuzzle({
+      fen: '6k1/p4ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1',
+      moves: ['a7a6', 'd1d8'],
+    })
+    const { container } = render(
+      <PuzzleBoard
+        puzzle={puzzle}
+        autoAdvance={false}
+        onComplete={() => {}}
+        onAdvance={() => {}}
+      />,
+    )
+    const badge = () => container.querySelector('[data-side]')
+    // Mentre l'avversario fa la mossa d'apertura non tocca ancora a chi risolve.
+    expect(badge()).toBeNull()
+
+    act(() => vi.advanceTimersByTime(500))
+    expect(badge()).toHaveAttribute('data-side', 'w')
+    expect(badge()).toHaveTextContent(
+      itTranslations.puzzleBoard.moveWith(itTranslations.puzzleBoard.white),
+    )
+
+    // A puzzle finito lo stato torna testo semplice.
+    const square = (name: string) => container.querySelector(`[data-square="${name}"]`)!
+    act(() => {
+      fireEvent.click(square('d1'))
+    })
+    act(() => {
+      fireEvent.click(square('d8'))
+    })
+    expect(badge()).toBeNull()
+  })
+
   describe('after the puzzle', () => {
     const puzzle = makeLichessPuzzle({
       fen: '6k1/p4ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1',

@@ -939,7 +939,10 @@ export function PuzzleBoard({
     return attemptMove(sourceSquare, targetSquare)
   }
 
-  const turnLabel = orientation === 'white' ? t.puzzleBoard.white : t.puzzleBoard.black
+  const turnLabel = solverTurn === 'w' ? t.puzzleBoard.white : t.puzzleBoard.black
+  // E' il turno di chi risolve: lo stato dice con quale colore si muove.
+  const solverToMove =
+    !analysisEnabled && isLive && (feedback === 'playing' || feedback === 'correct')
   const startTurn = puzzle.fen.split(' ')[1] === 'b' ? 'b' : 'w'
   const currentPly = timelinePath.length
 
@@ -963,18 +966,43 @@ export function PuzzleBoard({
   // spazio per una colonna a destra) sia nella colonna di analisi a destra
   // a lg: (vedi il commento su BOARD_SIZE): stesso markup, due punti di
   // aggancio diversi, cosi' le due versioni non possono disallinearsi.
+  // Due righe fisse: dati del puzzle e stato. Lo stato ha una riga sua, cosi'
+  // un testo piu' lungo non va a capo cambiando l'altezza del blocco.
   const statusRow = (
     <>
-      {progress && <span>{t.puzzleBoard.progress(progress.current, progress.total)}</span>}
-      <span>{t.puzzleBoard.rating(puzzle.rating)}</span>
-      <span
-        className={
-          isDisplayThreefoldRepetition ? 'text-amber-600 dark:text-amber-400 font-semibold' : ''
-        }
-      >
-        {statusText}
-      </span>
-      <span>{formatElapsed(elapsed)}</span>
+      <div className="flex items-center justify-between gap-2 whitespace-nowrap">
+        {progress && <span>{t.puzzleBoard.progress(progress.current, progress.total)}</span>}
+        <span>{t.puzzleBoard.rating(puzzle.rating)}</span>
+        <span>{formatElapsed(elapsed)}</span>
+      </div>
+      <div className="flex h-6 items-center">
+        {solverToMove ? (
+          <span
+            data-side={solverTurn}
+            className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 font-semibold ring-1 ${
+              solverTurn === 'w'
+                ? 'bg-white text-neutral-900 ring-neutral-300'
+                : 'bg-neutral-900 text-white ring-neutral-600'
+            }`}
+          >
+            <span aria-hidden className="text-sm leading-none">
+              {'\u265A\uFE0E'}
+            </span>
+            {statusText}
+          </span>
+        ) : (
+          <span
+            title={statusText}
+            className={`truncate ${
+              isDisplayThreefoldRepetition
+                ? 'text-amber-600 dark:text-amber-400 font-semibold'
+                : ''
+            }`}
+          >
+            {statusText}
+          </span>
+        )}
+      </div>
     </>
   )
 
@@ -1024,7 +1052,7 @@ export function PuzzleBoard({
       <div className="flex flex-col items-center gap-4">
         <div
           style={{ width: BOARD_SIZE }}
-          className="text-muted-foreground flex items-center justify-between text-xs lg:hidden"
+          className="text-muted-foreground flex flex-col gap-1 text-xs lg:hidden"
         >
           {statusRow}
         </div>
@@ -1219,7 +1247,7 @@ export function PuzzleBoard({
           zona sopra/sotto la scacchiera (vedi commento su BOARD_SIZE) cosi'
           quest'ultima puo' occupare tutta l'altezza disponibile. */}
       <div className="flex w-full flex-col gap-4 lg:w-72 lg:shrink-0">
-        <div className="text-muted-foreground hidden w-full items-center justify-between text-xs lg:flex">
+        <div className="text-muted-foreground hidden w-full flex-col gap-1 text-xs lg:flex">
           {statusRow}
         </div>
 
