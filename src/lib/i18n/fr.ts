@@ -71,6 +71,11 @@ export const fr: Translations = {
   socialLogin: {
     continueWith: (provider) => `Continuer avec ${provider}`,
   },
+  turnstile: {
+    loadError:
+      'La vérification de sécurité ne s’est pas chargée. Désactivez les éventuels blocages (bloqueur de publicité, VPN) et réessayez.',
+    retry: 'Réessayer',
+  },
   dashboard: {
     loggedInAs: (email) => `Connecté en tant que ${email}`,
     stats: (elo, solved, failed) => `ELO ${elo} · ${solved} résolus · ${failed} ratés`,

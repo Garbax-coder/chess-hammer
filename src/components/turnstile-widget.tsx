@@ -1,5 +1,7 @@
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { Button } from '@/components/ui/button'
 import { useTheme } from '@/hooks/use-theme'
+import { useTranslations } from '@/lib/language-context'
 
 // Supabase (Authentication -> Attack Protection) applica la protezione
 // CAPTCHA in blocco a signup, signin con password e reset password: non si
@@ -23,7 +25,13 @@ function loadTurnstileScript(): Promise<void> {
     script.async = true
     script.defer = true
     script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Turnstile script failed to load'))
+    script.onerror = () => {
+      // Senza questo il fallimento resterebbe in memoria e nessun tentativo
+      // successivo riscaricherebbe lo script.
+      scriptLoadPromise = null
+      script.remove()
+      reject(new Error('Turnstile script failed to load'))
+    }
     document.head.appendChild(script)
   })
   return scriptLoadPromise
@@ -48,35 +56,56 @@ declare global {
   }
 }
 
-export function TurnstileWidget({
-  onVerify,
-  onExpire,
-  // Cambiando questo valore (es. dopo un submit fallito, un token Turnstile
-  // e' utilizzabile una sola volta) il widget si rimonta da zero.
-  resetKey,
-}: {
+interface TurnstileWidgetProps {
   onVerify: (token: string) => void
   onExpire?: () => void
+  // Cambiando questo valore (es. dopo un submit fallito, un token Turnstile
+  // e' utilizzabile una sola volta) il widget si rimonta da zero.
   resetKey?: unknown
-}) {
+}
+
+export function TurnstileWidget(props: TurnstileWidgetProps) {
+  if (!SITE_KEY) return null
+  return <TurnstileChallenge {...props} siteKey={SITE_KEY} />
+}
+
+function TurnstileChallenge({
+  onVerify,
+  onExpire,
+  resetKey,
+  siteKey,
+}: TurnstileWidgetProps & { siteKey: string }) {
+  const t = useTranslations()
   const containerId = useId()
   const widgetIdRef = useRef<string | null>(null)
   const { theme } = useTheme()
+  // Lo script di Cloudflare non si e' caricato (ad blocker, VPN, rete): senza
+  // token il form non parte, quindi lo si dice e si puo' riprovare.
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
-    if (!SITE_KEY) return
     let cancelled = false
     const container = document.getElementById(containerId)
 
-    loadTurnstileScript().then(() => {
-      if (cancelled || !container || !window.turnstile) return
-      widgetIdRef.current = window.turnstile.render(container, {
-        sitekey: SITE_KEY,
-        theme,
-        callback: onVerify,
-        'expired-callback': onExpire,
-      })
-    })
+    loadTurnstileScript().then(
+      () => {
+        if (cancelled || !container || !window.turnstile) return
+        widgetIdRef.current = window.turnstile.render(container, {
+          sitekey: siteKey,
+          theme,
+          callback: onVerify,
+          'expired-callback': onExpire,
+        })
+      },
+      (error: unknown) => {
+        if (cancelled) return
+        setLoadFailed(true)
+        // Gestito qui, ma deve arrivare comunque a Sentry: dice quante
+        // persone restano bloccate.
+        reportError(error)
+      },
+    )
 
     return () => {
       cancelled = true
@@ -86,9 +115,26 @@ export function TurnstileWidget({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerId, theme, resetKey])
+  }, [containerId, theme, resetKey, attempt])
 
-  if (!SITE_KEY) return null
+  if (loadFailed) {
+    return (
+      <div role="alert" className="flex flex-col items-start gap-2 text-sm">
+        <p className="text-destructive">{t.turnstile.loadError}</p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setLoadFailed(false)
+            setAttempt((n) => n + 1)
+          }}
+        >
+          {t.turnstile.retry}
+        </Button>
+      </div>
+    )
+  }
   return <div id={containerId} />
 }
 
