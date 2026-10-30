@@ -34,6 +34,7 @@ export function OpeningTreeView({
   names = new Map(),
   comments = new Map(),
   onMoveContextMenu,
+  plain = false,
 }: {
   tree: OpeningTree
   color: OpeningColor
@@ -47,6 +48,8 @@ export function OpeningTreeView({
   comments?: Map<number, string>
   /** Tasto destro (o tocco lungo) su una mossa, con il punto del clic. */
   onMoveContextMenu?: (node: OpeningNode, point: { x: number; y: number }) => void
+  /** Solo le mosse, senza i colori di padronanza (es. la cronologia dei puzzle). */
+  plain?: boolean
 }) {
   const o = useOpeningsTranslations()
   const [collapsed, setCollapsed] = useState<ReadonlySet<number>>(new Set())
@@ -104,6 +107,7 @@ export function OpeningTreeView({
     names,
     comments,
     onMoveContextMenu,
+    plain,
     collapsed,
     toggle,
   }
@@ -148,6 +152,7 @@ interface LineProps {
   names: Map<number, OpeningName>
   comments: Map<number, string>
   onMoveContextMenu?: (node: OpeningNode, point: { x: number; y: number }) => void
+  plain: boolean
   collapsed: ReadonlySet<number>
   toggle: (nodeId: number) => void
 }
@@ -225,6 +230,7 @@ function Move({
   selectedId,
   onSelect,
   onMoveContextMenu,
+  plain,
 }: LineProps & { node: OpeningNode; startsRow: boolean }) {
   const o = useOpeningsTranslations()
   const alternative = !node.is_main
@@ -232,20 +238,24 @@ function Move({
   const mistake = tree.mistakes.has(node.id)
   const userMove = isUserMove(node, color)
   const state =
-    userMove && !alternative && !mistake ? moveState(progress.get(node.id), now) : null
+    !plain && userMove && !alternative && !mistake
+      ? moveState(progress.get(node.id), now)
+      : null
   const selected = node.id === selectedId
   return (
     <button
       type="button"
       aria-current={selected ? 'true' : undefined}
       title={
-        mistake
-          ? o.mistakeLabel
-          : alternative
-            ? o.alternativeLabel
-            : state
-              ? o.legend[state]
-              : o.opponentMove
+        plain
+          ? undefined
+          : mistake
+            ? o.mistakeLabel
+            : alternative
+              ? o.alternativeLabel
+              : state
+                ? o.legend[state]
+                : o.opponentMove
       }
       onClick={() => onSelect(node.id)}
       onContextMenu={(event) => {

@@ -1,4 +1,4 @@
-import { act, fireEvent, render } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { it as itTranslations } from '@/lib/i18n/translations'
 import { makeLichessPuzzle } from '@/test/fixtures'
@@ -6,9 +6,14 @@ import { PuzzleBoard } from './puzzle-board'
 
 vi.mock('@/lib/language-context', () => ({
   useTranslations: () => itTranslations,
+  useLanguage: () => ({ language: 'it' }),
 }))
+const engineCalls: (object | null)[] = []
 vi.mock('@/hooks/use-stockfish-analysis', () => ({
-  useStockfishAnalysis: () => ({ lines: [], analyzing: false }),
+  useStockfishAnalysis: (position: object | null) => {
+    engineCalls.push(position)
+    return { lines: [], analyzing: false }
+  },
 }))
 vi.mock('@/lib/sound-effects', () => ({
   playMoveSound: () => {},
@@ -419,6 +424,66 @@ describe('PuzzleBoard', () => {
         fireEvent.click(square('d8'))
       })
       expect(onComplete).toHaveBeenCalledWith('solved', expect.any(Number))
+    })
+  })
+
+  describe('after the puzzle', () => {
+    const puzzle = makeLichessPuzzle({
+      fen: '6k1/p4ppp/8/8/8/8/5PPP/3RR1K1 b - - 0 1',
+      moves: ['a7a6', 'd1d8'],
+    })
+
+    function solve() {
+      const { container } = render(
+        <PuzzleBoard
+          puzzle={puzzle}
+          autoAdvance={false}
+          onComplete={() => {}}
+          onAdvance={() => {}}
+        />,
+      )
+      act(() => vi.advanceTimersByTime(2000))
+      const square = (name: string) => container.querySelector(`[data-square="${name}"]`)!
+      act(() => {
+        fireEvent.click(square('d1'))
+      })
+      act(() => {
+        fireEvent.click(square('d8'))
+      })
+      return container
+    }
+
+    beforeEach(() => {
+      window.localStorage.clear()
+      engineCalls.length = 0
+    })
+
+    it('shows the moves as a tree: a move opens that position', () => {
+      solve()
+      // Il Nero muove per primo: 1...a6 2.Rd8#, senza i colori delle aperture.
+      const first = screen.getByRole('button', { name: '1...a6' })
+      expect(first).not.toHaveAttribute('title')
+      expect(screen.getByRole('button', { name: /^2\.Rd8/ })).toHaveAttribute(
+        'aria-current',
+        'true',
+      )
+      fireEvent.click(first)
+      expect(first).toHaveAttribute('aria-current', 'true')
+    })
+
+    it('turns Stockfish off from the panel header, keeping the moves', () => {
+      solve()
+      expect(engineCalls.at(-1)).not.toBeNull()
+      const panel = screen
+        .getByText(itTranslations.analysisPanel.title)
+        .closest('[data-slot="card"]') as HTMLElement
+      fireEvent.click(within(panel).getByRole('switch', { name: 'Stockfish' }))
+
+      expect(engineCalls.at(-1)).toBeNull()
+      expect(window.localStorage.getItem('puzzle-stockfish')).toBe('false')
+      // Pannello chiuso, cronologia sempre disponibile.
+      expect(panel.querySelector('[data-slot="engine-line"]')).toBeNull()
+      expect(screen.getByRole('button', { name: '1...a6' })).toBeInTheDocument()
     })
   })
 })

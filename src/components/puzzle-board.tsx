@@ -16,6 +16,7 @@ import { PromotionPicker, type PromotionPieceType } from '@/components/promotion
 import { PuzzleInfoContent } from '@/components/puzzle-info'
 import { SolvedFireworks } from '@/components/solved-fireworks'
 import { Button } from '@/components/ui/button'
+import { useLocalToggle } from '@/hooks/use-local-toggle'
 import { useStockfishAnalysis } from '@/hooks/use-stockfish-analysis'
 import {
   boardThemeById,
@@ -450,6 +451,10 @@ export function PuzzleBoard({
   // cronologia con le frecce/i bottoni qui sotto.
   const { settings: engineSettings, update: updateEngineSettings } = useEngineSettings()
   const analysisEnabled = pendingCompletion !== null
+  // Stockfish a puzzle finito: si spegne dall'intestazione del pannello e la
+  // scelta resta su questo dispositivo. Le mosse libere restano disponibili.
+  const [engineOn, setEngineOn] = useLocalToggle('puzzle-stockfish', true)
+  const engineActive = analysisEnabled && engineOn
   const canRetry = !!onRetry && pendingCompletion?.result === 'failed'
   // Al motore va la partenza del puzzle con tutte le mosse fino alla
   // posizione mostrata, non solo la posizione: cosi' conta le ripetizioni
@@ -464,15 +469,15 @@ export function PuzzleBoard({
     [isLive, effectiveWrongMove, puzzle, timelinePath],
   )
   const { lines: engineLines, analyzing } = useStockfishAnalysis(
-    analysisEnabled ? enginePosition : null,
+    engineActive ? enginePosition : null,
     {
       multiPv: engineSettings.multiPv,
       depth: engineSettings.depth,
-      enabled: analysisEnabled,
+      enabled: engineActive,
     },
   )
   const bestMoveArrows = useMemo<Arrow[]>(() => {
-    if (!engineSettings.showBestMoveArrow) return []
+    if (!engineActive || !engineSettings.showBestMoveArrow) return []
     const bestUci = engineLines[0]?.pvUci[0]
     if (!bestUci || bestUci.length < 4) return []
     return [
@@ -482,7 +487,7 @@ export function PuzzleBoard({
         color: BEST_MOVE_ARROW_COLOR,
       },
     ]
-  }, [engineLines, engineSettings.showBestMoveArrow])
+  }, [engineActive, engineLines, engineSettings.showBestMoveArrow])
 
   // replayGame ha la cronologia delle posizioni (serve a isThreefoldRepetition
   // qui sotto); solo la mossa sbagliata dal vivo (un ramo a parte, mai
@@ -975,7 +980,7 @@ export function PuzzleBoard({
 
   const moveNavButtons = (
     <div className="flex w-full items-center gap-2">
-      <span className="text-muted-foreground w-6 shrink-0 text-center text-xs tabular-nums">
+      <span className="border-input text-muted-foreground flex h-11 min-w-9 shrink-0 items-center justify-center rounded-md border px-1.5 text-xs tabular-nums">
         {currentPly}
       </span>
       <div className="min-w-0 flex-1">
@@ -1047,7 +1052,7 @@ export function PuzzleBoard({
               il pannello di analisi finisce sotto a piena larghezza e non a
               fianco, quindi la barra laterale non avrebbe senso li'. */}
           <div className="hidden w-5 shrink-0 lg:block">
-            {analysisEnabled && (
+            {engineActive && (
               <EvalBar
                 orientation="vertical"
                 whitePercent={whitePercent}
@@ -1162,7 +1167,7 @@ export function PuzzleBoard({
 
         {/* Su mobile la barra di valutazione (nascosta di lato da lg: in su,
             vedi sopra) si sposta qui sotto la scacchiera, in orizzontale. */}
-        {analysisEnabled && (
+        {engineActive && (
           <div style={{ width: BOARD_SIZE }} className="lg:hidden">
             <EvalBar
               orientation="horizontal"
@@ -1230,6 +1235,8 @@ export function PuzzleBoard({
               analyzing={analyzing}
               settings={engineSettings}
               onUpdateSettings={updateEngineSettings}
+              enabled={engineOn}
+              onEnabledChange={setEngineOn}
             />
             <MoveHistoryPanel
               nodes={effectiveNodes}

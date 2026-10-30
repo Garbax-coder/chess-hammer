@@ -341,9 +341,9 @@ export function SessionPuzzleList({
   }, [activeSessionPuzzleId, orderedPuzzles])
 
   return (
-    <Card className="min-h-0 w-full flex-1 lg:w-64">
-      <CardHeader className="gap-2 py-3">
-        <CardTitle className="text-sm">{title ?? t.sessionPuzzleList.title}</CardTitle>
+    <Card size="sm" className="min-h-0 w-full flex-1 lg:w-64">
+      <CardHeader className="gap-2">
+        <CardTitle>{title ?? t.sessionPuzzleList.title}</CardTitle>
         {filters}
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 flex-col gap-1 pt-0">
