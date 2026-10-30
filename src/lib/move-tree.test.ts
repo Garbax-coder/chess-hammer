@@ -2,15 +2,20 @@ import { describe, expect, it } from 'vitest'
 import {
   addMoveNode,
   INITIAL_MOVE_NODES,
-  isWhiteMove,
-  moveNumberFor,
+  moveTreeAsOpeningTree,
   pathFromRoot,
   ROOT_NODE_ID,
 } from './move-tree'
 
 describe('addMoveNode', () => {
   it('adds a new child under the given parent', () => {
-    const { nodes, id } = addMoveNode(INITIAL_MOVE_NODES, ROOT_NODE_ID, 'e2e4', 'e4', 'n1')
+    const { nodes, id } = addMoveNode(
+      INITIAL_MOVE_NODES,
+      ROOT_NODE_ID,
+      'e2e4',
+      'e4',
+      'n1',
+    )
     expect(id).toBe('n1')
     expect(nodes[ROOT_NODE_ID].children).toEqual(['n1'])
     expect(nodes.n1).toMatchObject({ parentId: ROOT_NODE_ID, uci: 'e2e4', san: 'e4' })
@@ -47,30 +52,29 @@ describe('pathFromRoot', () => {
   })
 })
 
-describe('isWhiteMove', () => {
-  it('alternates starting from White', () => {
-    expect(isWhiteMove(1, 'w')).toBe(true)
-    expect(isWhiteMove(2, 'w')).toBe(false)
-    expect(isWhiteMove(3, 'w')).toBe(true)
+describe('moveTreeAsOpeningTree', () => {
+  function sample() {
+    const first = addMoveNode(INITIAL_MOVE_NODES, ROOT_NODE_ID, 'a7a6', 'a6', 'n0')
+    const second = addMoveNode(first.nodes, first.id, 'd1d8', 'Rd8', 'n1')
+    return addMoveNode(second.nodes, first.id, 'e1e8', 'Re8', 'n2').nodes
+  }
+
+  it('numbers the plies from the side that starts, with the variations', () => {
+    const { tree, toOpeningId, fromOpeningId } = moveTreeAsOpeningTree(sample(), 'b')
+    const a6 = tree.byId.get(toOpeningId('n0')!)!
+    expect(a6.ply).toBe(2)
+    expect(a6.parent_id).toBeNull()
+    expect(tree.children.get(a6.id)!.map((n) => n.san)).toEqual(['Rd8', 'Re8'])
+    expect(fromOpeningId(a6.id)).toBe('n0')
+    expect(toOpeningId(ROOT_NODE_ID)).toBeNull()
   })
 
-  it('alternates starting from Black (puzzle solver plays Black)', () => {
-    expect(isWhiteMove(1, 'b')).toBe(false)
-    expect(isWhiteMove(2, 'b')).toBe(true)
-  })
-})
-
-describe('moveNumberFor', () => {
-  it('counts move pairs starting from White', () => {
-    expect(moveNumberFor(1, 'w')).toBe(1)
-    expect(moveNumberFor(2, 'w')).toBe(1)
-    expect(moveNumberFor(3, 'w')).toBe(2)
-  })
-
-  it('counts move pairs starting from Black', () => {
-    expect(moveNumberFor(1, 'b')).toBe(1)
-    expect(moveNumberFor(2, 'b')).toBe(2)
-    expect(moveNumberFor(3, 'b')).toBe(2)
-    expect(moveNumberFor(4, 'b')).toBe(3)
+  it('keeps the ids of the moves when a variation is added', () => {
+    const before = moveTreeAsOpeningTree(sample(), 'w')
+    const nodes = addMoveNode(sample(), 'n1', 'g8h7', 'Kh7', 'n3').nodes
+    const after = moveTreeAsOpeningTree(nodes, 'w')
+    for (const id of ['n0', 'n1', 'n2']) {
+      expect(after.toOpeningId(id)).toBe(before.toOpeningId(id))
+    }
   })
 })

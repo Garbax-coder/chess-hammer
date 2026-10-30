@@ -51,9 +51,9 @@ export function AnalysisPanel({
   const t = useTranslations()
 
   return (
-    <Card className={className}>
-      <CardHeader className="flex flex-row items-center justify-between gap-2 py-3">
-        <CardTitle className="text-sm">{t.analysisPanel.title}</CardTitle>
+    <Card size="sm" className={className}>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <CardTitle>{t.analysisPanel.title}</CardTitle>
         <div className="flex items-center gap-1">
           {onEnabledChange && (
             <Switch

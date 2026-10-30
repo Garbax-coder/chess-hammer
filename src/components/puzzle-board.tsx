@@ -16,6 +16,7 @@ import { PromotionPicker, type PromotionPieceType } from '@/components/promotion
 import { PuzzleInfoContent } from '@/components/puzzle-info'
 import { SolvedFireworks } from '@/components/solved-fireworks'
 import { Button } from '@/components/ui/button'
+import { useLocalToggle } from '@/hooks/use-local-toggle'
 import { useStockfishAnalysis } from '@/hooks/use-stockfish-analysis'
 import {
   boardThemeById,
@@ -450,6 +451,10 @@ export function PuzzleBoard({
   // cronologia con le frecce/i bottoni qui sotto.
   const { settings: engineSettings, update: updateEngineSettings } = useEngineSettings()
   const analysisEnabled = pendingCompletion !== null
+  // Stockfish a puzzle finito: si spegne dall'intestazione del pannello e la
+  // scelta resta su questo dispositivo. Le mosse libere restano disponibili.
+  const [engineOn, setEngineOn] = useLocalToggle('puzzle-stockfish', true)
+  const engineActive = analysisEnabled && engineOn
   const canRetry = !!onRetry && pendingCompletion?.result === 'failed'
   // Al motore va la partenza del puzzle con tutte le mosse fino alla
   // posizione mostrata, non solo la posizione: cosi' conta le ripetizioni
@@ -464,15 +469,15 @@ export function PuzzleBoard({
     [isLive, effectiveWrongMove, puzzle, timelinePath],
   )
   const { lines: engineLines, analyzing } = useStockfishAnalysis(
-    analysisEnabled ? enginePosition : null,
+    engineActive ? enginePosition : null,
     {
       multiPv: engineSettings.multiPv,
       depth: engineSettings.depth,
-      enabled: analysisEnabled,
+      enabled: engineActive,
     },
   )
   const bestMoveArrows = useMemo<Arrow[]>(() => {
-    if (!engineSettings.showBestMoveArrow) return []
+    if (!engineActive || !engineSettings.showBestMoveArrow) return []
     const bestUci = engineLines[0]?.pvUci[0]
     if (!bestUci || bestUci.length < 4) return []
     return [
@@ -482,7 +487,7 @@ export function PuzzleBoard({
         color: BEST_MOVE_ARROW_COLOR,
       },
     ]
-  }, [engineLines, engineSettings.showBestMoveArrow])
+  }, [engineActive, engineLines, engineSettings.showBestMoveArrow])
 
   // replayGame ha la cronologia delle posizioni (serve a isThreefoldRepetition
   // qui sotto); solo la mossa sbagliata dal vivo (un ramo a parte, mai
@@ -934,7 +939,10 @@ export function PuzzleBoard({
     return attemptMove(sourceSquare, targetSquare)
   }
 
-  const turnLabel = orientation === 'white' ? t.puzzleBoard.white : t.puzzleBoard.black
+  const turnLabel = solverTurn === 'w' ? t.puzzleBoard.white : t.puzzleBoard.black
+  // E' il turno di chi risolve: lo stato dice con quale colore si muove.
+  const solverToMove =
+    !analysisEnabled && isLive && (feedback === 'playing' || feedback === 'correct')
   const startTurn = puzzle.fen.split(' ')[1] === 'b' ? 'b' : 'w'
   const currentPly = timelinePath.length
 
@@ -958,24 +966,49 @@ export function PuzzleBoard({
   // spazio per una colonna a destra) sia nella colonna di analisi a destra
   // a lg: (vedi il commento su BOARD_SIZE): stesso markup, due punti di
   // aggancio diversi, cosi' le due versioni non possono disallinearsi.
+  // Due righe fisse: dati del puzzle e stato. Lo stato ha una riga sua, cosi'
+  // un testo piu' lungo non va a capo cambiando l'altezza del blocco.
   const statusRow = (
     <>
-      {progress && <span>{t.puzzleBoard.progress(progress.current, progress.total)}</span>}
-      <span>{t.puzzleBoard.rating(puzzle.rating)}</span>
-      <span
-        className={
-          isDisplayThreefoldRepetition ? 'text-amber-600 dark:text-amber-400 font-semibold' : ''
-        }
-      >
-        {statusText}
-      </span>
-      <span>{formatElapsed(elapsed)}</span>
+      <div className="flex items-center justify-between gap-2 whitespace-nowrap">
+        {progress && <span>{t.puzzleBoard.progress(progress.current, progress.total)}</span>}
+        <span>{t.puzzleBoard.rating(puzzle.rating)}</span>
+        <span>{formatElapsed(elapsed)}</span>
+      </div>
+      <div className="flex h-6 items-center">
+        {solverToMove ? (
+          <span
+            data-side={solverTurn}
+            className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 font-semibold ring-1 ${
+              solverTurn === 'w'
+                ? 'bg-white text-neutral-900 ring-neutral-300'
+                : 'bg-neutral-900 text-white ring-neutral-600'
+            }`}
+          >
+            <span aria-hidden className="text-sm leading-none">
+              {'\u265A\uFE0E'}
+            </span>
+            {statusText}
+          </span>
+        ) : (
+          <span
+            title={statusText}
+            className={`truncate ${
+              isDisplayThreefoldRepetition
+                ? 'text-amber-600 dark:text-amber-400 font-semibold'
+                : ''
+            }`}
+          >
+            {statusText}
+          </span>
+        )}
+      </div>
     </>
   )
 
   const moveNavButtons = (
     <div className="flex w-full items-center gap-2">
-      <span className="text-muted-foreground w-6 shrink-0 text-center text-xs tabular-nums">
+      <span className="border-input text-muted-foreground flex h-11 min-w-9 shrink-0 items-center justify-center rounded-md border px-1.5 text-xs tabular-nums">
         {currentPly}
       </span>
       <div className="min-w-0 flex-1">
@@ -1019,7 +1052,7 @@ export function PuzzleBoard({
       <div className="flex flex-col items-center gap-4">
         <div
           style={{ width: BOARD_SIZE }}
-          className="text-muted-foreground flex items-center justify-between text-xs lg:hidden"
+          className="text-muted-foreground flex flex-col gap-1 text-xs lg:hidden"
         >
           {statusRow}
         </div>
@@ -1047,7 +1080,7 @@ export function PuzzleBoard({
               il pannello di analisi finisce sotto a piena larghezza e non a
               fianco, quindi la barra laterale non avrebbe senso li'. */}
           <div className="hidden w-5 shrink-0 lg:block">
-            {analysisEnabled && (
+            {engineActive && (
               <EvalBar
                 orientation="vertical"
                 whitePercent={whitePercent}
@@ -1162,7 +1195,7 @@ export function PuzzleBoard({
 
         {/* Su mobile la barra di valutazione (nascosta di lato da lg: in su,
             vedi sopra) si sposta qui sotto la scacchiera, in orizzontale. */}
-        {analysisEnabled && (
+        {engineActive && (
           <div style={{ width: BOARD_SIZE }} className="lg:hidden">
             <EvalBar
               orientation="horizontal"
@@ -1214,7 +1247,7 @@ export function PuzzleBoard({
           zona sopra/sotto la scacchiera (vedi commento su BOARD_SIZE) cosi'
           quest'ultima puo' occupare tutta l'altezza disponibile. */}
       <div className="flex w-full flex-col gap-4 lg:w-72 lg:shrink-0">
-        <div className="text-muted-foreground hidden w-full items-center justify-between text-xs lg:flex">
+        <div className="text-muted-foreground hidden w-full flex-col gap-1 text-xs lg:flex">
           {statusRow}
         </div>
 
@@ -1230,6 +1263,8 @@ export function PuzzleBoard({
               analyzing={analyzing}
               settings={engineSettings}
               onUpdateSettings={updateEngineSettings}
+              enabled={engineOn}
+              onEnabledChange={setEngineOn}
             />
             <MoveHistoryPanel
               nodes={effectiveNodes}

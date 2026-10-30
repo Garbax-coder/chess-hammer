@@ -1,3 +1,5 @@
+import { buildOpeningTree, type OpeningNode, type OpeningTree } from '@/lib/opening-tree'
+
 export interface MoveTreeNode {
   id: string
   parentId: string | null
@@ -19,7 +21,9 @@ const ROOT_NODE: MoveTreeNode = {
 // Riferimento stabile (non un nuovo oggetto ad ogni render) da usare come
 // albero delle mosse "effettivo" nel render in cui il puzzle e' appena
 // cambiato, prima che il reset dello state sia stato applicato.
-export const INITIAL_MOVE_NODES: Record<string, MoveTreeNode> = { [ROOT_NODE_ID]: ROOT_NODE }
+export const INITIAL_MOVE_NODES: Record<string, MoveTreeNode> = {
+  [ROOT_NODE_ID]: ROOT_NODE,
+}
 
 /**
  * Aggiunge una mossa come figlio di parentId. Se un figlio con la stessa
@@ -62,12 +66,43 @@ export function pathFromRoot(
   return path
 }
 
-export function isWhiteMove(ply: number, startTurn: 'w' | 'b'): boolean {
-  return startTurn === 'w' ? ply % 2 === 1 : ply % 2 === 0
-}
-
-/** Numero di mossa "semplificato" (non usa il fullmove number della FEN). */
-export function moveNumberFor(ply: number, startTurn: 'w' | 'b'): number {
-  if (startTurn === 'w') return Math.ceil(ply / 2)
-  return ply === 1 ? 1 : 1 + Math.ceil((ply - 1) / 2)
+/**
+ * L'albero delle mosse di un puzzle nella forma della vista ad albero delle
+ * aperture. Gli id numerici seguono l'ordine di inserimento dei nodi, che
+ * crescono soltanto: restano stabili mentre si aggiungono varianti.
+ */
+export function moveTreeAsOpeningTree(
+  nodes: Record<string, MoveTreeNode>,
+  startTurn: 'w' | 'b',
+): {
+  tree: OpeningTree
+  toOpeningId: (id: string) => number | null
+  fromOpeningId: (id: number) => string
+} {
+  const keys = Object.keys(nodes).filter((id) => id !== ROOT_NODE_ID)
+  const numbers = new Map(keys.map((id, index) => [id, index + 1]))
+  const list: OpeningNode[] = []
+  // Il ply delle aperture conta dalla prima mossa del Bianco.
+  const visit = (id: string, parentId: number | null, ply: number) => {
+    for (const childId of nodes[id].children) {
+      const node = nodes[childId]
+      const number = numbers.get(childId) as number
+      list.push({
+        id: number,
+        parent_id: parentId,
+        ply,
+        uci: node.uci ?? '',
+        san: node.san ?? '',
+        epd: '',
+        is_main: true,
+      })
+      visit(childId, number, ply + 1)
+    }
+  }
+  visit(ROOT_NODE_ID, null, startTurn === 'b' ? 2 : 1)
+  return {
+    tree: buildOpeningTree(list),
+    toOpeningId: (id) => numbers.get(id) ?? null,
+    fromOpeningId: (id) => keys[id - 1],
+  }
 }

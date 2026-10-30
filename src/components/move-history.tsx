@@ -1,109 +1,12 @@
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useMemo } from 'react'
+import { OpeningTreeView } from '@/components/opening-tree-view'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTranslations } from '@/lib/language-context'
-import {
-  isWhiteMove,
-  moveNumberFor,
-  ROOT_NODE_ID,
-  type MoveTreeNode,
-} from '@/lib/move-tree'
+import { moveTreeAsOpeningTree, ROOT_NODE_ID, type MoveTreeNode } from '@/lib/move-tree'
 
-interface MoveLineProps {
-  nodes: Record<string, MoveTreeNode>
-  currentId: string
-  startTurn: 'w' | 'b'
-  onSelect: (id: string) => void
-  startId: string
-  ply: number
-  depth: number
-  // Il primo nodo di una MoveLine "variante" e' gia' stato presentato come
-  // diramazione dal chiamante (che ha iterato su TUTTI i children del
-  // genitore): rilevare di nuovo i suoi stessi fratelli qui creerebbe una
-  // ricorsione reciproca infinita (A rende B come variante, B rende A come
-  // variante, ...). Si salta quindi il controllo SOLO al primo nodo di una
-  // chiamata ricorsiva; dal secondo nodo in poi (diramazioni piu' profonde
-  // nella stessa linea) il controllo torna attivo normalmente.
-  skipSiblingsAtStart?: boolean
-}
-
-function MoveLine({
-  nodes,
-  currentId,
-  startTurn,
-  onSelect,
-  startId,
-  ply,
-  depth,
-  skipSiblingsAtStart,
-}: MoveLineProps) {
-  const tokens: ReactNode[] = []
-  const variationBlocks: ReactNode[] = []
-  let nodeId: string | undefined = startId
-  let currentPly = ply
-  let isFirstToken = true
-
-  while (nodeId) {
-    const node: MoveTreeNode = nodes[nodeId]
-    const white = isWhiteMove(currentPly, startTurn)
-    const number = moveNumberFor(currentPly, startTurn)
-    const prefix = white ? `${number}.` : isFirstToken ? `${number}…` : ''
-    const isCurrent = node.id === currentId
-
-    tokens.push(
-      <button
-        key={node.id}
-        type="button"
-        onClick={() => onSelect(node.id)}
-        className={`shrink-0 rounded px-1 py-0.5 font-mono text-xs ${
-          isCurrent
-            ? 'bg-primary text-primary-foreground font-semibold'
-            : 'text-foreground hover:bg-accent'
-        }`}
-      >
-        {prefix}
-        {node.san}
-      </button>,
-    )
-
-    const parent = node.parentId ? nodes[node.parentId] : undefined
-    if (parent && !(isFirstToken && skipSiblingsAtStart)) {
-      for (const siblingId of parent.children) {
-        if (siblingId === node.id) continue
-        variationBlocks.push(
-          <div
-            key={siblingId}
-            className="flex flex-wrap items-center gap-0.5"
-            style={{ marginLeft: (depth + 1) * 12 }}
-          >
-            <MoveLine
-              nodes={nodes}
-              currentId={currentId}
-              startTurn={startTurn}
-              onSelect={onSelect}
-              startId={siblingId}
-              ply={currentPly}
-              depth={depth + 1}
-              skipSiblingsAtStart
-            />
-          </div>,
-        )
-      }
-    }
-
-    isFirstToken = false
-    nodeId = node.children[0]
-    currentPly += 1
-  }
-
-  return (
-    <>
-      <div className="flex flex-wrap items-center gap-0.5">{tokens}</div>
-      {variationBlocks}
-    </>
-  )
-}
+const NO_PROGRESS = new Map()
 
 interface MoveHistoryPanelProps {
   nodes: Record<string, MoveTreeNode>
@@ -121,6 +24,7 @@ export function MoveHistoryPanel({
   const t = useTranslations()
   const current = nodes[currentId]
   const rootChildren = nodes[ROOT_NODE_ID]?.children ?? []
+  const view = useMemo(() => moveTreeAsOpeningTree(nodes, startTurn), [nodes, startTurn])
   const canGoBack = currentId !== ROOT_NODE_ID
   const canGoForward = current.children.length > 0
 
@@ -133,23 +37,23 @@ export function MoveHistoryPanel({
   }
 
   return (
-    <Card className="w-full lg:w-72">
-      <CardHeader className="py-3">
-        <CardTitle className="text-sm">{t.moveHistory.title}</CardTitle>
+    <Card size="sm" className="w-full lg:w-72">
+      <CardHeader>
+        <CardTitle>{t.moveHistory.title}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 pt-0">
-        <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto">
+        <div className="max-h-48 overflow-y-auto p-0.5">
           {rootChildren.length === 0 ? (
             <p className="text-muted-foreground text-xs">{t.moveHistory.empty}</p>
           ) : (
-            <MoveLine
-              nodes={nodes}
-              currentId={currentId}
-              startTurn={startTurn}
-              onSelect={onSelect}
-              startId={rootChildren[0]}
-              ply={1}
-              depth={0}
+            <OpeningTreeView
+              plain
+              tree={view.tree}
+              color="w"
+              progress={NO_PROGRESS}
+              now={new Date()}
+              selectedId={view.toOpeningId(currentId)}
+              onSelect={(id) => onSelect(view.fromOpeningId(id))}
             />
           )}
         </div>
