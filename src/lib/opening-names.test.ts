@@ -41,13 +41,19 @@ describe('openingNamesSql', () => {
     expect(sql.match(/insert into public\.opening_names/g)).toHaveLength(2)
   })
 
-  it('keeps the names migration in sync with the Lichess files', () => {
-    const names = ['a', 'b', 'c', 'd', 'e'].flatMap((f) => parseOpeningNamesTsv(tsv(f)))
-    expect(names.length).toBeGreaterThan(3000)
-    const migration = readFileSync(
-      join(root, 'supabase/migrations/0102_opening_names.sql'),
-      'utf8',
-    )
-    expect(migration.endsWith(openingNamesSql(names))).toBe(true)
-  })
+  // Rigioca le mosse di quasi 4000 aperture: su una macchina carica supera il
+  // timeout predefinito di 5 secondi.
+  it(
+    'keeps the names migration in sync with the Lichess files',
+    { timeout: 30_000 },
+    () => {
+      const names = ['a', 'b', 'c', 'd', 'e'].flatMap((f) => parseOpeningNamesTsv(tsv(f)))
+      expect(names.length).toBeGreaterThan(3000)
+      const migration = readFileSync(
+        join(root, 'supabase/migrations/0102_opening_names.sql'),
+        'utf8',
+      )
+      expect(migration.endsWith(openingNamesSql(names))).toBe(true)
+    },
+  )
 })

@@ -33,3 +33,6 @@ supabase/.temp/
 # Playwright (npm run test:e2e)
 test-results/
 playwright-report/
+
+# Vercel CLI (vercel link)
+.vercel

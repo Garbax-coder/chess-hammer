@@ -138,7 +138,10 @@ test('learn an opening line', async () => {
 
   // Sulla dashboard, la card delle aperture.
   await page.goto('/dashboard')
-  await expect(page.getByText(o.dashboardTitle, { exact: true })).toBeVisible()
+  // Il titolo della card, non la voce del menu con lo stesso testo.
+  await expect(
+    page.locator('[data-slot="card-title"]').getByText(o.dashboardTitle, { exact: true }),
+  ).toBeVisible()
   await expect(page.getByRole('link', { name: o.dashboardOpen })).toBeVisible()
 })
 
